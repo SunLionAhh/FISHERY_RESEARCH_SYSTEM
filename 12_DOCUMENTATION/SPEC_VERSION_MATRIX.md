@@ -48,7 +48,7 @@
 | **以 V4 为准** | `V4_REQUIREMENTS_INDEX.md` 第 1 节、`00_PROJECT_SPEC/README.md`、`S00_START_PROMPT.md`、总索引与变更记录 | 已完成；旧规范降级历史基线、原位只读保留 |
 | **没有 2004，不要混淆** | `01_ORIGINAL_DATA/FISHFINDER/` 目录（删 2004、建 2005）、`FISHFINDER/README.md`、`00_PROJECT_SPEC/README.md`、启动指令、演示页、全部管理文档 | 已完成；项目内设备目录与 V4 完全一致 |
 | **Python 3.10 可以装** | 启动指令、总索引、环境预检、`V4_REQUIREMENTS_INDEX.md` 第 6 节 | 已从「待裁定」改为「**用户已批准安装 3.10**」；安装与 `.venv` 由 S00 在目标解释器执行并复测，本轮未改系统环境 |
-| **Git 安全回滚点需要** | 项目 Git 仓库 + `.gitignore` + 初始回滚点提交；启动指令要求 S00 核验复用并在验收后另建阶段回滚点 | 已建立初始回滚点（见 `CHANGELOG.md` / `PROJECT_MASTER_INDEX.md` 中的提交号）；不替代 S00 阶段回滚点 |
+| **Git 安全回滚点需要** | 项目 Git 仓库 + `.gitignore` + 初始回滚点提交；启动指令要求 S00 核验复用并在验收后另建阶段回滚点 | 已建立初始回滚点 `183e469e5ff62b39adda2e2fde693995879b3e2e`；不替代 S00 阶段回滚点 |
 | **2001 到 11-07 结束、不会补传** | `SCOPE_CONFIRMATION_DUAL_STATION.md`、`FISHFINDER/README.md`、启动指令、演示页 | 已完成；双站同期窗口定为 10-31—11-07（仍须按文件内真实时间戳复核），2000 的 11-08—11-12 为单站延伸，2001 侧数据已完整 |
 
 ---

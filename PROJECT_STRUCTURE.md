@@ -52,7 +52,7 @@
 | --- | --- |
 | `FISHERY_FULL_PLAN_V4/` | 2026-11-14 19:02 到位的 **V4 完整开发规范包**：17 个文件，包内 SHA-256 清单 16/16 通过。用户 19:13 确认「这是全部要求」、19:17 裁定「**以 V4 为准**」。**原位完整保留，不拆散、不改名、不覆盖**（`00_README.txt` 第 6 行要求整包交给开发者）。 |
 | `.gitignore` | 排除 `01_ORIGINAL_DATA/FISHFINDER/**/*.csv`（8.38 GB）、`14_TEMP/`、`.venv/`、缓存。 |
-| `.git/` | 用户 19:17 要求的 Git 安全回滚点；初始提交号见 `CHANGELOG.md` 与 `PROJECT_MASTER_INDEX.md`。 |
+| `.git/` | 用户 19:17 要求的 Git 安全回滚点；初始提交 `183e469`（完整 hash 见 `PROJECT_MASTER_INDEX.md`）；`.gitattributes` 保证按字节保真。 |
 
 > `FISHERY_FULL_PLAN_V4/` 不属于 00—14 编号体系。V4 文档内部引用的 `00_PROJECT_SPEC/01|02|03_*.md` 须按 `12_DOCUMENTATION/V4_REQUIREMENTS_INDEX.md` 第 3 节**路径解析规则**映射到包内同名文件，不得误读历史基线。
 

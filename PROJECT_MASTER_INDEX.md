@@ -107,7 +107,7 @@
 | run_id | 无（尚未分析） |
 | origin_job_id | 无 |
 | dataset_id | 无（DATASET_01~04 待建立） |
-| 最新 Git 提交 | 初始回滚点（提交号见 `CHANGELOG.md` 顶部；仓库已初始化，原始 CSV 已由 `.gitignore` 排除） |
+| 最新 Git 提交 | 初始安全回滚点 `183e469e5ff62b39adda2e2fde693995879b3e2e`（69 个文件；8.38 GB 原始 CSV 已排除、按字节保真入库）；S00 须另建阶段回滚点 |
 | 最新测试结果 | 无 |
 | 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S00.md` **待生成**（须由 S00 实测后输出，本轮不代写） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
