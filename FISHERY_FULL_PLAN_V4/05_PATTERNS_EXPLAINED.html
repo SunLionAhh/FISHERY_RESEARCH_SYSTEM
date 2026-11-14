@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>规律体现在哪里</title><style>body{margin:0;background:#eef3f5;color:#203441;font:16px/1.85 "Microsoft YaHei",sans-serif}main{max-width:1000px;margin:24px auto;padding:40px;background:white}h1{font-size:30px}h2{margin-top:32px;color:#12677e;font-size:22px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #d4e0e5;padding:10px;text-align:left;vertical-align:top}th,.box{background:#edf6f8}.box{padding:18px;margin:20px 0}a{color:#12677e}small{color:#596e79}@media(max-width:650px){main{padding:20px;margin:0}th,td{padding:6px}}@media print{body{background:white}main{margin:0;padding:0}tr{break-inside:avoid}h2{break-after:avoid}}</style></head><body><main>
+<h1>规律体现在哪里？</h1>
+<p><strong>最终体现为“可复查的规律结论＋支持和反对证据＋后续验证结果”，图表负责把这些证据展示出来。</strong>某天出现一次高峰只能说明当天观察到什么；多个有效日期重复、排除质量和参数影响，再经过后续独立资料验证，才逐步形成更可靠的规律。</p>
+<p><small>本页说明系统计划实现的成果，不表示已经分析出你的真实鱼群规律。完整方案见同一资料包中的<a href="04_FULL_PLAN_V4.html">全规范深化总规划V4.0</a>。</small></p>
+<div class="box"><strong>V4前提：</strong>五台为2000、2001、2002、2003、2005，全部规律只使用各台人工截断范围内的有效数据。2000号上限为斜距5.2 m；GPS由用户在网页录入。理论覆盖、图表、报告和Origin共同使用版本化参数。<a href="04_FULL_PLAN_V4.html#v4-user">查看强制要求</a> · <a href="04_FULL_PLAN_V4.html#v4-geometry">查看覆盖计算</a></div><h2>六类规律分别在哪里看</h2>
+<table><thead><tr><th>规律类型</th><th>具体回答</th><th>最终产物</th></tr></thead><tbody>
+<tr><td>日际变化</td><td>哪些日期偏高或偏低？相对历史基线的变化是否持续？</td><td>任意日期比较表、滚动基线图、支持和反对日期。</td></tr>
+<tr><td>日内时间</td><td>每台何时上升、高值、下降、低值及再次回升？是否每天相近？</td><td>24小时曲线、日期×时刻热图（图03）、峰值时段与持续性（图09）。</td></tr>
+<tr><td>周月变化</td><td>典型日是否改变？周与月之间有何差异？</td><td>周月报告、阶段比较、峰时分布；不把短期星期差异直接称为生物周期。</td></tr>
+<tr><td>环境关联</td><td>高峰跟着钟点还是潮相？风速、水温变化前后是否重复出现响应？</td><td>钟点/潮相对照、联合效应和滞后表；说明配对覆盖与适用条件。</td></tr>
+<tr><td>五站空间</td><td>哪些站相对活跃？是否同步？某站是否经常先变化？</td><td>地图、站位差异及同期/同步性图（图15）；统计时差不解释为同一鱼群迁移。</td></tr>
+<tr><td>长期时空</td><td>上述模式是否稳定、漂移或转换？变化是否因水层而异？</td><td>长期趋势、模式版本、站位×水层比较及昼夜晨昏三水层图（图16）。</td></tr>
+</tbody></table>
+<p><strong>水层是贯穿时间、空间和环境规律的分析维度：</strong>分别比较可观测的上、中、下层，并显示各层实际覆盖。不能把未观测到的水层填成零活动，中心轴投影也不能冒充鱼类精确深度。</p>
+<h2>在总规划中直接跳到这些位置</h2>
+<ul><li><a href="04_FULL_PLAN_V4.html#d-time">时间、环境和统计验证</a>：T01—T08时间模块、潮相与滞后、V03规律卡片。</li><li><a href="04_FULL_PLAN_V4.html#d-space">空间与三水层</a>：站位差异、同步性、时差及水层解释。</li><li><a href="04_FULL_PLAN_V4.html#d-origin">Origin与16类科研图</a>：重点看图03、08、09、15、16。图08把发现期、验证期、支持/反对日期和适用条件放在同一组图中。</li></ul>
+<h2>每条规律必须是一张完整的“规律卡片”</h2>
+<p>卡片保存：规律ID与版本、设备/站位、指标和单位、研究日期、活动时段或环境条件、变化幅度与不确定性、可评价日期数、支持日期、反对日期、无法评价日期及原因、覆盖率、统计方法、证据等级、参数/QC版本、run_id和原始回波入口。</p>
+<div class="box"><strong>输出模板——全部为占位符，不是实际发现：</strong><p>设备{编号}在{研究范围}内，通常于{时段}活动较高，{时段}下降，{时段}再次回升。这一模式在{支持日期数}/{可评价日期数}中出现，反对日期为{日期列表}；另有{无法评价日期数}因{原因}无法判断。模式主要适用于{环境条件/水层}，变化幅度为{估计及区间}，证据等级为{等级}。后续验证结果为{结果}，详情见{图表与run_id}。</p></div>
+<h2>如何从观察变成有证据的规律</h2>
+<p><strong>L0</strong>：证据不足；<strong>L1</strong>：初步观察；<strong>L2</strong>：多个有效日期重复；<strong>L3</strong>：冻结规则后，在后续独立数据中得到验证。等级不能仅按积累天数升级，也不能代替统计检验与效应量。</p>
+<p>每次新增数据，先用原来的规则验证新日期，再单独开展新模式发现。支持、反对和无法评价分别记账；不因某天反对预期就把它删掉。需要修正规则时保存新版本，旧卡片和报告保留，证据等级允许下降。</p>
+<p><strong>用户的查看路径：</strong>选择设备和日期 → 查看曲线/热图 → 点击高低活动时段 → 查看原始回波与质量 → 打开规律卡片 → 查看支持/反对及后续验证。这样得到的不只是“哪条线更高”，而是“什么模式出现了、凭什么相信、适用于哪些条件”。</p>
+</main></body></html>

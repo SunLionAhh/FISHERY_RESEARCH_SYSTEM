@@ -1,0 +1,135 @@
+{
+  "spec_id": "FIGURE_COLOR_SPEC_V1",
+  "title": "科研配色方案（用户确认，项目所有生成图片强制执行）",
+  "confirmed_at": "2026-11-14 18:55 Asia/Shanghai",
+  "confirmed_by": "用户：『里面出的图片要使用科研配色方案，给你几个图片你参考一下。记录这条规格，并严格执行』",
+  "authority": "用户新增规格；不改写 01/02/03 三份 FINAL 1.5 规范，与规范冲突时以本文件为配色专项依据，其余仍以规范为准",
+  "applies_to": [
+    "07_FIGURES/ 下全部 PNG/PDF/SVG/GIF/MP4 与组合图",
+    "S07 深度/底界/三水层/长期规律图",
+    "S09 OriginPro 16 类科研组合图与动态帧",
+    "S10 Flask 工作台全部网页图表（含 SVG/Canvas/ECharts/Plotly）",
+    "09_PAPER_OUTPUT/ 论文插图、答辩 PPT 与 18 类自动报告中的图",
+    "12_DOCUMENTATION/DEMO_PROTOTYPE.html 等任何对外展示的生成图"
+  ],
+  "does_not_apply_to": [
+    "01_ORIGINAL_DATA/ 下的原始资料本身（11 张潮汐 PNG 曲线截图等），只读、不得改色或重绘",
+    "设备厂家资料、Western/仪器原始截图",
+    "文字/表格底色若用于可读性提示而非数据编码，可用 neutral 组"
+  ],
+  "source_references": [
+    {
+      "file": "05_CONFIG/COLOR_REFERENCE/1b06751c-a574-467b-a272-10227e3155c2.jpg",
+      "sha256": "4ed6d9ffe9f2acbf45d068d22fec68d70a86119e043b00c484af4406dbeeafb6",
+      "size_bytes": 231336,
+      "palette": "A_SCIENTIFIC_PRIMARY",
+      "note": "原图含原作者水印，仅作色值与版式依据，不得作为出版素材使用"
+    },
+    {
+      "file": "05_CONFIG/COLOR_REFERENCE/9e514186-17a9-42ea-a283-ce049c78090d.jpg",
+      "sha256": "d710ee984cead221f3923d8b658814f0f03df564ac3f8b9700e0dbe2dbee7db7",
+      "size_bytes": 224753,
+      "palette": "B_SOFT_PALE",
+      "note": "原图含原作者水印，仅作色值与版式依据，不得作为出版素材使用"
+    },
+    {
+      "file": "05_CONFIG/COLOR_REFERENCE/4c301704-954f-442e-b25c-9729762f651c.jpg",
+      "sha256": "43acdacb78dac8850302b2fb267d812a86c26732534bcc535dcef8a83d934ef7",
+      "size_bytes": 245026,
+      "palette": "C_PASTEL_SIX",
+      "note": "原图含原作者水印，仅作色值与版式依据，不得作为出版素材使用"
+    }
+  ],
+  "palettes": {
+    "A_SCIENTIFIC_PRIMARY": {
+      "label": "方案 A · 科研主色（中饱和，出版级对比）",
+      "typical_charts": ["PCA 散点", "堆叠比例条", "富集/通路条形图 FDR 深浅", "Z-score 热图", "分组柱状图+误差棒+p 值", "信号轨迹密度峰", "多组折线+误差棒"],
+      "diverging": "Z score：淡黄 #F2EF92（高）→ 灰蓝紫 #9599C6 / 深蓝 #0271AC（低）；零值居中",
+      "usage": "折线与描边、需高对比的出版级柱状图、显著性与强调",
+      "colors": [
+        {"hex": "#9599C6", "rgb": [149, 153, 198], "role": "灰蓝紫 / 弱强调、对照组"},
+        {"hex": "#BBA0CB", "rgb": [187, 160, 203], "role": "淡紫 / 次分组"},
+        {"hex": "#BE71AF", "rgb": [190, 113, 175], "role": "品红紫 / 显著性、堆叠深分层"},
+        {"hex": "#0271AC", "rgb": [2, 113, 172], "role": "深蓝 / 主数据、主折线"},
+        {"hex": "#E05C4F", "rgb": [224, 92, 79], "role": "珊瑚红 / 高值、正向、强调"},
+        {"hex": "#F2EF92", "rgb": [242, 239, 146], "role": "淡黄 / 高值端、Z-score 正向"}
+      ]
+    },
+    "B_SOFT_PALE": {
+      "label": "方案 B · 极淡底 + 玫瑰强调",
+      "typical_charts": ["PCA 分析", "动态变化曲线（含半透明置信带）", "分布比较小提琴", "分组柱状图", "密度山脊图", "雷达图", "热图（粉蓝发散）", "等高线图", "流程示意图"],
+      "diverging": "有符号数值：玫瑰 #DA7A9B（正/高）→ 极淡蓝 #EFF5FF → 淡蓝（负/低）；零值居中",
+      "usage": "大面积浅色填充、置信带、卡片底、面板分区；描边用同色系较深色",
+      "colors": [
+        {"hex": "#FEEFF2", "rgb": [254, 239, 242], "role": "极淡粉 / 组1 底"},
+        {"hex": "#FEFBE9", "rgb": [254, 251, 233], "role": "极淡黄 / 组2 底"},
+        {"hex": "#EFF5FF", "rgb": [239, 245, 255], "role": "极淡蓝 / 组3 底"},
+        {"hex": "#DA7A9B", "rgb": [218, 122, 155], "role": "玫瑰 / 唯一深色强调、组1 主线"},
+        {"hex": "#F6DDF8", "rgb": [246, 221, 248], "role": "极淡紫 / 组4 底"}
+      ]
+    },
+    "C_PASTEL_SIX": {
+      "label": "方案 C · 六色柔和粉彩（默认分组色板）",
+      "typical_charts": ["PCA", "Trend 多组趋势", "Boxplot 六组", "Grouped Bar", "Ridgeline", "Radar", "Heatmap", "Contour", "Process"],
+      "diverging": "暖色（珊瑚/杏橙）为高值 → 冷色（薄荷/淡蓝/淡紫）为低值；零值居中",
+      "usage": "G1—G6 / 五站 / 任意设备组合的分类着色；顺序固定，不得跳色或重排",
+      "colors": [
+        {"hex": "#FCAFA8", "rgb": [252, 175, 168], "role": "G1 珊瑚粉"},
+        {"hex": "#FCD5AA", "rgb": [252, 213, 170], "role": "G2 杏橙"},
+        {"hex": "#ADD8CE", "rgb": [173, 216, 206], "role": "G3 薄荷绿"},
+        {"hex": "#B0D2EE", "rgb": [176, 210, 238], "role": "G4 淡蓝"},
+        {"hex": "#F4C8D9", "rgb": [244, 200, 217], "role": "G5 淡粉"},
+        {"hex": "#CDC4E3", "rgb": [205, 196, 227], "role": "G6 淡紫"}
+      ]
+    }
+  },
+  "neutral": {
+    "label": "中性色（非数据编码，仅用于文字/轴/网格/边框/底色）",
+    "colors": [
+      {"hex": "#FFFFFF", "rgb": [255, 255, 255], "role": "纯白底"},
+      {"hex": "#FBFBFB", "rgb": [251, 251, 251], "role": "页面极浅底"},
+      {"hex": "#F7F7F7", "rgb": [247, 247, 247], "role": "表头/弱网格底"},
+      {"hex": "#EDEDED", "rgb": [237, 237, 237], "role": "网格线/分隔线"},
+      {"hex": "#E8E8E8", "rgb": [232, 232, 232], "role": "卡片边框"},
+      {"hex": "#D8D8D8", "rgb": [216, 216, 216], "role": "虚线边框"},
+      {"hex": "#8A8A8A", "rgb": [138, 138, 138], "role": "坐标轴、次要文字、图例"},
+      {"hex": "#4A4A4A", "rgb": [74, 74, 74], "role": "次级正文"},
+      {"hex": "#2B2B2B", "rgb": [43, 43, 43], "role": "主正文"}
+    ]
+  },
+  "semantic_roles": {
+    "default_categorical": "C_PASTEL_SIX",
+    "categorical_order": "G1→G2→G3→G4→G5→G6 严格对应 C 方案第 1—6 色；设备 2000—2005 / 五站同理按编号顺序取色",
+    "line_and_emphasis": "A_SCIENTIFIC_PRIMARY（折线、描边、误差棒、显著性标记取该方案中较深色）",
+    "light_fills_and_bands": "B_SOFT_PALE（面积填充、置信带、卡片底、面板分区）",
+    "diverging_positive": "暖色端：#E05C4F / #F2EF92 / #DA7A9B / #FCAFA8",
+    "diverging_negative": "冷色端：#0271AC / #9599C6 / #ADD8CE / #B0D2EE",
+    "zero_center": "#FFFFFF 或 #FBFBFB",
+    "missing_or_NA": "不编码颜色，留白/虚线框，标注 NA；禁止用『零值色』代替缺测"
+  },
+  "style_rules": [
+    "纯白或近白底；禁止深色/暗色主题、渐变背景、阴影、3D 效果、重度网格",
+    "坐标轴与网格线用 neutral 组细线（1 px 以内）；主要刻度标签用 #8A8A8A 小字号",
+    "同一项目内同一分组的颜色必须跨图一致；图例顺序与色板顺序一致",
+    "定量比较图必须带误差棒，显著性用 p 值/FDR 文字标注，不得仅靠颜色深浅暗示",
+    "不得仅靠颜色区分系列：需叠加点形、线型、填充纹理或文字标签（色盲友好）",
+    "发散色标必须零值居中、暖色=高/正、冷色=低/负，并显式给出色标数值范围",
+    "低饱和柔和为主；禁止 jet/彩虹色标、纯红 #FF0000、纯绿 #00FF00、纯蓝 #0000FF、荧光色",
+    "不使用默认 matplotlib/Excel/Origin 原始配色；所有绘图脚本从本文件取色",
+    "图内文字统一字体与字号层级；单位、样本量 n、时间范围、时区须标注",
+    "输出分辨率与格式按 01 主规范，配色不改变数据量纲、统计方法与数值"
+  ],
+  "forbidden": [
+    "色板（三套 palettes）与 neutral 之外的任何 HEX/RGB 用于数据编码",
+    "把原始资料截图（潮汐 PNG 等）重绘、调色或当作自绘成果图",
+    "为『好看』临时新增颜色；确需扩展须用户确认并修订本文件版本号",
+    "用颜色表达涨跌以外的语义时套用股市红绿习惯（本项目为科研图，以本文件发散规则为准）"
+  ],
+  "enforcement": {
+    "single_source_of_truth": "05_CONFIG/figure_palette.json",
+    "loader": "12_DOCUMENTATION/figure_palette.py",
+    "validator": "12_DOCUMENTATION/check_figure_colors.py",
+    "check_command": "python3 12_DOCUMENTATION/check_figure_colors.py",
+    "acceptance": "任何生成图片/页面在交付前必须通过校验脚本，色板外颜色数必须为 0；阶段报告须记录校验输出"
+  }
+}

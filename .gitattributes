@@ -1,0 +1,5 @@
+# 科研资料按字节保真入库，禁止任何 CRLF/LF 自动换行转换。
+# 原因：FISHERY_FULL_PLAN_V4/MANIFEST_SHA256.json、原始 CSV 归档清单与
+# 10_TEST_REPORTS 内的哈希都是对磁盘字节计算的；Git 若转换换行符，
+# 从仓库恢复后哈希会失效，违反 V4「原始数据只读保护 / 可复现」要求。
+* -text
