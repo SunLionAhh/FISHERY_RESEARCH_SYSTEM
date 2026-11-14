@@ -1,0 +1,88 @@
+{
+  "package": "FISHERY_FULL_PLAN_V4_20261114",
+  "version": "V4.0",
+  "date": "2026-11-14",
+  "scope": "Complete revised development documents; not implemented software; excludes raw CSV and source DOCX binaries",
+  "files": [
+    {
+      "name": "00_README.txt",
+      "size_bytes": 3812,
+      "sha256": "eddf155d231e1344341599949c3a732312c304eb1898a0f5283442c15d04559a"
+    },
+    {
+      "name": "01_MASTER_SPEC_FINAL.md",
+      "size_bytes": 51630,
+      "sha256": "cf53dd9807d8bfc227c1129d9c69ce271667d38e7053902e75afbc6683f1a2a3"
+    },
+    {
+      "name": "02_CODEX_EXECUTION_GUIDE_FINAL.md",
+      "size_bytes": 21334,
+      "sha256": "3a71a8a2fd62c77fe1e73b7c2b9dbb75ef10486236ebc3b71c348cc32bde379a"
+    },
+    {
+      "name": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "size_bytes": 41440,
+      "sha256": "b53e8773cdaa84e8fc2e58b4fbf23466837e2a0162dc57eb5b46f3d62efa0f9e"
+    },
+    {
+      "name": "04_FULL_PLAN_V4.html",
+      "size_bytes": 195892,
+      "sha256": "35f56d2e78b638e4a066a5351076a628a4c61f9ab316dcef1a5438220f98b23d"
+    },
+    {
+      "name": "04_FULL_PLAN_V4.txt",
+      "size_bytes": 167116,
+      "sha256": "713f04a3d99533527bcbafea55f851b066c35fb43116bdb760a9fe78d1b7fe92"
+    },
+    {
+      "name": "05_PATTERNS_EXPLAINED.html",
+      "size_bytes": 6007,
+      "sha256": "2d2228eea297a46492d36396cd494a443f74a7c520d7f552f2070d764fe3d11e"
+    },
+    {
+      "name": "06_CODEX_START.txt",
+      "size_bytes": 2225,
+      "sha256": "991a9d3750c06762c1f866556a4373f2e6ce3d0cf952836cca1904812497f516"
+    },
+    {
+      "name": "07_SOURCE_REFERENCES.txt",
+      "size_bytes": 2467,
+      "sha256": "70948e6c72413dda35bad7d174bb6fce223189bc8616dbe0ca9efd3c5ef6113f"
+    },
+    {
+      "name": "08_USER_REQUIREMENTS_V4.md",
+      "size_bytes": 13838,
+      "sha256": "b4d405a5a44c51699e0f39ca3a3e048b95f675b48ea44931ad088631c8409e4b"
+    },
+    {
+      "name": "09_DEVELOPER_ACCEPTANCE.md",
+      "size_bytes": 23700,
+      "sha256": "e91dbc811033b19db370283632f2321a8334d4ac51182b211c354b9f37b212bf"
+    },
+    {
+      "name": "10_DEVICE_CONFIG_EXAMPLE.json",
+      "size_bytes": 5593,
+      "sha256": "1c31f92d95f555983f3658a42a6d85c9b00ee6a75fbbc7f4bc910880546855d4"
+    },
+    {
+      "name": "11_GPS_BEAM_GEOMETRY.md",
+      "size_bytes": 20261,
+      "sha256": "4c43f46a231b4dbb8c026c18a5c7b0293a9bf9c8e8a4b62fcd34559909e55970"
+    },
+    {
+      "name": "12_GEOMETRY_EXAMPLE.png",
+      "size_bytes": 371696,
+      "sha256": "416e325a48b5e7380ab4c711c67098bbae2c500602f7d02978011505e5ff23b9"
+    },
+    {
+      "name": "12_GEOMETRY_EXAMPLE.svg",
+      "size_bytes": 541177,
+      "sha256": "ae6ab81e9cedd4401a446e39793ce6f8cf745dcd22e7270f05de9fbf51689957"
+    },
+    {
+      "name": "13_REVISION_AND_VERIFICATION.txt",
+      "size_bytes": 1341,
+      "sha256": "8eb132457b0465675dfc58a7f9a4ea442ada6ed14b8001a8c91f44dc28aa87e2"
+    }
+  ]
+}

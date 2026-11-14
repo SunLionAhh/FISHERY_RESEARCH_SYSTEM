@@ -1,6 +1,22 @@
 # CHANGELOG — 变更记录
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
+
+## 2026-11-14（S00 执行，CodeBuddy）
+
+### S00：项目检查、目录建立和备份（按 V4 03 第三章 + 06_CODEX_START.txt 执行，待用户验收）
+
+- **环境（任务六）**：核实本机已装 Python 3.10.11（64 位）并复用用户批准的解释器；项目 `.venv` 指向 3.10.11，本轮补装并锁定依赖 flask 3.1.3 / numpy 2.2.6 / pandas 2.3.3 / matplotlib 3.10.9 / pytest 9.2.0 / openpyxl 3.1.5 等 36 项（`04_SOURCE_CODE/requirements-lock.txt`），全部在目标解释器内实测导入。**如实登记**：PyCharm 实装 2025.2.1.1（规范写 2024.1）；OriginPro 2026b 未安装、`Origin.ApplicationSI` COM ProgID 未注册（S09 BLOCKED）；`E:\鱼探仪` 路径不存在；实测硬件 Ryzen 7 9700X / 31.2 GB / 磁盘空闲约 4.8 TB。
+- **完整性校验（任务五）**：新增 `12_DOCUMENTATION/s00_verify_integrity.py`，独立重算并复核 **V4 包 16/16**（对照 MANIFEST_SHA256.json）与 **21 个原始 CSV 21/21**（合计 8,380,445,292 字节，对照 RAW_CSV_PRECHECK_INVENTORY_CURRENT.csv）全部 PASS；证据在 `10_TEST_REPORTS/s00_verification/`。未照抄清单，逐文件重新哈希。
+- **备份（任务七）**：新增 `12_DOCUMENTATION/s00_backup_assets.py`，30 个可恢复资产备份至 `11_BACKUPS/S00_baseline_backup_20261114/`（含逐文件 SHA-256 的 BACKUP_MANIFEST.csv 与恢复说明）；8.38 GB 原始 CSV 不做物理备份（只读保护，完整性由哈希清单覆盖）。
+- **追踪矩阵与计划（S00 核心交付）**：新增 `12_DOCUMENTATION/REQUIREMENTS_TRACEABILITY_MATRIX.md`（24 章 / 36 交付 / 31 入口 / 18 报告 / 16 图 / 45 条 K / GEO-01—12 逐项登记，当前除 S00 相关 3 项外均为「未实施」）与 `12_DOCUMENTATION/DEV_PLAN_S00_S11.md`（12 阶段、57—89 人日参考、关键路径、V4 硬契约落位检查表、R1—R10 风险）。
+- **自动测试**：新增 `04_SOURCE_CODE/tests/test_s00_smoke.py`，`python -m pytest` **29 passed**（目录骨架、五设备无 2004、21 CSV、V4 权威文件、示例配置五台隔离、目标解释器、依赖导入等）。
+- **配色校验**：`check_figure_colors.py` 输出色板 26 色一致 PASS、参考图 3 张 PASS、生成物色板外 **0 种** PASS（已写入 STAGE_S00.md）。
+- **规范冲突检查**：V4 01/02/03 与 08/09/10/11 逐点对照，未发现未裁定冲突；V4 与历史基线差异以 SPEC_VERSION_MATRIX.md D1—D12 为准，本轮独立复核无新增差异。
+- **阶段报告**：生成 `10_TEST_REPORTS/stage_reports/STAGE_S00.md`（18 节，含环境实测、原始数据、备份、性能预算拟定、未知项、S01 前置）。**当前停在 S00 等待用户验收；未开始 S01**。
+- **未做**：未生成 import_batch_id / run_id / manifest.json；未建立 SQLite；未解析导入任何原始 CSV；未使用破坏性 Git 命令；阶段回滚点 tag 按用户要求待验收后创建。
+
+> 以下为开工前准备记录（WorkBuddy 辅助）。
 > **初始 Git 安全回滚点**：`183e469e5ff62b39adda2e2fde693995879b3e2e`（2026-11-14 19:27，69 个文件 / 约 3.74 MB）。`.gitignore` 排除 8.38 GB 原始 CSV，`.gitattributes` 禁用换行转换以保证 V4 包 SHA-256 字节保真；S00 须核验复用并另建阶段回滚点。
 > 2026-11-14 晚些时候修订：本轮会话进行中项目根目录出现 21 个原始 CSV，下文「原始数据不在本机」类表述已按 `RAW_CSV_ARRIVAL_NOTE.md` 更正。
 > 同日 18:50 再修订：用户指示「整理一下文件夹」后，21 个 CSV 已按设备归档至 `01_ORIGINAL_DATA/FISHFINDER/2000/`、`2001/`，下文「未归档 / 归档须用户允许」类表述已按新状态更正。

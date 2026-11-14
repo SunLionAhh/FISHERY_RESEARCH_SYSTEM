@@ -1,0 +1,20 @@
+# 原始声学数据：只读保护，8.38 GB，绝不纳入版本控制
+01_ORIGINAL_DATA/FISHFINDER/**/*.csv
+
+# 可重新生成的临时文件
+14_TEMP/
+*.tmp
+*.log
+
+# Python 环境与缓存
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 编辑器与系统
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

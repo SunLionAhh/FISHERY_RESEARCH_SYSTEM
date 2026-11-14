@@ -12,15 +12,15 @@
 | `01_ORIGINAL_DATA/` | 原始 CSV、环境原文件、GPS、厂家资料；**只读保护** | 风速 xlsx、潮汐 zip；`FISHFINDER/2000/` 13 个 + `2001/` 8 个原始 CSV（8.38 GB，**第一阶段双站完整导出**，21/21 哈希复核通过）；`FISHFINDER/README.md`；**2002/2003/2005 空（第二阶段后续上传），无 2004** |
 | `02_IMPORTED_DATA/` | 标准化数据、解析结果、字段映射、导入批次 | `ENVIRONMENT/WIND/` 风速预处理 CSV、`ENVIRONMENT/TIDE/` 潮汐截图清单 CSV（**格式预处理副本，无 import_batch_id**） |
 | `03_DATABASE/` | SQLite 数据库、迁移文件、备份 | 空 |
-| `04_SOURCE_CODE/` | Python、Flask、解析、统计、环境、空间、动态、Origin 桥接代码 | 空 |
+| `04_SOURCE_CODE/` | Python、Flask、解析、统计、环境、空间、动态、Origin 桥接代码 | `requirements-lock.txt`（36 项依赖锁）、`tests/test_s00_smoke.py`（S00 冒烟 29 用例）；**尚无 Flask/解析/统计实现** |
 | `05_CONFIG/` | 设备、站位、安装参数、底界、环境来源、分析参数、时区、图形样式 | `FIGURE_COLOR_SPEC.md`、`figure_palette.json`、`COLOR_REFERENCE/`；**V4 10 参数示例是草稿，未生效**；其余设备/站位参数为空 |
 | `06_ANALYSIS_RESULTS/` | 各数据集统计结果、CSV、报告、运行清单 | 空 |
 | `07_FIGURES/` | PNG、PDF、SVG、GIF、MP4、动态帧、组合图 | 空 |
 | `08_ORIGIN_PROJECTS/` | OPJU、Origin 模板、任务包、导出与回传记录 | 空 |
 | `09_PAPER_OUTPUT/` | 论文各章节、图表、表格、图注、证据包 | 空 |
-| `10_TEST_REPORTS/` | S00—S11 阶段报告、数据审计、测试与验收记录 | `README.md`、`ENVIRONMENT_PRECHECK.md`、`RAW_CSV_ARRIVAL_NOTE.md`、三份 CSV 清单（均为预检，非阶段报告）；`stage_reports/` 空，STAGE_S00.md 待生成 |
-| `11_BACKUPS/` | 代码、数据库、配置的可恢复备份 | 空 |
-| `12_DOCUMENTATION/` | 安装手册、用户手册、开发说明 | **`V4_REQUIREMENTS_INDEX.md`（要求全集索引）、`SPEC_VERSION_MATRIX.md`（版本矩阵）**、`S00_START_PROMPT.md`（V4 基准启动指令）、`SCOPE_CONFIRMATION_DUAL_STATION.md`、`V4_PACKAGE_ARRIVAL_NOTE.md`、`WORKBUDDY_SCOPE_AND_GAPS.md`、早期开发总规划；脚本 `preprocess_environment.py`、`precheck_raw_csv.py`、`archive_raw_csv.py`、`figure_palette.py`、`check_figure_colors.py`、`generate_demo.py`；`DEMO_PROTOTYPE.html`、`demo_assets/` |
+| `10_TEST_REPORTS/` | S00—S11 阶段报告、数据审计、测试与验收记录 | `README.md`、`ENVIRONMENT_PRECHECK.md`、`RAW_CSV_ARRIVAL_NOTE.md`、三份 CSV 清单（预检）；**`stage_reports/STAGE_S00.md`（已生成，待验收）**、**`s00_verification/`（V4 包 16/16 + 21 CSV 全量复核证据）** |
+| `11_BACKUPS/` | 代码、数据库、配置的可恢复备份 | **`S00_baseline_backup_20261114/`（30 文件 + SHA-256 清单 + 恢复说明）** |
+| `12_DOCUMENTATION/` | 安装手册、用户手册、开发说明 | **`V4_REQUIREMENTS_INDEX.md`、`SPEC_VERSION_MATRIX.md`、`REQUIREMENTS_TRACEABILITY_MATRIX.md`（S00 新建追踪矩阵）、`DEV_PLAN_S00_S11.md`（S00 新建开发计划）**、`S00_START_PROMPT.md`、`SCOPE_CONFIRMATION_DUAL_STATION.md`、`V4_PACKAGE_ARRIVAL_NOTE.md`、`WORKBUDDY_SCOPE_AND_GAPS.md`、早期开发总规划；脚本 `preprocess_environment.py`、`precheck_raw_csv.py`、`archive_raw_csv.py`、`figure_palette.py`、`check_figure_colors.py`、`generate_demo.py`、**`s00_verify_integrity.py`、`s00_backup_assets.py`（S00 新增）**；`DEMO_PROTOTYPE.html`、`demo_assets/` |
 | `13_FROZEN_VERSIONS/` | 双站、五站、预答辩、盲审冻结结果 | 空 |
 | `14_TEMP/` | 可重新生成的临时文件 | 潮汐解压副本、日志、标题拼接图、批量同步脚本（已被 `.gitignore` 排除） |
 

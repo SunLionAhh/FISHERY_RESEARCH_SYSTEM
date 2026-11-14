@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S00（准备完成，阶段任务未执行、未验收） |
-| 当前状态 | 未实施 / NOT_STARTED |
+| 当前阶段 | S00（**九项任务已实际执行，阶段报告已生成，待用户验收；验收通过前不开始 S01**） |
+| 当前状态 | S00_DONE_PENDING_ACCEPTANCE |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-14 19:17（Asia/Shanghai，V4 基准切换与四项用户裁定） |
+| 更新时间 | 2026-11-14（S00 执行完成登记） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -31,6 +31,16 @@
 - `FISHERY_FULL_PLAN_V4/09_DEVELOPER_ACCEPTANCE.md` — 45 条 K 验收、W1—W3、D0—D2、用户十步验收
 - `FISHERY_FULL_PLAN_V4/11_GPS_BEAM_GEOMETRY.md` — 几何算法与 GEO-01—12
 - `FISHERY_FULL_PLAN_V4/00_README.txt`、`05`、`07`、`10`、`12`、`13`、`MANIFEST_SHA256.json` — 包说明、规律说明、来源效力、参数示例（草稿）、示意图（条件算例）、修订记录、完整性清单
+
+**S00 阶段交付（2026-11-14 实际执行）**
+
+- `10_TEST_REPORTS/stage_reports/STAGE_S00.md` — **S00 阶段报告**（环境实测、21 CSV 全量复核、V4 包 16/16、备份、风险、S01 前置；待验收）
+- `12_DOCUMENTATION/REQUIREMENTS_TRACEABILITY_MATRIX.md` — **需求追踪矩阵**（24 章 / 36 交付 / 31 入口 / 18 报告 / 16 图 / 45 条 K / GEO-01—12 逐项登记，随每阶段更新）
+- `12_DOCUMENTATION/DEV_PLAN_S00_S11.md` — **S00—S11 开发计划**（阶段总表、关键路径、V4 硬契约落位检查表、R1—R10 风险）
+- `10_TEST_REPORTS/s00_verification/` — V4 包与原始 CSV 完整性校验证据（V4 16/16 PASS、CSV 21/21 PASS）
+- `11_BACKUPS/S00_baseline_backup_20261114/` — 可恢复资产备份（30 文件 + SHA-256 清单）
+- `04_SOURCE_CODE/requirements-lock.txt`、`04_SOURCE_CODE/tests/test_s00_smoke.py` — 依赖锁定（36 项）与 S00 冒烟测试（29 用例 PASS）
+- `12_DOCUMENTATION/s00_verify_integrity.py`、`s00_backup_assets.py` — 可复现校验/备份脚本
 
 **整理与执行入口**
 
@@ -103,13 +113,13 @@
 
 | 项 | 值 |
 | --- | --- |
-| import_batch_id | 无（尚未导入） |
+| import_batch_id | 无（尚未导入；归档 ≠ 导入） |
 | run_id | 无（尚未分析） |
 | origin_job_id | 无 |
 | dataset_id | 无（DATASET_01~04 待建立） |
-| 最新 Git 提交 | 初始安全回滚点 `183e469e5ff62b39adda2e2fde693995879b3e2e`（69 个文件；8.38 GB 原始 CSV 已排除、按字节保真入库）；S00 须另建阶段回滚点 |
-| 最新测试结果 | 无 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S00.md` **待生成**（须由 S00 实测后输出，本轮不代写） |
+| 最新 Git 提交 | 初始安全回滚点 `183e469e5ff62b39adda2e2fde693995879b3e2e`；S00 成果提交见 `CHANGELOG.md` 顶部；阶段回滚点 tag 待 S00 验收通过后创建 |
+| 最新测试结果 | pytest 29 passed（S00 冒烟）；V4 包 16/16 SHA-256 PASS；21 CSV 全量复核 PASS；配色校验色板外 0 PASS |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S00.md`（已生成，待验收） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
