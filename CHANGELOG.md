@@ -4,6 +4,7 @@
 
 ## 2026-11-15（用户裁定与登记，S00 仍待验收）
 
+- **用户提供两台设备坐标与 2001 参数（登记，未生效）**：2000 经度 121.2117505073547 / 纬度 27.99346353124773；2001 经度 121.2130272388458 / 纬度 27.99260143251764、截断斜距 5.2 m、离底高度 3.6 m。新建 `12_DOCUMENTATION/USER_PROVIDED_PARAMETERS.md` 作为 S01 网页录入的来源依据（字段用 V4 08 权威名，逐台独立，不继承）；数值自检：两站间距 **157.81 m**（南北 −95.86 m、东西 +125.36 m），坐标位于洞头附近海域，量级合理；末位 1e-13° ≈ 1.1e-8 m 属浮点残差，**不作为定位精度**，`position_accuracy_m` 保持 UNKNOWN。仍缺：坐标系（CRS）、定位精度、两台方位角、2001 倾角、2002/2003/2005 全部参数。已同步 PROJECT_MASTER_INDEX、DEV_PLAN R2、STAGE_S00.md 未知项清单。
 - **15° 波束角确认为全角（用户裁定）**：用户「这是全角，已确定」。据此登记 `beam_angle_value_deg = 15`、`beam_angle_kind = FULL`、内部半角 β = 7.5°（全角 θ 对应 β = θ/2），五台同型号共用该波束角；S01 网页按台录入并按此派生 `beam_half_angle_deg`。V4 包正文（01/02/03/08/09/10/11/13/00）**不改写**，以本裁定为准；已同步 PROJECT_MASTER_INDEX、SPEC_VERSION_MATRIX（D4 + 待处置项 3）、V4_REQUIREMENTS_INDEX（第 5.8 条加注）、DEV_PLAN（R2）、REQUIREMENTS_TRACEABILITY_MATRIX（K22/GEO-02）、STAGE_S00.md。**仍未确认**：2001/2002/2003/2005 截断值、离底高度、全部设备坐标与方位角。
 - **OriginPro 改用 2027（用户裁定）**：用户确认「OriginPro 2027 已安装，就用这个版本」。本机实测注册表：`Origin2027`，版本 10.40.131，安装路径 `C:\Program Files\OriginLab\Origin2027\`；COM ProgID `Origin.ApplicationSI`、`Origin.Application` 已注册（`OriginPro.ApplicationSI` 未注册）。Learning Edition 属性与 12 窗口上限待 S09 实测。规范 01/02 内「2026b」字样不改写，以本裁定为准；STAGE_S00.md、DEV_PLAN、追踪矩阵已同步。
 - **设备参数填写范围澄清（非文档改动，答复用户）**：现有数据仅覆盖 2000/2001，但**数据到位 ≠ 参数已知**。按 V4 08 第 5 节，2001/2002/2003/2005 四台的截断斜距、垂直离底高度、全部坐标与方位角均未提供，保持 UNKNOWN——除非用户补充 2001 参数，否则网页需填写的设备为 **4 台**（不是 3 台）。S01 表单按五台全部建立，允许逐台 UNKNOWN/BLOCKED。
