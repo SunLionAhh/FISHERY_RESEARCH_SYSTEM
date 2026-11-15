@@ -114,9 +114,10 @@ def test_device_config_example_five_devices():
         assert d["position"]["latitude_deg"] is None
 
 
-def test_no_analysis_code_yet_honest_state():
-    """S00 阶段 04_SOURCE_CODE 只有依赖锁与测试，不得有冒充已实现的分析代码。"""
+def test_source_layout_honest_state():
+    """结构守护：实现代码只允许在 app/ 下，测试只允许在 tests/ 下（S00 时仅依赖锁+冒烟测试，S01 起含 app/）。"""
     src = ROOT / "04_SOURCE_CODE"
-    py_files = [p.name for p in src.rglob("*.py")]
-    assert all(n.startswith("test_") for n in py_files), \
-        f"S00 阶段不应存在实现代码：{py_files}"
+    py_files = [p.relative_to(src).as_posix() for p in src.rglob("*.py")]
+    assert py_files, "04_SOURCE_CODE 应存在 Python 文件"
+    for rel in py_files:
+        assert rel.startswith(("app/", "tests/")) or rel == "run.py", f"实现代码位置越界：{rel}"

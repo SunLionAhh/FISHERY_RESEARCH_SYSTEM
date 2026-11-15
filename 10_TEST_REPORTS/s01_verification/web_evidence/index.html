@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设备清单 · 渔业声学监测科研工作台</title>
+<style>
+/* 配色全部取自 05_CONFIG/figure_palette.json：neutral 组 + A/B 方案强调色，不硬编码色板外颜色 */
+:root {
+  --bg: #FBFBFB; --card: #FFFFFF; --table-head: #F7F7F7;
+  --line: #EDEDED; --border: #E8E8E8; --border-dash: #D8D8D8;
+  --muted: #8A8A8A; --text-2: #4A4A4A; --text: #2B2B2B;
+  --accent: #0271AC;      /* 深蓝：主按钮/链接 */
+  --warn: #E05C4F;        /* 珊瑚红：缺失/阻断提示 */
+  --soft-pink: #FEEFF2;   /* 极淡粉：缺失卡片底 */
+  --soft-blue: #EFF5FF;   /* 极淡蓝：信息卡片底 */
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 14px/1.6 "Microsoft YaHei", "PingFang SC", sans-serif; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 24px;
+         display: flex; align-items: baseline; gap: 16px; }
+header h1 { font-size: 17px; margin: 0; }
+header .sub { color: var(--muted); font-size: 12px; }
+main { max-width: 1080px; margin: 20px auto; padding: 0 16px; }
+a { color: var(--accent); text-decoration: none; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+        padding: 16px 20px; margin-bottom: 16px; }
+.card h2 { font-size: 15px; margin: 0 0 12px; color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--table-head); color: var(--text-2); text-align: left;
+     padding: 6px 10px; border-bottom: 1px solid var(--line); font-weight: 600; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--text-2); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+.badge.ok    { background: var(--soft-blue); color: var(--accent); }
+.badge.miss  { background: var(--soft-pink); color: var(--warn); }
+.badge.unknown { background: var(--table-head); color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.device-card { border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; background: var(--card); }
+.device-card.miss-card { border: 1px dashed var(--border-dash); background: var(--soft-pink); }
+.btn { background: var(--accent); color: #FFFFFF; border: none; padding: 6px 18px;
+       border-radius: 4px; cursor: pointer; font-size: 13px; }
+label { display: block; color: var(--text-2); font-size: 12px; margin-top: 10px; }
+input, select { width: 100%; padding: 6px 8px; border: 1px solid var(--border-dash);
+                border-radius: 4px; font-size: 13px; background: var(--card); color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.muted { color: var(--muted); font-size: 12px; }
+ul.errors { color: var(--warn); }
+.flash { background: var(--soft-blue); border: 1px solid var(--border); color: var(--accent);
+         padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>渔业声学监测科研工作台</h1>
+  <span class="sub">S01 最小可用 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）</span>
+</header>
+<main>
+  
+    
+  
+  
+<div class="card">
+  <h2>五台设备状态与未知参数队列（K01）</h2>
+  <table>
+    <tr>
+      <th>设备</th><th>状态</th><th>分析截断</th><th>离底参考</th><th>倾角</th>
+      <th>波束角</th><th>方位角</th><th>坐标</th><th>缺失项</th><th></th>
+    </tr>
+    
+    <tr>
+      <td><b>2000</b></td>
+      <td>ACTIVE</td>
+      <td>5.2 m</td>
+      <td>3.68 m（VERTICAL）</td>
+      <td>45.0°</td>
+      <td>15.0° FULL</td>
+      <td><span class="badge miss">待用户后天提供</span></td>
+      <td>121.211751, 27.993464</td>
+      <td>
+        <span class="badge miss">方位角</span> <span class="badge miss">坐标系</span> <span class="badge miss">定位精度</span> <span class="badge miss">方位角(位置)</span> 
+      </td>
+      <td><a href="/devices/2000">填写 / 历史</a></td>
+    </tr>
+    
+    <tr>
+      <td><b>2001</b></td>
+      <td>ACTIVE</td>
+      <td>5.2 m</td>
+      <td>3.6 m（VERTICAL）</td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td>15.0° FULL</td>
+      <td><span class="badge miss">待用户后天提供</span></td>
+      <td>121.213027, 27.992601</td>
+      <td>
+        <span class="badge miss">倾角</span> <span class="badge miss">方位角</span> <span class="badge miss">坐标系</span> <span class="badge miss">定位精度</span> <span class="badge miss">方位角(位置)</span> 
+      </td>
+      <td><a href="/devices/2001">填写 / 历史</a></td>
+    </tr>
+    
+    <tr>
+      <td><b>2002</b></td>
+      <td>PENDING_USER_INPUT</td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge miss">待用户后天提供</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td>
+        <span class="badge miss">全部分析参数</span> <span class="badge miss">经纬度</span> 
+      </td>
+      <td><a href="/devices/2002">填写 / 历史</a></td>
+    </tr>
+    
+    <tr>
+      <td><b>2003</b></td>
+      <td>PENDING_USER_INPUT</td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge miss">待用户后天提供</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td>
+        <span class="badge miss">全部分析参数</span> <span class="badge miss">经纬度</span> 
+      </td>
+      <td><a href="/devices/2003">填写 / 历史</a></td>
+    </tr>
+    
+    <tr>
+      <td><b>2005</b></td>
+      <td>PENDING_USER_INPUT</td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td><span class="badge miss">待用户后天提供</span></td>
+      <td><span class="badge unknown">UNKNOWN</span></td>
+      <td>
+        <span class="badge miss">全部分析参数</span> <span class="badge miss">经纬度</span> 
+      </td>
+      <td><a href="/devices/2005">填写 / 历史</a></td>
+    </tr>
+    
+  </table>
+  <p class="muted">UNKNOWN 项不自动填默认值；缺失项阻断依赖它们的正式分析，不影响其他功能。数据库文件：03_DATABASE/fishery.db；已登记原始文件 21 个（SHA-256）。</p>
+</div>
+
+<div class="card">
+  <h2>研究数据集（任务六）</h2>
+  <table>
+    <tr><th>数据集</th><th>阶段</th><th>状态</th><th>起止</th><th>说明</th></tr>
+    
+    <tr><td><b>DATASET_01_DUAL_STATION</b></td><td>1</td><td>PLANNED</td>
+        <td>待确认 — 待确认</td><td>设备 2000/2001；起始待实际确认；结束待五站正式同步开始时间确定；天数不固定；同期窗口口径 2026-10-31—11-07 待 S02 复核</td></tr>
+    
+    <tr><td><b>DATASET_02_FIVE_STATION</b></td><td>2</td><td>PLANNED</td>
+        <td>待确认 — 待确认</td><td>设备 2000/2001/2002/2003/2005；起始待五站正式同步运行确认；目标 60—90 天或更长</td></tr>
+    
+  </table>
+  <p class="muted">数据集引用原始数据（file_registry 登记路径），不复制大型 CSV。</p>
+</div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设备 2001 · 参数与GPS · 渔业声学监测科研工作台</title>
+<style>
+/* 配色全部取自 05_CONFIG/figure_palette.json：neutral 组 + A/B 方案强调色，不硬编码色板外颜色 */
+:root {
+  --bg: #FBFBFB; --card: #FFFFFF; --table-head: #F7F7F7;
+  --line: #EDEDED; --border: #E8E8E8; --border-dash: #D8D8D8;
+  --muted: #8A8A8A; --text-2: #4A4A4A; --text: #2B2B2B;
+  --accent: #0271AC;      /* 深蓝：主按钮/链接 */
+  --warn: #E05C4F;        /* 珊瑚红：缺失/阻断提示 */
+  --soft-pink: #FEEFF2;   /* 极淡粉：缺失卡片底 */
+  --soft-blue: #EFF5FF;   /* 极淡蓝：信息卡片底 */
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 14px/1.6 "Microsoft YaHei", "PingFang SC", sans-serif; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 24px;
+         display: flex; align-items: baseline; gap: 16px; }
+header h1 { font-size: 17px; margin: 0; }
+header .sub { color: var(--muted); font-size: 12px; }
+main { max-width: 1080px; margin: 20px auto; padding: 0 16px; }
+a { color: var(--accent); text-decoration: none; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+        padding: 16px 20px; margin-bottom: 16px; }
+.card h2 { font-size: 15px; margin: 0 0 12px; color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--table-head); color: var(--text-2); text-align: left;
+     padding: 6px 10px; border-bottom: 1px solid var(--line); font-weight: 600; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--text-2); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+.badge.ok    { background: var(--soft-blue); color: var(--accent); }
+.badge.miss  { background: var(--soft-pink); color: var(--warn); }
+.badge.unknown { background: var(--table-head); color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.device-card { border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; background: var(--card); }
+.device-card.miss-card { border: 1px dashed var(--border-dash); background: var(--soft-pink); }
+.btn { background: var(--accent); color: #FFFFFF; border: none; padding: 6px 18px;
+       border-radius: 4px; cursor: pointer; font-size: 13px; }
+label { display: block; color: var(--text-2); font-size: 12px; margin-top: 10px; }
+input, select { width: 100%; padding: 6px 8px; border: 1px solid var(--border-dash);
+                border-radius: 4px; font-size: 13px; background: var(--card); color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.muted { color: var(--muted); font-size: 12px; }
+ul.errors { color: var(--warn); }
+.flash { background: var(--soft-blue); border: 1px solid var(--border); color: var(--accent);
+         padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>渔业声学监测科研工作台</h1>
+  <span class="sub">S01 最小可用 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）</span>
+</header>
+<main>
+  
+    
+  
+  
+<p><a href="/">← 返回设备清单</a></p>
+
+<div class="card">
+  <h2>设备 2001 当前参数（版本 v1）</h2>
+  
+  <table>
+    <tr><th>字段</th><th>值</th><th>说明</th></tr>
+    <tr><td>人工分析截断斜距</td><td><b>5.2 m</b></td><td>硬上限，永不覆盖；理论 5.2043 m（如派生）仅参考</td></tr>
+    <tr><td>离底参考输入类型</td><td>VERTICAL</td><td>VERTICAL=垂直离底高度；AXIS_SLANT=中心轴斜距</td></tr>
+    <tr><td>垂直离底高度</td><td>3.6 </td><td>派生值按倾角换算，标记 is_derived</td></tr>
+    <tr><td>中心轴斜距</td><td>— </td><td>派生值仅参考</td></tr>
+    <tr><td>倾角</td><td>UNKNOWN </td><td>相对水平面向下为正</td></tr>
+    <tr><td>波束角</td><td>15.0° FULL</td><td>内部半角 β = 7.5°</td></tr>
+    <tr><td>方位角</td><td>UNKNOWN</td><td>真北 0°、顺时针；用户后天提供</td></tr>
+  </table>
+  
+</div>
+
+<div class="card">
+  <h2>填写 / 更新参数（每次保存生成新版本，旧版本不可覆盖）</h2>
+  <form method="post" action="/devices/2001/params">
+    <input type="hidden" name="expected_version" value="1">
+    <div class="form-row">
+      <label>人工分析截断斜距（m，必填硬上限）
+        <input name="analysis_cutoff_slant_m" value="5.2"></label>
+      <label>离底参考输入类型
+        <select name="clearance_input_type">
+          
+          <option value="VERTICAL" selected>VERTICAL</option>
+          
+          <option value="AXIS_SLANT" >AXIS_SLANT</option>
+          
+          <option value="UNKNOWN" >UNKNOWN</option>
+          
+        </select></label>
+      <label>垂直离底高度（m，VERTICAL 时必填）
+        <input name="vertical_bottom_clearance_m" value="3.6"></label>
+      <label>中心轴斜距（m，AXIS_SLANT 时必填）
+        <input name="axis_slant_m" value=""></label>
+      <label>倾角（°，相对水平面向下为正）
+        <input name="downward_tilt_deg" value=""></label>
+      <label>倾角基准
+        <input name="tilt_reference" value=""></label>
+      <label>波束角数值（°）
+        <input name="beam_angle_value_deg" value="15.0"></label>
+      <label>波束角类型（必须显式选择）
+        <select name="beam_angle_kind">
+          
+          <option value="FULL" selected>FULL</option>
+          
+          <option value="HALF" >HALF</option>
+          
+          <option value="UNKNOWN" >UNKNOWN</option>
+          
+        </select></label>
+      <label>方位角（°，真北 0°顺时针；可留空=UNKNOWN）
+        <input name="heading_deg" value=""></label>
+      <label>方位角基准
+        <input name="heading_reference" value="TRUE_NORTH_CW"></label>
+      <label>测量方式
+        <input name="measurement_method" value="USER_PROVIDED"></label>
+      <label>不确定性（文字说明）
+        <input name="uncertainty" value=""></label>
+      <label>来源（必填，可追溯）
+        <input name="source" value="USER_PROVIDED_2026-11-15（USER_PROVIDED_PARAMETERS.md）"></label>
+      <label>生效起始日期（必填，如 2026-10-31）
+        <input name="effective_from" value="2026-10-31"></label>
+      <label>修改原因
+        <input name="change_reason" value=""></label>
+    </div>
+    <p><button class="btn" type="submit">保存为新版本</button>
+       <a href="/devices/2001/params/preview?clearance_input_type=VERTICAL&amp;vertical_bottom_clearance_m=3.6&amp;axis_slant_m=&amp;downward_tilt_deg=&amp;beam_angle_value_deg=15.0&amp;beam_angle_kind=FULL&amp;analysis_cutoff_slant_m=5.2&amp;source=preview&amp;effective_from=2026-10-31">保存前影响预览（JSON）</a></p>
+    <p class="muted">影响预览说明派生值与截断上限是否受影响；并发提交若预期版本过期将返回 409。</p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>GPS 位置（经纬度网页录入，历史不覆盖 — K19/GEO-01）</h2>
+  <form method="post" action="/devices/2001/position">
+    <input type="hidden" name="expected_version" value="1">
+    <div class="form-row">
+      <label>经度（必填，-180—180）
+        <input name="longitude_deg" value="121.2130272388458"></label>
+      <label>纬度（必填，-90—90）
+        <input name="latitude_deg" value="27.9926014325176"></label>
+      <label>坐标系（不填=UNKNOWN，不默认 WGS84）
+        <input name="coordinate_reference_system" value=""></label>
+      <label>定位精度（m，可留空）
+        <input name="position_accuracy_m" value=""></label>
+      <label>方位角（°，可留空；后天补录）
+        <input name="heading_deg" value=""></label>
+      <label>方位角基准
+        <input name="heading_reference" value=""></label>
+      <label>位置来源（必填）
+        <input name="position_source" value="USER_PROVIDED_2026-11-15（USER_PROVIDED_PARAMETERS.md）"></label>
+      <label>生效起始日期（必填）
+        <input name="effective_from" value="2026-10-31"></label>
+      <label>备注
+        <input name="notes" value=""></label>
+    </div>
+    <p><button class="btn" type="submit">保存为新位置版本</button></p>
+  </form>
+  <table>
+    <tr><th>版本</th><th>经度</th><th>纬度</th><th>坐标系</th><th>精度</th><th>方位角</th><th>生效</th><th>来源</th></tr>
+    
+    <tr><td>v1</td><td>121.2130272388458</td><td>27.99260143251764</td>
+        <td>UNKNOWN</td>
+        <td>UNKNOWN</td>
+        <td>UNKNOWN</td>
+        <td>2026-10-31 — 至今</td><td>USER_PROVIDED_2026-11-15（USER_PROVIDED_PARAMETERS.md）</td></tr>
+    
+  </table>
+</div>
+
+<div class="card">
+  <h2>参数历史版本（任务四：旧版本不可覆盖，新参数不改变历史结果）</h2>
+  <table>
+    <tr><th>版本</th><th>截断</th><th>离底输入</th><th>垂直</th><th>轴斜距</th><th>派生垂直</th><th>派生轴距</th><th>倾角</th><th>波束角</th><th>方位角</th><th>生效区间</th><th>来源</th></tr>
+    
+    <tr><td>v1</td><td>5.2 m</td>
+        <td>VERTICAL</td><td>3.6</td>
+        <td>—</td>
+        <td>—</td><td>—</td>
+        <td>—</td>
+        <td>15.0° FULL</td>
+        <td>UNKNOWN</td>
+        <td>2026-10-31 — 至今</td><td>USER_PROVIDED_2026-11-15（USER_PROVIDED_PARAMETERS.md）</td></tr>
+    
+  </table>
+</div>
+
+
+
+</main>
+</body>
+</html>

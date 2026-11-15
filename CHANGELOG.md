@@ -2,9 +2,26 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
-## 2026-11-15（用户裁定与登记，S00 仍待验收）
+## 2026-11-15（S01 执行，CodeBuddy）
 
-- **用户提供两台设备坐标与 2001 参数（登记，未生效）**：2000 经度 121.2117505073547 / 纬度 27.99346353124773；2001 经度 121.2130272388458 / 纬度 27.99260143251764、截断斜距 5.2 m、离底高度 3.6 m。新建 `12_DOCUMENTATION/USER_PROVIDED_PARAMETERS.md` 作为 S01 网页录入的来源依据（字段用 V4 08 权威名，逐台独立，不继承）；数值自检：两站间距 **157.81 m**（南北 −95.86 m、东西 +125.36 m），坐标位于洞头附近海域，量级合理；末位 1e-13° ≈ 1.1e-8 m 属浮点残差，**不作为定位精度**，`position_accuracy_m` 保持 UNKNOWN。仍缺：坐标系（CRS）、定位精度、两台方位角、2001 倾角、2002/2003/2005 全部参数。已同步 PROJECT_MASTER_INDEX、DEV_PLAN R2、STAGE_S00.md 未知项清单。
+### S01：数据库、五台设备和独立参数管理（用户「S00 验收通过，开始 S01」后执行，待验收）
+
+- **回滚点**：创建 tag `s00-accepted`（S00 验收回滚点）。
+- **数据库（任务一）**：新建 `03_DATABASE/fishery.db`；迁移框架 `app/db.py` + `migrations/0001_init.sql`（12 张表：devices/stations/device_parameters/device_parameter_versions/device_positions/device_installations/bottom_references/file_registry/import_batches/analysis_runs/datasets+members/audit_logs）；幂等迁移已测；`.gitignore` 排除 `*.db`。
+- **五台设备（任务二/三）**：2000/2001/2002/2003/2005（无 2004）入库；独立离底高度双向换算（VERTICAL↔AXIS_SLANT，按本台倾角），派生值标记 is_derived 不写回用户输入、不覆盖 5.2 截断；UNKNOWN 一律 NULL，不自动填 3.68。
+- **历史版本（任务四）**：每次保存生成新版本（含来源/测量方式/不确定性/修改原因/生效区间），旧版本不可变；analysis_runs 以 params_snapshot_json 引用版本 id（缓存失效按版本键控）。
+- **2000 初始配置（任务五）**：3.68 人工水底参考面（USER_DEFINED_ESTIMATED、NOT_DETECTED）+ 5.2 截断 + 45° 倾角 + 15°FULL（用户裁定）播种；2001 播种用户提供的 5.2/3.6/坐标；2002/2003/2005 保持 UNKNOWN。
+- **数据集（任务六）**：DATASET_01_DUAL_STATION（2000+2001）与 DATASET_02_FIVE_STATION（五台）建立，PLANNED，起止待确认。
+- **原始文件登记（任务八）**：file_registry 播种 21 行（SHA-256 来自 RAW_CSV_ARCHIVE_MANIFEST.csv），路径唯一+重复检查；原始文件未改动。
+- **强制增项网页**：`/` 设备清单+未知参数队列（K01）、`/devices/<id>` 参数/GPS 全字段表单+双历史表、保存前影响预览 JSON、后端校验 400（K13）、并发冲突 409；CSS 全部取自配色板。
+- **测试（任务七）**：P1—P5 独立性、修改 P1 不影响他台、倾角换算（45°/30°）、UNKNOWN 不填默认、历史保留、人工底界独立、数据集独立创建——全部 PASS；**pytest 53 passed**（含 K01—K03/K13/K19/GEO-01/GEO-03 与迁移幂等）。
+- **界面证据**：真实启动 Flask（127.0.0.1:5000），首页/2000/2001 详情页/预览接口 4 请求全 200，证据归档 `10_TEST_REPORTS/s01_verification/web_evidence/`。
+- **配色校验**：check_figure_colors.py 色板外 0 PASS。
+- **阶段报告**：`10_TEST_REPORTS/stage_reports/STAGE_S01.md`。**当前停在 S01 等待用户验收；未开始 S02**。与阶段文本的两处偏差均系用户裁定（15°=FULL；2001 参数已提供），已在报告中登记。
+
+> 以下为 2026-11-15 用户裁定登记（S00 待验收期间）。
+
+## 2026-11-15（用户裁定与登记，S00 验收前）：2000 经度 121.2117505073547 / 纬度 27.99346353124773；2001 经度 121.2130272388458 / 纬度 27.99260143251764、截断斜距 5.2 m、离底高度 3.6 m。新建 `12_DOCUMENTATION/USER_PROVIDED_PARAMETERS.md` 作为 S01 网页录入的来源依据（字段用 V4 08 权威名，逐台独立，不继承）；数值自检：两站间距 **157.81 m**（南北 −95.86 m、东西 +125.36 m），坐标位于洞头附近海域，量级合理；末位 1e-13° ≈ 1.1e-8 m 属浮点残差，**不作为定位精度**，`position_accuracy_m` 保持 UNKNOWN。仍缺：坐标系（CRS）、定位精度、两台方位角、2001 倾角、2002/2003/2005 全部参数。已同步 PROJECT_MASTER_INDEX、DEV_PLAN R2、STAGE_S00.md 未知项清单。
 - **15° 波束角确认为全角（用户裁定）**：用户「这是全角，已确定」。据此登记 `beam_angle_value_deg = 15`、`beam_angle_kind = FULL`、内部半角 β = 7.5°（全角 θ 对应 β = θ/2），五台同型号共用该波束角；S01 网页按台录入并按此派生 `beam_half_angle_deg`。V4 包正文（01/02/03/08/09/10/11/13/00）**不改写**，以本裁定为准；已同步 PROJECT_MASTER_INDEX、SPEC_VERSION_MATRIX（D4 + 待处置项 3）、V4_REQUIREMENTS_INDEX（第 5.8 条加注）、DEV_PLAN（R2）、REQUIREMENTS_TRACEABILITY_MATRIX（K22/GEO-02）、STAGE_S00.md。**仍未确认**：2001/2002/2003/2005 截断值、离底高度、全部设备坐标与方位角。
 - **OriginPro 改用 2027（用户裁定）**：用户确认「OriginPro 2027 已安装，就用这个版本」。本机实测注册表：`Origin2027`，版本 10.40.131，安装路径 `C:\Program Files\OriginLab\Origin2027\`；COM ProgID `Origin.ApplicationSI`、`Origin.Application` 已注册（`OriginPro.ApplicationSI` 未注册）。Learning Edition 属性与 12 窗口上限待 S09 实测。规范 01/02 内「2026b」字样不改写，以本裁定为准；STAGE_S00.md、DEV_PLAN、追踪矩阵已同步。
 - **设备参数填写范围澄清（非文档改动，答复用户）**：现有数据仅覆盖 2000/2001，但**数据到位 ≠ 参数已知**。按 V4 08 第 5 节，2001/2002/2003/2005 四台的截断斜距、垂直离底高度、全部坐标与方位角均未提供，保持 UNKNOWN——除非用户补充 2001 参数，否则网页需填写的设备为 **4 台**（不是 3 台）。S01 表单按五台全部建立，允许逐台 UNKNOWN/BLOCKED。

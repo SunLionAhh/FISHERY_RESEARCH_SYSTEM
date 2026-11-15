@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}渔业声学监测科研工作台{% endblock %}</title>
+<style>
+/* 配色全部取自 05_CONFIG/figure_palette.json：neutral 组 + A/B 方案强调色，不硬编码色板外颜色 */
+:root {
+  --bg: #FBFBFB; --card: #FFFFFF; --table-head: #F7F7F7;
+  --line: #EDEDED; --border: #E8E8E8; --border-dash: #D8D8D8;
+  --muted: #8A8A8A; --text-2: #4A4A4A; --text: #2B2B2B;
+  --accent: #0271AC;      /* 深蓝：主按钮/链接 */
+  --warn: #E05C4F;        /* 珊瑚红：缺失/阻断提示 */
+  --soft-pink: #FEEFF2;   /* 极淡粉：缺失卡片底 */
+  --soft-blue: #EFF5FF;   /* 极淡蓝：信息卡片底 */
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 14px/1.6 "Microsoft YaHei", "PingFang SC", sans-serif; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 24px;
+         display: flex; align-items: baseline; gap: 16px; }
+header h1 { font-size: 17px; margin: 0; }
+header .sub { color: var(--muted); font-size: 12px; }
+main { max-width: 1080px; margin: 20px auto; padding: 0 16px; }
+a { color: var(--accent); text-decoration: none; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+        padding: 16px 20px; margin-bottom: 16px; }
+.card h2 { font-size: 15px; margin: 0 0 12px; color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--table-head); color: var(--text-2); text-align: left;
+     padding: 6px 10px; border-bottom: 1px solid var(--line); font-weight: 600; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--text-2); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+.badge.ok    { background: var(--soft-blue); color: var(--accent); }
+.badge.miss  { background: var(--soft-pink); color: var(--warn); }
+.badge.unknown { background: var(--table-head); color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.device-card { border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; background: var(--card); }
+.device-card.miss-card { border: 1px dashed var(--border-dash); background: var(--soft-pink); }
+.btn { background: var(--accent); color: #FFFFFF; border: none; padding: 6px 18px;
+       border-radius: 4px; cursor: pointer; font-size: 13px; }
+label { display: block; color: var(--text-2); font-size: 12px; margin-top: 10px; }
+input, select { width: 100%; padding: 6px 8px; border: 1px solid var(--border-dash);
+                border-radius: 4px; font-size: 13px; background: var(--card); color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.muted { color: var(--muted); font-size: 12px; }
+ul.errors { color: var(--warn); }
+.flash { background: var(--soft-blue); border: 1px solid var(--border); color: var(--accent);
+         padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>渔业声学监测科研工作台</h1>
+  <span class="sub">S01 最小可用 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）</span>
+</header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

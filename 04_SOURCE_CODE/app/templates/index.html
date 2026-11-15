@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}设备清单 · 渔业声学监测科研工作台{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>五台设备状态与未知参数队列（K01）</h2>
+  <table>
+    <tr>
+      <th>设备</th><th>状态</th><th>分析截断</th><th>离底参考</th><th>倾角</th>
+      <th>波束角</th><th>方位角</th><th>坐标</th><th>缺失项</th><th></th>
+    </tr>
+    {% for d in devices %}
+    <tr>
+      <td><b>{{ d.device_id }}</b></td>
+      <td>{{ d.status }}</td>
+      <td>{% if d.param and d.param.analysis_cutoff_slant_m is not none %}{{ d.param.analysis_cutoff_slant_m }} m{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
+      <td>{% if d.param and d.param.clearance_input_type != 'UNKNOWN' %}{{ d.param.vertical_bottom_clearance_m or d.param.axis_slant_m }} m（{{ d.param.clearance_input_type }}）{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
+      <td>{% if d.param and d.param.downward_tilt_deg is not none %}{{ d.param.downward_tilt_deg }}°{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
+      <td>{% if d.param and d.param.beam_angle_kind != 'UNKNOWN' %}{{ d.param.beam_angle_value_deg }}° {{ d.param.beam_angle_kind }}{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
+      <td>{% if d.position and d.position.heading_deg is not none %}{{ d.position.heading_deg }}°{% else %}<span class="badge miss">待用户后天提供</span>{% endif %}</td>
+      <td>{% if d.position %}{{ "%.6f"|format(d.position.longitude_deg) }}, {{ "%.6f"|format(d.position.latitude_deg) }}{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
+      <td>
+        {% if d.complete %}<span class="badge ok">齐备</span>
+        {% else %}{% for m in d.missing %}<span class="badge miss">{{ m }}</span> {% endfor %}{% endif %}
+      </td>
+      <td><a href="{{ url_for('web.device_detail', device_id=d.device_id) }}">填写 / 历史</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="muted">UNKNOWN 项不自动填默认值；缺失项阻断依赖它们的正式分析，不影响其他功能。数据库文件：03_DATABASE/fishery.db；已登记原始文件 {{ n_files }} 个（SHA-256）。</p>
+</div>
+
+<div class="card">
+  <h2>研究数据集（任务六）</h2>
+  <table>
+    <tr><th>数据集</th><th>阶段</th><th>状态</th><th>起止</th><th>说明</th></tr>
+    {% for ds in datasets %}
+    <tr><td><b>{{ ds.dataset_id }}</b></td><td>{{ ds.phase }}</td><td>{{ ds.status }}</td>
+        <td>{{ ds.start_time or '待确认' }} — {{ ds.end_time or '待确认' }}</td><td>{{ ds.notes }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted">数据集引用原始数据（file_registry 登记路径），不复制大型 CSV。</p>
+</div>
+{% endblock %}

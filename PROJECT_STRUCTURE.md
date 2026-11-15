@@ -11,8 +11,8 @@
 | `00_PROJECT_SPEC/` | **历史基线（只读对照）** + `README.md` 版本声明 | 三份 FINAL 1.5 `.md`、`_source/` 原始 docx；不作开发依据，现行规范见 `FISHERY_FULL_PLAN_V4/` |
 | `01_ORIGINAL_DATA/` | 原始 CSV、环境原文件、GPS、厂家资料；**只读保护** | 风速 xlsx、潮汐 zip；`FISHFINDER/2000/` 13 个 + `2001/` 8 个原始 CSV（8.38 GB，**第一阶段双站完整导出**，21/21 哈希复核通过）；`FISHFINDER/README.md`；**2002/2003/2005 空（第二阶段后续上传），无 2004** |
 | `02_IMPORTED_DATA/` | 标准化数据、解析结果、字段映射、导入批次 | `ENVIRONMENT/WIND/` 风速预处理 CSV、`ENVIRONMENT/TIDE/` 潮汐截图清单 CSV（**格式预处理副本，无 import_batch_id**） |
-| `03_DATABASE/` | SQLite 数据库、迁移文件、备份 | 空 |
-| `04_SOURCE_CODE/` | Python、Flask、解析、统计、环境、空间、动态、Origin 桥接代码 | `requirements-lock.txt`（36 项依赖锁）、`tests/test_s00_smoke.py`（S00 冒烟 29 用例）；**尚无 Flask/解析/统计实现** |
+| `03_DATABASE/` | SQLite 数据库、迁移文件、备份 | **`fishery.db`（S01 建立：12 表 + 21 文件登记 + 两数据集；不入 Git，迁移+种子可幂等重建）** |
+| `04_SOURCE_CODE/` | Python、Flask、解析、统计、环境、空间、动态、Origin 桥接代码 | **S01 Flask 工作台**：`run.py` 启动（127.0.0.1:5000）；`app/`（迁移框架+12 表 schema、种子、设备参数服务、路由、4 模板）、`tests/`（conftest + S01 24 用例 + S00 冒烟 29 用例）、`requirements-lock.txt`；**S02 起新增解析/统计模块** |
 | `05_CONFIG/` | 设备、站位、安装参数、底界、环境来源、分析参数、时区、图形样式 | `FIGURE_COLOR_SPEC.md`、`figure_palette.json`、`COLOR_REFERENCE/`；**V4 10 参数示例是草稿，未生效**；其余设备/站位参数为空 |
 | `06_ANALYSIS_RESULTS/` | 各数据集统计结果、CSV、报告、运行清单 | 空 |
 | `07_FIGURES/` | PNG、PDF、SVG、GIF、MP4、动态帧、组合图 | 空 |

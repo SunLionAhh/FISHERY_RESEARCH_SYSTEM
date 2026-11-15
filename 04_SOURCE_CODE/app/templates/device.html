@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}设备 {{ d.device_id }} · 参数与GPS · 渔业声学监测科研工作台{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('web.index') }}">← 返回设备清单</a></p>
+
+<div class="card">
+  <h2>设备 {{ d.device_id }} 当前参数（版本 v{{ d.param.version if d.param else '—' }}）</h2>
+  {% if d.param %}
+  <table>
+    <tr><th>字段</th><th>值</th><th>说明</th></tr>
+    <tr><td>人工分析截断斜距</td><td><b>{{ d.param.analysis_cutoff_slant_m }} m</b></td><td>硬上限，永不覆盖；理论 5.2043 m（如派生）仅参考</td></tr>
+    <tr><td>离底参考输入类型</td><td>{{ d.param.clearance_input_type }}</td><td>VERTICAL=垂直离底高度；AXIS_SLANT=中心轴斜距</td></tr>
+    <tr><td>垂直离底高度</td><td>{{ d.param.vertical_bottom_clearance_m or '—' }} {% if d.param.derived_vertical_clearance_m %}<span class="badge ok">派生 {{ d.param.derived_vertical_clearance_m }} m</span>{% endif %}</td><td>派生值按倾角换算，标记 is_derived</td></tr>
+    <tr><td>中心轴斜距</td><td>{{ d.param.axis_slant_m or '—' }} {% if d.param.derived_axis_slant_m %}<span class="badge ok">派生 {{ d.param.derived_axis_slant_m }} m</span>{% endif %}</td><td>派生值仅参考</td></tr>
+    <tr><td>倾角</td><td>{{ d.param.downward_tilt_deg or 'UNKNOWN' }} {{ d.param.tilt_reference or '' }}</td><td>相对水平面向下为正</td></tr>
+    <tr><td>波束角</td><td>{{ d.param.beam_angle_value_deg }}° {{ d.param.beam_angle_kind }}</td><td>内部半角 β = {{ d.param.beam_half_angle_deg }}°</td></tr>
+    <tr><td>方位角</td><td>{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else 'UNKNOWN' }}</td><td>真北 0°、顺时针；用户后天提供</td></tr>
+  </table>
+  {% else %}
+  <p class="muted">尚无参数版本；请在下方表单首次填写（UNKNOWN 不自动填默认值）。</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>填写 / 更新参数（每次保存生成新版本，旧版本不可覆盖）</h2>
+  <form method="post" action="{{ url_for('web.save_params', device_id=d.device_id) }}">
+    <input type="hidden" name="expected_version" value="{{ d.param.version if d.param else 0 }}">
+    <div class="form-row">
+      <label>人工分析截断斜距（m，必填硬上限）
+        <input name="analysis_cutoff_slant_m" value="{{ d.param.analysis_cutoff_slant_m if d.param else '' }}"></label>
+      <label>离底参考输入类型
+        <select name="clearance_input_type">
+          {% for t in ['VERTICAL','AXIS_SLANT','UNKNOWN'] %}
+          <option value="{{ t }}" {% if d.param and d.param.clearance_input_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select></label>
+      <label>垂直离底高度（m，VERTICAL 时必填）
+        <input name="vertical_bottom_clearance_m" value="{{ d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '' }}"></label>
+      <label>中心轴斜距（m，AXIS_SLANT 时必填）
+        <input name="axis_slant_m" value="{{ d.param.axis_slant_m if d.param and d.param.clearance_input_type=='AXIS_SLANT' else '' }}"></label>
+      <label>倾角（°，相对水平面向下为正）
+        <input name="downward_tilt_deg" value="{{ d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '' }}"></label>
+      <label>倾角基准
+        <input name="tilt_reference" value="{{ d.param.tilt_reference if d.param and d.param.tilt_reference else '' }}"></label>
+      <label>波束角数值（°）
+        <input name="beam_angle_value_deg" value="{{ d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '' }}"></label>
+      <label>波束角类型（必须显式选择）
+        <select name="beam_angle_kind">
+          {% for t in ['FULL','HALF','UNKNOWN'] %}
+          <option value="{{ t }}" {% if d.param and d.param.beam_angle_kind == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select></label>
+      <label>方位角（°，真北 0°顺时针；可留空=UNKNOWN）
+        <input name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"></label>
+      <label>方位角基准
+        <input name="heading_reference" value="TRUE_NORTH_CW"></label>
+      <label>测量方式
+        <input name="measurement_method" value="USER_PROVIDED"></label>
+      <label>不确定性（文字说明）
+        <input name="uncertainty" value=""></label>
+      <label>来源（必填，可追溯）
+        <input name="source" value="{{ d.param.source if d.param else 'USER_PROVIDED' }}"></label>
+      <label>生效起始日期（必填，如 2026-10-31）
+        <input name="effective_from" value="2026-10-31"></label>
+      <label>修改原因
+        <input name="change_reason" value=""></label>
+    </div>
+    <p><button class="btn" type="submit">保存为新版本</button>
+       <a href="{{ url_for('web.params_preview', device_id=d.device_id, clearance_input_type=d.param.clearance_input_type if d.param else 'VERTICAL', vertical_bottom_clearance_m=d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '', axis_slant_m='', downward_tilt_deg=d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '', beam_angle_value_deg=d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '', beam_angle_kind=d.param.beam_angle_kind if d.param else 'FULL', analysis_cutoff_slant_m=d.param.analysis_cutoff_slant_m if d.param else 5.2, source='preview', effective_from='2026-10-31') }}">保存前影响预览（JSON）</a></p>
+    <p class="muted">影响预览说明派生值与截断上限是否受影响；并发提交若预期版本过期将返回 409。</p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>GPS 位置（经纬度网页录入，历史不覆盖 — K19/GEO-01）</h2>
+  <form method="post" action="{{ url_for('web.save_position', device_id=d.device_id) }}">
+    <input type="hidden" name="expected_version" value="{{ d.position.version if d.position else 0 }}">
+    <div class="form-row">
+      <label>经度（必填，-180—180）
+        <input name="longitude_deg" value="{{ '%.13f'|format(d.position.longitude_deg) if d.position else '' }}"></label>
+      <label>纬度（必填，-90—90）
+        <input name="latitude_deg" value="{{ '%.13f'|format(d.position.latitude_deg) if d.position else '' }}"></label>
+      <label>坐标系（不填=UNKNOWN，不默认 WGS84）
+        <input name="coordinate_reference_system" value="{{ d.position.coordinate_reference_system if d.position and d.position.coordinate_reference_system else '' }}"></label>
+      <label>定位精度（m，可留空）
+        <input name="position_accuracy_m" value="{{ d.position.position_accuracy_m if d.position and d.position.position_accuracy_m is not none else '' }}"></label>
+      <label>方位角（°，可留空；后天补录）
+        <input name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"></label>
+      <label>方位角基准
+        <input name="heading_reference" value="{{ d.position.heading_reference if d.position and d.position.heading_reference else '' }}"></label>
+      <label>位置来源（必填）
+        <input name="position_source" value="{{ d.position.position_source if d.position else 'USER_PROVIDED' }}"></label>
+      <label>生效起始日期（必填）
+        <input name="effective_from" value="2026-10-31"></label>
+      <label>备注
+        <input name="notes" value=""></label>
+    </div>
+    <p><button class="btn" type="submit">保存为新位置版本</button></p>
+  </form>
+  <table>
+    <tr><th>版本</th><th>经度</th><th>纬度</th><th>坐标系</th><th>精度</th><th>方位角</th><th>生效</th><th>来源</th></tr>
+    {% for p in position_history %}
+    <tr><td>v{{ p.version }}</td><td>{{ p.longitude_deg }}</td><td>{{ p.latitude_deg }}</td>
+        <td>{{ p.coordinate_reference_system or 'UNKNOWN' }}</td>
+        <td>{{ p.position_accuracy_m or 'UNKNOWN' }}</td>
+        <td>{{ p.heading_deg if p.heading_deg is not none else 'UNKNOWN' }}</td>
+        <td>{{ p.effective_from }} — {{ p.effective_to or '至今' }}</td><td>{{ p.position_source }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>参数历史版本（任务四：旧版本不可覆盖，新参数不改变历史结果）</h2>
+  <table>
+    <tr><th>版本</th><th>截断</th><th>离底输入</th><th>垂直</th><th>轴斜距</th><th>派生垂直</th><th>派生轴距</th><th>倾角</th><th>波束角</th><th>方位角</th><th>生效区间</th><th>来源</th></tr>
+    {% for v in param_history %}
+    <tr><td>v{{ v.version }}</td><td>{{ v.analysis_cutoff_slant_m }} m</td>
+        <td>{{ v.clearance_input_type }}</td><td>{{ v.vertical_bottom_clearance_m or '—' }}</td>
+        <td>{{ v.axis_slant_m or '—' }}</td>
+        <td>{{ v.derived_vertical_clearance_m or '—' }}</td><td>{{ v.derived_axis_slant_m or '—' }}</td>
+        <td>{{ v.downward_tilt_deg or '—' }}</td>
+        <td>{{ v.beam_angle_value_deg }}° {{ v.beam_angle_kind }}</td>
+        <td>{{ v.heading_deg if v.heading_deg is not none else 'UNKNOWN' }}</td>
+        <td>{{ v.effective_from }} — {{ v.effective_to or '至今' }}</td><td>{{ v.source }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% if bottom_refs %}
+<div class="card">
+  <h2>水底参考面（任务五）</h2>
+  <table>
+    <tr><th>类型</th><th>垂直高度</th><th>声学探底状态</th><th>生效</th><th>来源</th><th>备注</th></tr>
+    {% for b in bottom_refs %}
+    <tr><td>{{ b.reference_type }}</td><td>{{ b.vertical_height_m }} m</td><td>{{ b.acoustic_bottom_status }}</td>
+        <td>{{ b.effective_from }} — {{ b.effective_to or '至今' }}</td><td>{{ b.source }}</td><td>{{ b.notes }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

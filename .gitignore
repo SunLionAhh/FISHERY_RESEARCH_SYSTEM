@@ -6,6 +6,11 @@
 *.tmp
 *.log
 
+# SQLite 数据库：可由迁移+种子重建，不纳入版本控制
+03_DATABASE/*.db
+03_DATABASE/*.db-wal
+03_DATABASE/*.db-shm
+
 # Python 环境与缓存
 .venv/
 venv/

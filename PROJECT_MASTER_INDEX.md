@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S00（**九项任务已实际执行，阶段报告已生成，待用户验收；验收通过前不开始 S01**） |
-| 当前状态 | S00_DONE_PENDING_ACCEPTANCE |
+| 当前阶段 | S01（**数据库+五台参数/GPS 网页已实现，53 测试全过，阶段报告已生成，待用户验收**） |
+| 当前状态 | S01_DONE_PENDING_ACCEPTANCE |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-14（S00 执行完成登记） |
+| 更新时间 | 2026-11-15（S01 执行完成登记） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -41,6 +41,14 @@
 - `11_BACKUPS/S00_baseline_backup_20261114/` — 可恢复资产备份（30 文件 + SHA-256 清单）
 - `04_SOURCE_CODE/requirements-lock.txt`、`04_SOURCE_CODE/tests/test_s00_smoke.py` — 依赖锁定（36 项）与 S00 冒烟测试（29 用例 PASS）
 - `12_DOCUMENTATION/s00_verify_integrity.py`、`s00_backup_assets.py` — 可复现校验/备份脚本
+
+**S01 阶段交付（2026-11-15 实际执行）**
+
+- `10_TEST_REPORTS/stage_reports/STAGE_S01.md` — **S01 阶段报告**（12 张表迁移框架、五台参数/GPS 网页、P1—P5 独立性测试、53 测试全过；待验收）
+- `03_DATABASE/fishery.db` — SQLite 正式库（12 表已迁移、21 文件登记、两数据集；不入 Git，可重建）
+- `04_SOURCE_CODE/` — Flask 工作台（`run.py` 启动，仅 127.0.0.1）：`/` 设备清单+未知队列、`/devices/<id>` 参数与 GPS 表单+历史、保存前影响预览、409 并发冲突
+- `10_TEST_REPORTS/s01_verification/web_evidence/` — 真实服务界面证据（4 请求 200 + 预览 JSON）
+- 网页录入生效说明：用户已确认参数（15°FULL、两台坐标、2001 截断/离底）已作为种子数据入库（来源=USER_PROVIDED_PARAMETERS.md）；方位角后天补录将生成新版本
 
 **整理与执行入口**
 
@@ -117,9 +125,9 @@
 | run_id | 无（尚未分析） |
 | origin_job_id | 无 |
 | dataset_id | 无（DATASET_01~04 待建立） |
-| 最新 Git 提交 | 初始安全回滚点 `183e469e5ff62b39adda2e2fde693995879b3e2e`；S00 成果提交见 `CHANGELOG.md` 顶部；阶段回滚点 tag 待 S00 验收通过后创建 |
-| 最新测试结果 | pytest 29 passed（S00 冒烟）；V4 包 16/16 SHA-256 PASS；21 CSV 全量复核 PASS；配色校验色板外 0 PASS |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S00.md`（已生成，待验收） |
+| 最新 Git 提交 | tag：`s00-accepted`（S00 验收回滚点，2026-11-15）；后续提交见 `CHANGELOG.md` |
+| 最新测试结果 | pytest **53 passed**（S01 24 项 + S00 冒烟 29 项）；配色校验色板外 0 PASS |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S01.md`（已生成，待验收） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
