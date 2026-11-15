@@ -103,7 +103,7 @@ V4 01/02/03 的 V4 修订头部与 08 用户要求逐条对照，**未发现未�
 | `.venv` 独立虚拟环境 | 必须建立 | 存在，`pyvenv.cfg` version=3.10.11、include-system-site-packages=false | 符合 |
 | 依赖 | Flask/NumPy/Pandas/Matplotlib/Pytest | 本轮在 `.venv` 内安装并**实测导入**：flask 3.1.3、numpy 2.2.6、pandas 2.3.3、matplotlib 3.10.9、pytest 9.2.0、openpyxl 3.1.5；锁定文件 `04_SOURCE_CODE/requirements-lock.txt`（36 项） | 符合 |
 | PyCharm | 2024.1 | 实装 **PyCharm 2025.2.1.1** | **版本不符，如实登记**；不擅改规范 |
-| OriginPro 2026b | Build/路径/Learning/COM | 注册表卸载项与 JetBrains 目录均无 Origin；`Origin.ApplicationSI` ProgID **未注册** | **未安装 / BLOCKED（S09）** |
+| OriginPro | 规范写 2026b Learning Edition | **用户 2026-11-15 裁定改用已装的 Origin2027**（实测：注册表 `Origin2027` 版本 10.40.131，安装路径 `C:\Program Files\OriginLab\Origin2027\`；COM ProgID `Origin.ApplicationSI`、`Origin.Application` 已注册，`OriginPro.ApplicationSI` 未注册）。Learning Edition 属性与 12 窗口上限待 S09 本机实测 | 已安装（版本与规范不同，属用户裁定，S09 实测 COM 桥接） |
 | Git | 安全回滚点 | 仓库已初始化，`master` 分支干净；初始回滚点已核验 | 符合 |
 | 硬件 | S00 须登记 | CPU AMD Ryzen 7 9700X（8 核）；内存 31.2 GB；磁盘空闲 C: 771.5 GB / E: 443.0 GB / F: 3,595.9 GB | 已登记（供 W1—W3 基准） |
 
@@ -135,7 +135,7 @@ V4 01/02/03 的 V4 修订头部与 08 用户要求逐条对照，**未发现未�
 ## 11. 工时与风险估计
 
 - 工期：按 V4 04 参考 **57—89 工程人日**；V4 增项约 +7—12 人日；2026-11-14 → 2027-01-20 约 67 日历日，单人完成全部系统与长期验证存在时间压力，风险已在 DEV_PLAN 登记。
-- 主要风险 R1—R10（见 DEV_PLAN 第 5 节）：OriginPro 未装（S09 硬阻断）、15° 全/半角与四台参数未知（几何正式结论 BLOCKED）、潮汐无数值表、风速非实测、双编码格式、采样语义未核实、单站延伸段、PyCharm 版本差异、五站同步时间未定、性能预算待冻结。
+- 主要风险 R1—R10（见 DEV_PLAN 第 5 节）：OriginPro 2027 已装但 COM 桥接与 Learning 属性待 S09 实测、15° 全/半角与四台（2001/2002/2003/2005）参数未知（几何正式结论 BLOCKED）、潮汐无数值表、风速非实测、双编码格式、采样语义未核实、单站延伸段、PyCharm 版本差异、五站同步时间未定、性能预算待冻结。
 
 ## 12. 修改文件与实际运行记录
 
@@ -197,7 +197,7 @@ git log --oneline -5；git status --porcelain            # 回滚点核验，工
 | --- | --- |
 | S02 全量数据审计（8 项产物） | 未开始（S02 任务，非 S00 范围） |
 | SQLite 数据库与迁移框架 | 未开始（S01） |
-| OriginPro 安装与 COM 实测 | BLOCKED（未安装，用户需安装/授权后实测） |
+| OriginPro 2027 COM 桥接实测（含 Learning 属性与 12 窗口上限） | 待 S09 实测（2026-11-15 已安装 Origin2027 10.40.131，ProgID 已注册） |
 | W1—W3 真实样本基准 | 待验证（S02 起用真实文件测量后冻结预算） |
 | 阶段回滚点 tag | 待 S00 验收通过后创建（用户明确要求） |
 | PyCharm 2024.1 | 差异已登记，不阻塞开发 |

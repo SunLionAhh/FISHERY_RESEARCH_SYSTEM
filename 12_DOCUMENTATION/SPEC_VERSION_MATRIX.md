@@ -55,7 +55,7 @@
 
 ## 4. 仍需处置 / 不得擅自决定的事项
 
-1. **OriginPro 2026b 未安装**（本机实测）；Learning Edition 授权、COM 桥接与 12 窗口限制须在 S09 本机实测，未装时相关验收项标 BLOCKED。
+1. **OriginPro 版本变更（用户 2026-11-15 裁定）**：规范原写 2026b Learning Edition；用户裁定「OriginPro 2027 已安装，就用这个版本」。本机实测：注册表 `Origin2027` 版本 10.40.131，路径 `C:\Program Files\OriginLab\Origin2027\`，COM ProgID `Origin.ApplicationSI`/`Origin.Application` 已注册。Learning 属性与 12 窗口上限在 S09 本机实测；此为用户对规范版本号的正式变更裁定，登记于 CHANGELOG。
 2. **PyCharm 版本差异**：规范写 2024.1，实装 2025.2.1.1；S00 如实登记，不擅自改规范。
 3. **15° 是全角还是半角**、其余四台截断值 / 离底高度 / 全部设备坐标 / 方位角：**未提供，保持 UNKNOWN，禁止填造或复制 2000 的值**。
 4. **五站正式同步开始时间、第一阶段正式截止时间**：V4 03 第 11 条定义为「五台正式同步观测开始之前」，具体日期未定；不得擅定。
