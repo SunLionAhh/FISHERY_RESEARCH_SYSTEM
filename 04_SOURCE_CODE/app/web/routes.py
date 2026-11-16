@@ -6,7 +6,9 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 
 from ..db import connect
 from ..services import devices as svc
+from ..services import weather as weather_svc
 from ..services.devices import ConflictError, ValidationError
+from ..services.weather import ValidationError as WeatherValidationError
 
 bp = Blueprint("web", __name__)
 
@@ -61,6 +63,7 @@ def device_detail(device_id: str):
         br = conn.execute(
             "SELECT * FROM bottom_references WHERE device_id=? ORDER BY reference_id DESC", (device_id,)
         ).fetchall()
+        weather_hist = weather_svc.weather_history(conn, device_id)
     finally:
         conn.close()
     return render_template(
@@ -68,6 +71,8 @@ def device_detail(device_id: str):
         param_history=phist,
         position_history=poshist,
         bottom_refs=br,
+        weather_history=weather_hist,
+        weather_codes=weather_svc.WEATHER_CODES,
     )
 
 
@@ -152,3 +157,23 @@ def params_preview(device_id: str):
         "cutoff_untouched_by_derivation": True,
         "beam_half_angle_deg": data["beam_half_angle_deg"],
     }
+
+
+@bp.route("/devices/<device_id>/weather", methods=["POST"])
+def save_weather(device_id: str):
+    """保存某设备某天观测天气（每日一条，重复录入视为更正）。"""
+    if device_id not in ("2000", "2001", "2002", "2003", "2005"):
+        abort(404)
+    conn = get_conn()
+    try:
+        date, corrected = weather_svc.save_weather(conn, device_id, request.form)
+        conn.commit()
+        label = weather_svc.WEATHER_CODES[request.form.get("weather_code", "").strip().upper()]
+        verb = "已更正" if corrected else "已保存"
+        flash(f"{date} 天气{verb}：{label}（旧值仅留审计日志，天气不进参数版本链）", "ok")
+        return redirect(url_for("web.device_detail", device_id=device_id))
+    except WeatherValidationError as e:
+        conn.rollback()
+        return render_template("error.html", title="天气校验失败（后端拒绝）", errors=e.errors), 400
+    finally:
+        conn.close()
