@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S01（**数据库+五台参数/GPS 网页已实现，53 测试全过，阶段报告已生成，待用户验收**） |
-| 当前状态 | S01_DONE_PENDING_ACCEPTANCE |
+| 当前阶段 | S01（**验收退回整改已完成：3 项 D1 修复 + 5 项 P2 处置，93 测试全过，待复验**，见 `10_TEST_REPORTS/stage_reports/STAGE_S01.md` §16） |
+| 当前状态 | **S01_FIXED_PENDING_RECHECK**（S00 依赖锁已随本轮修复；验收报告见 `ACCEPTANCE_S00_S01.md`） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-15（S01 执行完成登记） |
+| 更新时间 | 2026-11-16（S01 验收整改完成） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -49,6 +49,7 @@
 - `04_SOURCE_CODE/` — Flask 工作台（`run.py` 启动，仅 127.0.0.1）：`/` 设备清单+未知队列、`/devices/<id>` 参数与 GPS 表单+历史、保存前影响预览、409 并发冲突
 - `10_TEST_REPORTS/s01_verification/web_evidence/` — 真实服务界面证据（4 请求 200 + 预览 JSON）
 - 网页录入生效说明：用户已确认参数（15°FULL、两台坐标、2001 截断/离底）已作为种子数据入库（来源=USER_PROVIDED_PARAMETERS.md）；方位角后天补录将生成新版本
+- `10_TEST_REPORTS/stage_reports/ACCEPTANCE_S00_S01.md` — **S00/S01 独立验收报告**（2026-11-16）：S00 有条件通过、S01 退回整改；含独立复算值、缺陷复现步骤与复验口径
 
 **整理与执行入口**
 
@@ -125,9 +126,9 @@
 | run_id | 无（尚未分析） |
 | origin_job_id | 无 |
 | dataset_id | 无（DATASET_01~04 待建立） |
-| 最新 Git 提交 | tag：`s00-accepted`（S00 验收回滚点，2026-11-15）；后续提交见 `CHANGELOG.md` |
-| 最新测试结果 | pytest **53 passed**（S01 24 项 + S00 冒烟 29 项）；配色校验色板外 0 PASS |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S01.md`（已生成，待验收） |
+| 最新 Git 提交 | 整改代码 `5aae0e5`（S01_FIXED）；首版 `8deaad7`；tag `s00-accepted` |
+| 最新测试结果 | pytest **93 passed**（S00 冒烟 29 + S01 首版 24 + 整改新增 40）；配色校验色板外 0 PASS |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S01.md`（含 §16 验收整改记录，待复验） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -148,6 +149,16 @@
 
 ## 下一步
 
-四项裁定已定，直接把 `12_DOCUMENTATION/S00_START_PROMPT.md` 代码块整段发给 CodeBuddy 即可开工：S00 安装 Python 3.10 并建 `.venv`、核验已有 Git 初始回滚点、在目标解释器内复测环境、核对 21 个原始 CSV 现行路径、建立需求追踪矩阵（24 章 / 36 交付 / 31 入口 / 18 报告 / 16 图 / 45 验收）与 S00—S11 计划、列出 V4 与历史基线差异，生成 `STAGE_S00.md` 后**停止等待用户验收**。S01 前置条件满足前不得开始。
+**2026-11-16 整改已完成（提交 `5aae0e5`），等待复验；复验通过前不得开始 S02。** 详见 `STAGE_S01.md` §16 与 `10_TEST_REPORTS/s01_verification/fix_evidence/`：
+
+1. **K13（D1，已修）**：`_parse_number()` 统一安全解析，NaN/inf/-inf/1e999/abc/0/-1 全部 400 并定位字段、零入库；截断上界优先 `devices.range_m`，UNKNOWN 时按 100 m 临时校验（520、1e9 拒绝，阈值待用户确认量程后收紧）；`expected_version=abc/空串` → 400（参数与位置两处）。证据：`test_s01_fix.py` 40 项、`fix_evidence/curl_cases.txt`（5 类非法全 400、行数不变、合法 5.2→302）。
+2. **依赖锁（D1，已修）**：`requirements-lock.txt` 重建为 39 行、无 BOM、LF；`pip install --no-deps --dry-run -r` 全解析通过（`fix_evidence/pip_dryrun.txt`）；另增运行期 `requirements.txt`。
+3. **迁移原子性（D1，已修）**：autocommit + `BEGIN IMMEDIATE`/`COMMIT`/`ROLLBACK` + `complete_statement` 切分；坏迁移注入后表与数据全回滚、`schema_migrations` 无记录（`test_bad_migration_rolls_back_atomically`）。
+4. **五项 P2 已处置**：新增 `devices.station_id`（迁移 0002，页面「站位：未分配」）；预览链接不再预填 5.2、空截断只回派生值；`created_by/actor` 写真实登录名（弱标识，S10 多用户替换）；矩阵 K13→PASS（带用例 ID）、K01→部分实现（S02 复验）、K43 登记；本报告 §3 更正迁移事务不实声明、§14 补齐阈值/站位/操作者/K01 登记。
+5. **回归未被削弱**：pytest **93 passed**（首版 53 项断言未改）；`verify_s01_fix.py` 对正式库只读复验全 PASS（五台无 2004、2000 的 5.2/3.68/45/15FULL/β7.5/派生 5.2043059≠5.2、2002/2003/2005 零行无 3.68）；21 CSV 与 V4 包零改动（`git status` 无相关变更）。
+
+**复验口径（验收报告第 6 节 5 条）**：① NaN/inf/abc/520→400；② expected_version=abc→400；③ pip 解析；④ 坏迁移回滚；⑤ pytest 全绿 ≥58（现 93）。通过后建 S01 阶段回滚点 tag，再开 S02（S02 的距离映射与统一硬掩码必须建立在"截断有限且已校验"之上）。
+
+整改指令已备好：`12_DOCUMENTATION/S01_FIX_PROMPT.md`——整段复制其中代码块发给 CodeBuddy 即可，含三项必改的实现要求、五项 P2 处置口径与 7 条完成标准。
 
 五站功能继续开发，2002/2003/2005 数据后续持续上传；涉及五站真实数据的验收项在数据到位前标 `BLOCKED / 待数据`，不得用双站数据冒充五站结论。

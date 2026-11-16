@@ -2,6 +2,21 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-16（S01 验收整改，CodeBuddy；状态 S01_FIXED_PENDING_RECHECK）
+
+独立验收（`10_TEST_REPORTS/stage_reports/ACCEPTANCE_S00_S01.md`）判定 S01 不通过：3 项 D1 + 5 项 P2。本轮只整改，未开始 S02。
+
+- **D1-1 K13 校验（已修）**：`app/services/devices.py` 废弃 `_num()`，新增 `_parse_number()`：非数字→字段级 400（不再 500）；`math.isfinite()` 拒绝 NaN/inf/-inf/1e999；非法值与空值用 `_INVALID` 哨兵区分，杜绝静默入库。截断新增有限上界：优先 `devices.range_m`，为空时 `CUTOFF_FALLBACK_MAX_M=100 m`（文案明确"量程 UNKNOWN，按上限 100 m 临时校验"；阈值来源与"待用户确认量程后收紧"已登记）。同规则覆盖垂直离底/轴斜距/倾角/波束角/方位角/经纬度/定位精度。`routes.py` 新增 `parse_expected_version()`：abc/空串/负数/非整数→400；预览接口 `require_cutoff=False`，非法字段仍 400+JSON。
+- **D1-2 依赖锁（已修）**：`requirements-lock.txt` 重建为 `pip freeze --all` 39 行、无 BOM、LF；`pip install --no-deps --dry-run -r` 全解析通过；新增运行期 `requirements.txt`（flask/python-dotenv/requests）。
+- **D1-3 迁移原子性（已修）**：`app/db.py` 改为 `isolation_level=None` + 显式 `BEGIN IMMEDIATE/COMMIT/ROLLBACK`，语句用 `sqlite3.complete_statement` 逐字符切分；坏迁移注入后表/数据/schema_migrations 全部回滚。顶部注释同步更正，不再声称未具备的能力。
+- **P2-1 站位**：迁移 `0002_devices_station_id.sql` 为 `devices` 增加可空 `station_id`；页面显示"站位：未分配"；`stations` 保持为空，未伪造。
+- **P2-2 预览预填**：无参数设备预览链接不再写死 5.2；空截断返回 null + "截断未填写（预览不借用其他设备数值）"。
+- **P2-3 操作者**：新增 `app/identity.py`（登录名，弱标识），`created_by`/`actor` 不再恒为 web；seed 仍记 seed；S10 多用户须替换为账号主体。
+- **P2-4/P2-5 文档**：矩阵 K13→PASS（写用例 ID）、K01→"S01 部分实现，S02 复验"、K43 登记迁移/依赖整改、第 20 章标注部分实现；`STAGE_S01.md` 新增 §16 验收整改记录（09 第二节字段齐全）、§3 更正迁移事务不实声明、§14 补齐阈值/站位/操作者/K01；总索引状态改 `S01_FIXED_PENDING_RECHECK`。
+- **测试**：新增 `04_SOURCE_CODE/tests/test_s01_fix.py` 40 用例（含 6 态截断非法值、expected_version、位置字段、预览、锁文件格式、坏迁移回滚、station_id、操作者、回归）；既有 53 项断言**一字未改**；`pytest` **93 passed**。
+- **证据**：`10_TEST_REPORTS/s01_verification/fix_evidence/`（pytest.txt、verify_db.txt、pip_dryrun.txt、curl_cases.txt、bad_migration_and_lock.txt）；`12_DOCUMENTATION/verify_s01_fix.py` 对正式库只读复验全 PASS（2000 仍 5.2/3.68/45/15FULL/β7.5/派生 5.2043059≠5.2；2002/2003/2005 零行）。
+- **未动**：21 个原始 CSV、V4 包（`git status` 无相关变更）；未开始 S02；未使用破坏性 Git 命令，整改为新增提交 `5aae0e5`（不 amend）。
+
 ## 2026-11-15（S01 执行，CodeBuddy）
 
 ### S01：数据库、五台设备和独立参数管理（用户「S00 验收通过，开始 S01」后执行，待验收）
