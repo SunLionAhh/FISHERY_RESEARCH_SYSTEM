@@ -1,0 +1,11 @@
+issue_id,device_id,severity,category,title,detail,evidence
+ISS-001,2000,P1,字段质量,水深为 0 的样本,150750 行；不得当作有效水深参与统计,timestamp_audit.csv
+ISS-002,2000,P1,信号数组,信号数组存在空项（冒号结尾）,192235 个空 token，其中尾部空项 192235 个；有效槽位 {1000: 192235}，原始 token 数 {1001: 192235},signal_array_audit.csv
+ISS-003,2000,P1,时间,同秒多记录,78639 个秒组、191087 行；不得仅按时间戳去重,timestamp_audit.csv
+ISS-004,2000,P0,距离映射,正式距离分析 BLOCKED,原因：采样语义未核实（1000 点是采样中心还是距离区间未确认）；映射支撑状态为 UNVERIFIED（未经用户确认）；首点距离未核实（禁止按 37.5 m/1000 点推定下标）,signal_array_audit.csv / DATA_AUDIT_REPORT.md
+ISS-005,2001,P1,字段质量,水深为 0 的样本,17250 行；不得当作有效水深参与统计,timestamp_audit.csv
+ISS-006,2001,P1,信号数组,信号数组存在空项（冒号结尾）,189834 个空 token，其中尾部空项 189834 个；有效槽位 {1000: 189834}，原始 token 数 {1001: 189834},signal_array_audit.csv
+ISS-007,2001,P1,时间,时间戳仅到分钟（秒精度缺失）,189834/189834 行；不得与秒级时间轴直接对齐，同分钟多记录不能按时间戳区分,timestamp_audit.csv
+ISS-008,2001,P1,时间,同秒多记录,1427 个秒组、189834 行；不得仅按时间戳去重,timestamp_audit.csv
+ISS-009,2001,P0,距离映射,正式距离分析 BLOCKED,原因：采样语义未核实（1000 点是采样中心还是距离区间未确认）；映射支撑状态为 UNVERIFIED（未经用户确认）；首点距离未核实（禁止按 37.5 m/1000 点推定下标）,signal_array_audit.csv / DATA_AUDIT_REPORT.md
+ISS-010,ALL,P1,编码,两台设备文件编码不同,"{'utf-8-sig', 'gb18030'}；必须逐文件探测，不得假定统一编码",field_dictionary.csv

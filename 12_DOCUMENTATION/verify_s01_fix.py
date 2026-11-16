@@ -30,7 +30,7 @@ conn.row_factory = sqlite3.Row
 versions = [r["version"] for r in conn.execute("SELECT version FROM schema_migrations ORDER BY version")]
 print(f"DB = {DB}")
 print(f"schema_migrations = {versions}")
-check("迁移含 0001/0002", versions, ["0001", "0002"])
+check("迁移含 0001/0002（后续阶段可追加）", versions[:2], ["0001", "0002"])
 
 device_ids = [r["device_id"] for r in conn.execute("SELECT device_id FROM devices ORDER BY device_id")]
 check("五台设备且无 2004", device_ids, ["2000", "2001", "2002", "2003", "2005"])

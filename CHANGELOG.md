@@ -2,6 +2,21 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-16（S02 执行，CodeBuddy；状态 S02_DONE_PENDING_ACCEPTANCE）
+
+S01 复验通过 → 建 tag `s01-accepted` → 执行 S02（真实 CSV 解析与数据质量审计），停在 S02 等验收，未开始 S03。
+
+- **文件检查**：2000 = 398,320,647 B、UTF-8-SIG + LF、192,235 数据行；2001 = 396,831,479 B、**GB18030 + CRLF**、189,834 数据行；两份 SHA-256 与 `RAW_CSV_ARCHIVE_MANIFEST.csv` **PASS**。2001 此前读取失败即因按 UTF-8 解码；现逐文件探测（BOM → 严格 UTF-8 → GB18030 回退）。
+- **流式解析**（`app/services/csv_parser.py`）：逐行 `csv.reader`，不加载全文；保留行号/序号/时间戳原文/数组原文；支持 `2026-10-31 00:00:00` 与 `2026/10/31 0:00` 等格式；全量审计 94.2 s。
+- **新发现（写入 issues/报告）**：① 每行数组 **1001 token = 1000 有效槽位 + 1 个尾部空项**（冒号结尾），不能把空项当第 1001 个采样；② 2001 时间戳**只到分钟**（单分钟最多 150 行），不能与秒级轴对齐；③ 2000 水深 0 值 150,750 行（78.4%），2001 17,250 行（9.1%）；④ 2000 同秒 78,639 组、2001 同分钟 1,427 组，均未去重。
+- **距离映射**（迁移 `0003_distance_mappings.sql` + `app/services/distance_mapping.py`）：按 `(device_id, version)` 版本化；两台登记 v1（range 37.5、1000 槽位、`sample_mode=UNKNOWN`、`support_status=UNVERIFIED`、首点距离 NULL），证据写明缺项。**正式距离分析 BLOCKED**（`DistanceMappingBlocked`），诊断模式 `status=BLOCKED`、`kept=()`，不冒充 0 样本。
+- **统一硬掩码**：唯一入口 `build_mask`；点样本 `r<=cutoff` 保留、**无浮点容差**（5.201 排除、5.2+1e-12 排除）；区间整段在界内才保留、跨界整段排除；排除原因 5 类（人工越界/跨界区间/距离未知/无效值/映射未核实），预留近场与底部干扰给 S07；越界幅度 0→65535/1e9 区内保留值与求和不变。
+- **8 份审计工件**（`10_TEST_REPORTS/data_audit/`）：field_dictionary、signal_array_audit、timestamp_audit、coverage_audit、device_comparability、bottom_reference_audit、issues（10 项含 2 项 P0 BLOCKED）、DATA_AUDIT_REPORT.md；独立入口 `scripts/s02_data_audit.py`。
+- **2000 底界审计**：3.68 m（USER_DEFINED_ESTIMATED/NOT_DETECTED）、45°、15°FULL 条件算例 β=7.5、人工截断 5.2 m、派生 5.2043059095 仅参考不覆盖 5.2；2001 倾角 UNKNOWN → 几何 BLOCKED。
+- **测试**：新增 `test_s02_mask.py`（16）与 `test_s02_parser.py`（9），全库 **115 passed**；S01 既有断言未改。`test_s00_smoke` 允许 `scripts/`；`verify_s01_fix.py` 迁移断言改为「前两个必须为 0001/0002」以容纳后续迁移。
+- **证据**：`10_TEST_REPORTS/s02_verification/`（`boundary_cases.csv` 手算对照、`mask_run.txt`、`audit_run.log`）。
+- **未动**：两份原始 CSV（哈希 PASS）、V4 包；未开始 S03；无破坏性 Git 操作。
+
 ## 2026-11-16（S01 验收整改，CodeBuddy；状态 S01_FIXED_PENDING_RECHECK）
 
 独立验收（`10_TEST_REPORTS/stage_reports/ACCEPTANCE_S00_S01.md`）判定 S01 不通过：3 项 D1 + 5 项 P2。本轮只整改，未开始 S02。

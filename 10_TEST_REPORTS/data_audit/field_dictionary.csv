@@ -1,0 +1,13 @@
+device_id,raw_header,canonical_field,dtype,unit,meaning_status,field_count,note
+2000,序号,seq,int,无,KNOWN,6,K01/唯一性审计用；同秒多记录不去重
+2000,日期,timestamp,datetime,本地时间（未带时区）,KNOWN,6,时间覆盖与断档审计；时区未核实
+2000,水深(m),depth_m,float,m,KNOWN,6,厂家字段；定义/支持范围未核实，不得直接当作截断后水深
+2000,水温(°C),water_temp_c,float,°C,KNOWN,6,环境参考；样本值待统计
+2000,量程(m),range_m,float,m,KNOWN,6,逐记录量程；与映射量程必须一致
+2000,数据(信号强度),signal_raw,int 数组（冒号分隔）,厂家相对强度（未标定）,KNOWN,6,1000 点是中心还是区间未核实；不得按 37.5/1000 推断下标
+2001,序号,seq,int,无,KNOWN,6,K01/唯一性审计用；同秒多记录不去重
+2001,日期,timestamp,datetime,本地时间（未带时区）,KNOWN,6,时间覆盖与断档审计；时区未核实
+2001,水深(m),depth_m,float,m,KNOWN,6,厂家字段；定义/支持范围未核实，不得直接当作截断后水深
+2001,水温(°C),water_temp_c,float,°C,KNOWN,6,环境参考；样本值待统计
+2001,量程(m),range_m,float,m,KNOWN,6,逐记录量程；与映射量程必须一致
+2001,数据(信号强度),signal_raw,int 数组（冒号分隔）,厂家相对强度（未标定）,KNOWN,6,1000 点是中心还是区间未核实；不得按 37.5/1000 推断下标

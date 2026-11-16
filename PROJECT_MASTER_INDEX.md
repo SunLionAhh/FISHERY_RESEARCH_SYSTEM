@@ -12,8 +12,8 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S01（**验收退回整改已完成：3 项 D1 修复 + 5 项 P2 处置，93 测试全过，待复验**，见 `10_TEST_REPORTS/stage_reports/STAGE_S01.md` §16） |
-| 当前状态 | **S01_FIXED_PENDING_RECHECK**（S00 依赖锁已随本轮修复；验收报告见 `ACCEPTANCE_S00_S01.md`） |
+| 当前阶段 | S02（**真实 CSV 解析与数据审计完成：8 份工件、距离映射 v1、统一硬掩码、115 测试全过；两台设备正式距离分析 BLOCKED（映射未核实）**，见 `STAGE_S02.md`） |
+| 当前状态 | **S02_DONE_PENDING_ACCEPTANCE**（S01 已通过并建回滚点 tag `s01-accepted`） |
 | 预答辩目标 | 2027-01-20 |
 | 更新时间 | 2026-11-16（S01 验收整改完成） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
@@ -126,9 +126,9 @@
 | run_id | 无（尚未分析） |
 | origin_job_id | 无 |
 | dataset_id | 无（DATASET_01~04 待建立） |
-| 最新 Git 提交 | 整改代码 `5aae0e5`（S01_FIXED）；首版 `8deaad7`；tag `s00-accepted` |
-| 最新测试结果 | pytest **93 passed**（S00 冒烟 29 + S01 首版 24 + 整改新增 40）；配色校验色板外 0 PASS |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S01.md`（含 §16 验收整改记录，待复验） |
+| 最新 Git 提交 | S02 提交见 `CHANGELOG.md` 顶部；S01 整改 `5aae0e5`；tag `s00-accepted`、`s01-accepted` |
+| 最新测试结果 | pytest **115 passed**（S02 新增 25）；配色校验色板外 0 PASS |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S02.md`（待验收）｜`10_TEST_REPORTS/data_audit/`（8 份工件） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -149,16 +149,16 @@
 
 ## 下一步
 
-**2026-11-16 整改已完成（提交 `5aae0e5`），等待复验；复验通过前不得开始 S02。** 详见 `STAGE_S01.md` §16 与 `10_TEST_REPORTS/s01_verification/fix_evidence/`：
+**2026-11-16 S02 已完成，等待验收；验收通过前不得开始 S03 的正式统计。** 详见 `STAGE_S02.md`：
 
-1. **K13（D1，已修）**：`_parse_number()` 统一安全解析，NaN/inf/-inf/1e999/abc/0/-1 全部 400 并定位字段、零入库；截断上界优先 `devices.range_m`，UNKNOWN 时按 100 m 临时校验（520、1e9 拒绝，阈值待用户确认量程后收紧）；`expected_version=abc/空串` → 400（参数与位置两处）。证据：`test_s01_fix.py` 40 项、`fix_evidence/curl_cases.txt`（5 类非法全 400、行数不变、合法 5.2→302）。
-2. **依赖锁（D1，已修）**：`requirements-lock.txt` 重建为 39 行、无 BOM、LF；`pip install --no-deps --dry-run -r` 全解析通过（`fix_evidence/pip_dryrun.txt`）；另增运行期 `requirements.txt`。
-3. **迁移原子性（D1，已修）**：autocommit + `BEGIN IMMEDIATE`/`COMMIT`/`ROLLBACK` + `complete_statement` 切分；坏迁移注入后表与数据全回滚、`schema_migrations` 无记录（`test_bad_migration_rolls_back_atomically`）。
-4. **五项 P2 已处置**：新增 `devices.station_id`（迁移 0002，页面「站位：未分配」）；预览链接不再预填 5.2、空截断只回派生值；`created_by/actor` 写真实登录名（弱标识，S10 多用户替换）；矩阵 K13→PASS（带用例 ID）、K01→部分实现（S02 复验）、K43 登记；本报告 §3 更正迁移事务不实声明、§14 补齐阈值/站位/操作者/K01 登记。
-5. **回归未被削弱**：pytest **93 passed**（首版 53 项断言未改）；`verify_s01_fix.py` 对正式库只读复验全 PASS（五台无 2004、2000 的 5.2/3.68/45/15FULL/β7.5/派生 5.2043059≠5.2、2002/2003/2005 零行无 3.68）；21 CSV 与 V4 包零改动（`git status` 无相关变更）。
+1. **文件检查**：2000 = 398,320,647 B / UTF-8-SIG + LF；2001 = 396,831,479 B / **GB18030 + CRLF**；两份 SHA-256 与归档清单 **PASS**；原始文件只读、审计前后哈希一致。
+2. **流式解析**：逐行迭代不加载全文，保留行号/序号/时间戳/数组原文；全量 ~380k 行审计耗时 94.2 s；**不按时间戳去重**（2000 同秒 78,639 组、2001 同分钟 1,427 组）。
+3. **关键新发现**：数组每行 **1001 token = 1000 有效槽位 + 1 尾部空项**；2001 时间戳**只到分钟**（单分钟最多 150 行）；2000 水深 **78.4% 为 0**（150,750 行），2001 为 9.1%。
+4. **距离映射**：`distance_mappings` v1（两台：range 37.5、1000 槽位、sample_mode=UNKNOWN、support=UNVERIFIED）；**首点距离与点/区间语义未核实 → `build_mask` 正式分析 BLOCKED**，诊断模式 `kept=()` 不冒充 0 样本。
+5. **硬掩码 + 测试**：点样本 `r<=5.2` 保留、无浮点容差（5.201 排除、5.2+1e-12 排除）；区间跨界整段排除；越界幅度 0→65535/1e9 区内不变；pytest **115 passed**（S02 新增 25），K04/K05/K06 矩阵改 PASS。
 
-**复验口径（验收报告第 6 节 5 条）**：① NaN/inf/abc/520→400；② expected_version=abc→400；③ pip 解析；④ 坏迁移回滚；⑤ pytest 全绿 ≥58（现 93）。通过后建 S01 阶段回滚点 tag，再开 S02（S02 的距离映射与统一硬掩码必须建立在"截断有限且已校验"之上）。
+**S03 前置门槛（本轮 BLOCKED 的唯一出口）**：需用户确认 ① 1000 槽位是采样中心还是区间；② 首点距离/单元宽度；③ 量程 37.5 m 与 1000 槽位的对应关系。确认后登记 `CONFIRMED` 映射新版本，S03 才能对 2000/2001 产出正式统计；在此之前 S03 对这两台保持 `BLOCKED`，不得用全量程替代，也不得先出未截断统计再补。
 
-整改指令已备好：`12_DOCUMENTATION/S01_FIX_PROMPT.md`——整段复制其中代码块发给 CodeBuddy 即可，含三项必改的实现要求、五项 P2 处置口径与 7 条完成标准。
+**S02 验收口径**：① 8 份工件齐全且 `DATA_AUDIT_REPORT.md` 数字可与 CSV 对上；② `curl`/pytest 复现 K04 5.199/5.200 保留、5.201 排除；③ K05 跨界区间整段排除；④ K06 未知映射 BLOCKED；⑤ pytest 全绿（现 115）；⑥ 两份原始 CSV SHA-256 与清单一致、`git status` 无 `01_ORIGINAL_DATA` 变更。通过后建 `s02-accepted` tag 再开 S03。
 
 五站功能继续开发，2002/2003/2005 数据后续持续上传；涉及五站真实数据的验收项在数据到位前标 `BLOCKED / 待数据`，不得用双站数据冒充五站结论。

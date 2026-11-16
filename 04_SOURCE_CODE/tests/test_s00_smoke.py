@@ -120,4 +120,5 @@ def test_source_layout_honest_state():
     py_files = [p.relative_to(src).as_posix() for p in src.rglob("*.py")]
     assert py_files, "04_SOURCE_CODE 应存在 Python 文件"
     for rel in py_files:
-        assert rel.startswith(("app/", "tests/")) or rel == "run.py", f"实现代码位置越界：{rel}"
+        assert rel.startswith(("app/", "tests/", "scripts/")) or rel == "run.py", \
+            f"实现代码位置越界：{rel}"
