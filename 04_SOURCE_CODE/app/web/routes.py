@@ -20,6 +20,25 @@ def current_app_db():
     return current_app.config["DB_FILE"]
 
 
+def parse_expected_version(form) -> int:
+    """expected_version 必须为非负整数；abc / 空串不得抛 500，转为字段级 400。
+
+    字段整体缺失（非网页表单调用，如脚本/接口）按 0 处理；字段存在但为空或非法一律 400。
+    """
+    if "expected_version" not in form:
+        return 0
+    raw = (form.get("expected_version") or "").strip()
+    if raw == "":
+        raise ValidationError(["预期版本号非法（expected_version 为空，必须为非负整数）"])
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        raise ValidationError([f"预期版本号非法（expected_version=“{raw}”，必须为非负整数）"])
+    if value < 0:
+        raise ValidationError([f"预期版本号非法（expected_version={value}，必须为非负整数）"])
+    return value
+
+
 @bp.route("/")
 def index():
     conn = get_conn()
@@ -56,7 +75,7 @@ def device_detail(device_id: str):
 def save_params(device_id: str):
     conn = get_conn()
     try:
-        expected = int(request.form.get("expected_version", "0"))
+        expected = parse_expected_version(request.form)
         new_version = svc.save_param(conn, device_id, request.form, expected)
         conn.commit()
         flash(f"参数已保存为新版本 v{new_version}（旧版本保留，未覆盖）", "ok")
@@ -78,7 +97,7 @@ def save_params(device_id: str):
 def save_position(device_id: str):
     conn = get_conn()
     try:
-        expected = int(request.form.get("expected_version", "0"))
+        expected = parse_expected_version(request.form)
         new_version = svc.save_position(conn, device_id, request.form, expected)
         conn.commit()
         flash(f"位置已保存为新版本 v{new_version}（历史保留，不覆盖）", "ok")
@@ -98,14 +117,29 @@ def save_position(device_id: str):
 
 @bp.route("/devices/<device_id>/params/preview")
 def params_preview(device_id: str):
-    """保存前影响预览（JSON）：显示派生值与 5.2 截断是否受影响。"""
+    """保存前影响预览（JSON）：派生值、β 与截断是否受影响。
+
+    P2-2：截断允许未填写（无参数设备预览不得借用其他台的 5.2）——只回派生值与 β，
+    analysis_cutoff_slant_m_will_be 返回 null，note 注明「截断未填写」；字段非法仍 400+JSON。
+    """
     form = request.args
+    conn = get_conn()
     try:
-        data = svc.validate_param_form(form)
+        range_m = svc.device_range_m(conn, device_id)
+    finally:
+        conn.close()
+    try:
+        data = svc.validate_param_form(form, range_m=range_m, require_cutoff=False)
     except ValidationError as e:
         return {"ok": False, "errors": e.errors}, 400
     derived_axis = data["derived_axis_slant_m"]
     derived_vertical = data["derived_vertical_clearance_m"]
+    cutoff = data["analysis_cutoff_slant_m"]
+    notes = []
+    if cutoff is None:
+        notes.append("截断未填写（预览不借用其他设备数值）")
+    if derived_axis or derived_vertical:
+        notes.append("派生值仅作参考显示，不写回、不覆盖人工分析截断斜距")
     return {
         "ok": True,
         "device_id": device_id,
@@ -113,8 +147,8 @@ def params_preview(device_id: str):
         "derived_axis_slant_m": derived_axis,
         "derived_vertical_clearance_m": derived_vertical,
         "derivation_tilt_deg": data["derivation_tilt_deg"],
-        "note": "派生值仅作参考显示，不写回、不覆盖人工分析截断斜距" if (derived_axis or derived_vertical) else "无派生换算",
-        "analysis_cutoff_slant_m_will_be": data["analysis_cutoff_slant_m"],
+        "note": "；".join(notes) if notes else "无派生换算",
+        "analysis_cutoff_slant_m_will_be": cutoff,
         "cutoff_untouched_by_derivation": True,
         "beam_half_angle_deg": data["beam_half_angle_deg"],
     }

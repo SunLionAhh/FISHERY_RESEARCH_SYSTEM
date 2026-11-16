@@ -5,6 +5,7 @@
 
 <div class="card">
   <h2>设备 {{ d.device_id }} 当前参数（版本 v{{ d.param.version if d.param else '—' }}）</h2>
+  <p class="muted">站位：{{ d.station_id if d.station_id else '未分配' }}（站位未提供时保持未分配，禁止伪造站位名称或坐标）</p>
   {% if d.param %}
   <table>
     <tr><th>字段</th><th>值</th><th>说明</th></tr>
@@ -66,7 +67,7 @@
         <input name="change_reason" value=""></label>
     </div>
     <p><button class="btn" type="submit">保存为新版本</button>
-       <a href="{{ url_for('web.params_preview', device_id=d.device_id, clearance_input_type=d.param.clearance_input_type if d.param else 'VERTICAL', vertical_bottom_clearance_m=d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '', axis_slant_m='', downward_tilt_deg=d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '', beam_angle_value_deg=d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '', beam_angle_kind=d.param.beam_angle_kind if d.param else 'FULL', analysis_cutoff_slant_m=d.param.analysis_cutoff_slant_m if d.param else 5.2, source='preview', effective_from='2026-10-31') }}">保存前影响预览（JSON）</a></p>
+       <a href="{{ url_for('web.params_preview', device_id=d.device_id, clearance_input_type=d.param.clearance_input_type if d.param else 'VERTICAL', vertical_bottom_clearance_m=d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '', axis_slant_m='', downward_tilt_deg=d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '', beam_angle_value_deg=d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '', beam_angle_kind=d.param.beam_angle_kind if d.param else 'FULL', analysis_cutoff_slant_m=d.param.analysis_cutoff_slant_m if d.param and d.param.analysis_cutoff_slant_m is not none else '', source='preview', effective_from='2026-10-31') }}">保存前影响预览（JSON）</a></p>
     <p class="muted">影响预览说明派生值与截断上限是否受影响；并发提交若预期版本过期将返回 409。</p>
   </form>
 </div>
