@@ -15,7 +15,7 @@
 | 审计聚合 | `04_SOURCE_CODE/app/services/audit_s02.py` |
 | 审计入口 | `04_SOURCE_CODE/scripts/s02_data_audit.py` |
 | 映射版本表 | 迁移 `0003_distance_mappings.sql`（真实库已应用） |
-| K04/K05/K06 证据 | `10_TEST_REPORTS/s02_verification/`（`boundary_cases.csv`、`boundary_cases_run.txt`、`mask_run.txt`、`audit_run.log`） |
+| K04/K05/K06 证据 | `10_TEST_REPORTS/s02_verification/`（`boundary_cases.csv`、`boundary_cases_run.txt`、`mask_run.txt`、`audit_run.txt`） |
 | 测试 | `04_SOURCE_CODE/tests/test_s02_mask.py`（16）、`test_s02_parser.py`（9）；全库 **115 passed** |
 
 ## 1. 任务一：文件检查
@@ -154,7 +154,7 @@
 
 ### 8.4 独立质量诊断出口
 
-`scripts/s02_data_audit.py` 独立于任何分析流程运行，产出 `issues.csv`（10 项，含 2 项 P0 阻断）与 `DATA_AUDIT_REPORT.md`；`audit_run.log` 记录运行时间与行数。**本阶段未生成任何正式统计**，不存在「先全量程分析再图上裁剪」。
+`scripts/s02_data_audit.py` 独立于任何分析流程运行，产出 `issues.csv`（10 项，含 2 项 P0 阻断）与 `DATA_AUDIT_REPORT.md`；`s02_verification/audit_run.txt` 记录运行时间与行数。**本阶段未生成任何正式统计**，不存在「先全量程分析再图上裁剪」。
 
 ## 9. 问题清单（10 项）
 
