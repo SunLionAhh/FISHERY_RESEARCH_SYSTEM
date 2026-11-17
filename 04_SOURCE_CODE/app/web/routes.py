@@ -13,6 +13,10 @@ from ..services import daily_stats as daily_svc
 from ..services import environment_analysis as env_analysis_svc
 from ..services import environment_fetch as fetch_svc
 from ..services import environment_import as env_import_svc
+from ..services import s07_datasets as dataset_svc
+from ..services import s07_depth as depth_svc
+from ..services import s07_patterns as pattern_svc
+from ..services import beam_geometry as geometry_svc
 from ..services import intraday as intraday_svc
 from ..services import devices as svc
 from ..services import incremental as upload_svc
@@ -515,3 +519,72 @@ def intraday_result(run_id: str):
         abort(404)
     result = json.loads(row["result_json"])
     return render_template("intraday_result.html", result=result)
+
+
+@bp.route("/s07", methods=["GET", "POST"])
+def s07_home():
+    conn = get_conn()
+    message = None
+    depth_result = None
+    geometry = None
+    patterns_result = None
+    try:
+        if request.method == "POST":
+            action = request.form.get("action")
+            try:
+                if action == "depth":
+                    depth_result = depth_svc.analyze_device_day(
+                        conn, request.form.get("device_id") or "2000",
+                        request.form.get("observed_date") or "2026-10-31",
+                        project_root=Path(current_app.config["PROJECT_ROOT"]))
+                elif action == "geometry":
+                    params = geometry_svc.effective_params(
+                        conn, request.form.get("device_id") or "2000",
+                        request.form.get("observed_date") or "2026-10-31")
+                    geometry = geometry_svc.beam_geometry(
+                        height_m=float(params["vertical_bottom_clearance_m"]),
+                        tilt_deg=float(params["downward_tilt_deg"]),
+                        beam_value_deg=float(params["beam_angle_value_deg"]),
+                        beam_kind=params["beam_angle_kind"],
+                        cutoff_m=float(params["analysis_cutoff_slant_m"]))
+                elif action == "pattern":
+                    devices = tuple(d.strip() for d in (request.form.get("devices") or "2000").split(",")
+                                    if d.strip())
+                    patterns_result = pattern_svc.analyze(
+                        conn, devices, request.form.get("start_date"), request.form.get("end_date"),
+                        dataset_id=request.form.get("dataset_id") or None)
+                    if request.form.get("save"):
+                        patterns_result["pattern_id"] = pattern_svc.save_pattern(
+                            conn, patterns_result, actor="web")
+                elif action in ("boundaries", "freeze", "reopen"):
+                    dataset_id = request.form.get("dataset_id") or "DATASET_01_DUAL_STATION"
+                    if action == "boundaries":
+                        dataset_svc.set_boundaries(
+                            conn, dataset_id,
+                            start_time=request.form.get("start_time") or None,
+                            end_time=request.form.get("end_time") or None,
+                            formal_sync_time=request.form.get("formal_sync_time") or None,
+                            installation_status=request.form.get("installation_status") or None,
+                            actor="web")
+                    elif action == "freeze":
+                        dataset_svc.freeze(conn, dataset_id, actor="web",
+                                           reason=request.form.get("reason") or "S07 阶段冻结")
+                    else:
+                        dataset_svc.reopen(conn, dataset_id, actor="web",
+                                           reason=request.form.get("reason") or "S07 解除冻结")
+                    message = f"{action} 完成：{dataset_id}"
+            except (ValueError, KeyError, depth_svc.DepthAnalysisUnavailable,
+                    dataset_svc.DatasetBoundaryError, geometry_svc.GeometryUnavailable) as exc:
+                message = str(exc)
+        datasets_report = [dataset_svc.report(conn, row["dataset_id"])
+                           for row in conn.execute("SELECT dataset_id FROM datasets ORDER BY dataset_id")]
+        versions = [dict(r) for r in conn.execute(
+            "SELECT * FROM s07_pattern_versions ORDER BY version DESC LIMIT 10")]
+        qc_rows = [dict(r) for r in conn.execute(
+            "SELECT * FROM s07_bottom_qc ORDER BY created_at DESC LIMIT 10")]
+    finally:
+        conn.close()
+    return render_template("s07.html", message=message, depth_result=depth_result,
+                           geometry=geometry, patterns_result=patterns_result,
+                           datasets=datasets_report, pattern_versions=versions, qc_rows=qc_rows)
+

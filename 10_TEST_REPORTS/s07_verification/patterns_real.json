@@ -1,0 +1,58 @@
+{
+  "analysis_id": "PAT-20261117131447",
+  "method_version": "S07_PATTERN_V1",
+  "devices": [
+    "2000",
+    "2001"
+  ],
+  "window": {
+    "start": "2026-10-31",
+    "end": "2026-11-03",
+    "window_days": null,
+    "n_effective_days": 4
+  },
+  "dataset_id": "DATASET_01_DUAL_STATION",
+  "metrics": {
+    "daily_rates": [
+      590.7578928898191,
+      2892.1093202522775,
+      508.39471855455173,
+      498.16283924843424,
+      713.6116910229646
+    ],
+    "mean_daily_rate": 1040.6072923936094,
+    "day_to_day_cv": 0.8927108468185311,
+    "peak_hour_stability": {
+      "2000": {
+        "modal_peak_hour": 10,
+        "n_days": 4,
+        "stability": 0.25
+      },
+      "2001": {
+        "modal_peak_hour": 3,
+        "n_days": 1,
+        "stability": 1.0
+      }
+    },
+    "mean_curve_similarity": 0.1326254242059802,
+    "day_night_consistency": 0.8,
+    "trend": {
+      "slope_per_day": 30.713449533286365,
+      "rank_correlation": -0.32703926231683134,
+      "direction": "DOWN"
+    }
+  },
+  "evidence_level": "L1",
+  "supporting": [
+    "窗口内 4 个有效观测日",
+    "昼夜方向一致度 0.80"
+  ],
+  "contradicting": [
+    "小时峰值稳定度仅 0.25",
+    "日间曲线平均相关仅 0.13"
+  ],
+  "level_reasons": [
+    "等级由证据判定，天数本身不能升级"
+  ],
+  "pattern_id": 2
+}
