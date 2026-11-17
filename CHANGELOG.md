@@ -2,6 +2,19 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-17（S03 执行，CodeBuddy；用户「S02通过，继续做S03」后启动，状态 S03_DONE_PENDING_ACCEPTANCE）
+
+先建 tag `s02-accepted`（指向 `6c04e9e`）作回滚点，运行前备份正式库（`11_BACKUPS/s03_pre_run_20261117/`），再执行 S03 每日统计/增量上传/缺测/基础图表；停在 S03 等验收，未开始 S04。
+
+- **统计引擎**（`app/services/daily_stats.py`）：所有样本只走 `build_mask(allow_blocked=False)`；逐指标分子/分母/单位/NA 规则见 `10_TEST_REPORTS/s03_verification/metric_definitions.csv`；type-7 精确分位数、总体标准差、阈值候选事件 `CANDIDATE_RUN_V1`（200/连续3格，非鱼量结论）；区内无候选记 0、无区内观测记 NA，缺测不填 0。
+- **增量上传**（`app/services/incremental.py` + `scripts/s03_daily_pipeline.py`）：一天一台一批次，run_id + 参数/映射/算法/文件哈希完整快照；重复跳过、同日异容冲突审查、迟到、历史补传、冻结数据集保护、缺测自动登记、旧 run 仅标 `SUPERSEDED`；`analysis_index.json` 随每次上传更新。
+- **真实数据**：2000/2001 的 2026-10-31 全量统计（192,235 / 189,834 条；区内样本 20,805,591 / 20,720,840；覆盖率 0.9235 / 0.9910；候选事件 13,093 / 68,784）。真实 8 步增量验证用 2000 的 11-01 → 跳过 11-02 → 11-03 → 补传 11-02 完成，第 2 天先 MISSING 后 REPROCESSED，原始 CSV 哈希 21/21 不变。
+- **真实数据缺陷登记**：11-02 文件有 **37 行信号数组有效槽位为 0**，原逐行阻断导致整天失败；修复为计入 `invalid_records` 并写 QC 备注（不填 0），补传成功；失败与成功日志均归档。
+- **日报与图表**（`app/services/reporting.py`）：日报 MD + 指标 CSV + 6 类 PNG（活动曲线/信号分布/覆盖率/缺测/底界排除/统计表），配色取自 `FIGURE_COLOR_SPEC_V1` A 方案；缺测图不伪造 0 曲线。新增 `/daily` 等 4 条网页路由。
+- **修复**：首次真实统计 `file_sha256` 为空（复用未算哈希的 inspection）→ 显式传哈希并以 `--force` 为两台重算生成新 run，旧 run 保留为 `SUPERSEDED`，未覆盖历史结果。
+- **测试与复算**：新增 22 项（158 passed）；`12_DOCUMENTATION/verify_s03_stats.py` 纯标准库独立重算两台真实前 2,000 行，kept_samples/sum/mean/候选事件/排除原因逐项 PASS。
+- **未动**：21 个原始 CSV、V4 包、S00—S02 既有断言；未开始 S04。
+
 ## 2026-11-17（S02 增补：盲区口径落地，CodeBuddy）
 
 用户提供盲区口径：「信号强度列以第一个出现的 0 开始才算是数据盲区的结束；设备的数据盲区是 0.5 m」。全量实证后落地，S02 仍停在待验收，未开始 S03 统计。

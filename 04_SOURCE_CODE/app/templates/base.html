@@ -53,7 +53,8 @@ ul.errors { color: var(--warn); }
 <body>
 <header>
   <h1>渔业声学监测科研工作台</h1>
-  <span class="sub">S01 最小可用 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）</span>
+  <span class="sub">S01 参数/GPS + S03 每日统计 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）
+    ｜ <a href="/daily">每日统计</a> ｜ <a href="/daily/upload">逐日上传</a></span>
 </header>
 <main>
   {% with messages = get_flashed_messages(with_categories=true) %}

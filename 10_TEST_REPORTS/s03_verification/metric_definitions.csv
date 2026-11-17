@@ -1,0 +1,27 @@
+﻿metric_name,numerator,denominator,unit,na_rule,source
+raw_records,当日文件数据行数（含解析异常行）,—（计数量）,条,文件未上传=NA；上传后为真实计数，可为 0,csv_parser.iter_rows
+valid_records,时间戳可解析且 build_mask 后至少保留 1 个区内样本的行数,—（计数量）,条,文件未上传=NA,build_mask.kept_count>0
+invalid_records,解析错误行（空行/列数不符/字段非数值等）,—（计数量）,条,文件未上传=NA,ParsedRow.errors
+fully_masked_records,无解析错误但掩码后 0 个区内样本的行,—（计数量）,条,文件未上传=NA,build_mask.kept_count==0
+signal_slots_per_record,单条记录有效信号槽位众数（尾部空 token 不计）,—（结构量）,点/条,文件未上传=NA,ParsedRow.effective_signal_len
+raw_signal_slots,Σ 每条记录有效信号槽位,—（计数量）,点,文件未上传=NA,ParsedRow.effective_signal_len
+kept_samples,Σ build_mask.kept_count,—（计数量）,点,文件未上传=NA；BLOCKED 设备不得统计,build_mask
+excluded_samples,Σ build_mask.excluded_total,—（计数量）,点,文件未上传=NA,build_mask
+near_field_excluded_samples,掩码原因 NEAR_FIELD 的样本数,—（计数量）,点,文件未上传=NA,build_mask.excluded_counts
+bottom_excluded_samples,掩码原因 BOTTOM_INTERFERENCE 的样本数,—（计数量）,点,S07 启用自动探底前恒为 0；文件未上传=NA,build_mask.excluded_counts
+valid_observation_duration_s,含至少 1 条有效记录的去重时间戳格数 × 时间戳分辨率,—（时长量）,s,文件未上传=NA；上限截断到 planned_window_s,ValidRow.timestamp bins
+observation_span_s,首末有效记录时间跨度 + 1 个时间戳格,—（时长量）,s,文件未上传=NA,min/max timestamp
+planned_window_s,日历日窗口长度,—（常量）,s,恒为 86400（可显式覆盖并留痕）,定义常量
+coverage_ratio,valid_observation_duration_s,planned_window_s,比例 0—1,文件未上传或无区内有效观测=NA（时长 0 不等于覆盖率 0）,两个时长字段
+valid_record_ratio,valid_records,raw_records,比例 0—1,raw_records=0 或文件未上传=NA,记录计数
+signal_mean,Σ kept_values,kept_samples,强度单位（原始 0—255）,kept_samples=0 → NA，禁止填 0,build_mask.kept_values
+signal_stddev,Σ(kept_value−mean)² / kept_samples 的平方根（总体标准差）,kept_samples,强度单位,kept_samples=0 → NA,build_mask.kept_values
+signal_median,kept_values 的经验 0.5 分位数（线性插值）,kept_samples,强度单位,kept_samples=0 → NA,build_mask.kept_values
+signal_p10/p25/p75/p90/p95/p99,kept_values 的对应经验分位数,kept_samples,强度单位,kept_samples=0 → NA,build_mask.kept_values
+candidate_events,区内相邻有效槽位连续 ≥3 且值 ≥200 的极大段数,—（计数量）,次,区内存在有效观测但无候选 → 0；无区内有效观测 → NA,CANDIDATE_RUN_V1
+candidate_event_rate_per_hour,candidate_events,valid_observation_duration_s / 3600,次/小时,有效观测时长=0 或候选事件=NA → NA,事件数与时长
+water_temp_mean/min/max,有效记录的水温值,有水温的有效记录数,°C,无有效水温 → NA,ParsedRow.water_temp_c
+missing_intervals_json,有效记录时间戳格之间的缺口（起、止、时长）,—（诊断量）,s,文件未上传=NA,去重时间戳
+excluded_by_reason_json,build_mask 逐原因排除样本数,—（诊断量）,点,文件未上传=NA,build_mask.excluded_counts
+hourly_activity_json,按时辰统计的有效记录/候选事件/区内样本,—（诊断量）,条/次/点,文件未上传=NA,有效记录时间戳
+status,缺测/质检状态（8 枚举 + BLOCKED）,—（状态量）,枚举,不允许用 0 代替缺测,状态判定规则

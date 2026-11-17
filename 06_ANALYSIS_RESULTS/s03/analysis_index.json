@@ -1,0 +1,24 @@
+{
+  "stage": "S03",
+  "generated_at": "2026-11-17T03:27:56+00:00",
+  "latest_run_by_device_date": {
+    "2000/2027-12-01": {
+      "run_id": "RUN-2000-20271201-20261117T032756Z-410fd7",
+      "status": "PARTIAL",
+      "coverage_ratio": 3.472222222222222e-05,
+      "valid_records": 3,
+      "report_path": "C:/Users/Administrator/AppData/Local/Temp/pytest-of-Administrator/pytest-47/test_web_daily_routes0/out/06_ANALYSIS_RESULTS/s03/daily/2000/2027-12-01/daily_report.md"
+    },
+    "2000/2027-12-02": {
+      "run_id": null,
+      "status": "MISSING",
+      "coverage_ratio": null,
+      "valid_records": null,
+      "report_path": null
+    }
+  },
+  "blocked": [],
+  "missing": [
+    "2000/2027-12-02"
+  ]
+}

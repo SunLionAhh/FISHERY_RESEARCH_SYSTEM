@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}每日统计 {{ row.device_id }} {{ row.observed_date }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>{{ row.device_id }} / {{ row.observed_date }}
+    <span class="badge {{ 'miss' if row.status in ('MISSING','BLOCKED','QC_FAILED') else 'ok' }}">{{ row.status }}</span>
+  </h2>
+  <p class="muted">run_id: {{ row.run_id or 'NA' }} ｜ 参数版本 {{ row.parameter_version if row.parameter_version is not none else 'NA' }}
+     ｜ 映射版本 {{ row.mapping_version if row.mapping_version is not none else 'NA' }}
+     ｜ 算法 {{ row.algorithm_version }}</p>
+  {% if row.blockage_reasons %}<p class="muted">阻断原因：{{ row.blockage_reasons }}</p>{% endif %}
+  <p class="muted">SHA-256: {{ row.file_sha256 or 'NA' }} ｜ QC: {{ row.qc_notes or '无' }}</p>
+</section>
+
+<section class="card">
+  <h2>指标（NA 表示缺测，未填 0）</h2>
+  <table>
+    <thead><tr><th>指标</th><th>值</th><th>分子</th><th>分母</th><th>单位</th><th>NA 规则</th></tr></thead>
+    <tbody>
+    {% for name, value, numerator, denominator, unit, na_rule in metrics %}
+      <tr><td><code>{{ name }}</code></td><td><strong>{{ value if value is not none else 'NA' }}</strong></td>
+          <td>{{ numerator }}</td><td>{{ denominator }}</td><td>{{ unit }}</td><td class="muted">{{ na_rule }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>图表与产物</h2>
+  <ul>
+  {% for a in artifacts %}<li>{{ a.artifact_type }} — {{ a.relative_path }}</li>{% else %}<li class="muted">无产物</li>{% endfor %}
+  </ul>
+  <form method="post" action="{{ url_for('web.daily_mark_missing', device_id=row.device_id, observed_date=row.observed_date) }}">
+    <label>缺测备注 <input name="note" placeholder="人工登记缺测"></label>
+    <p><button class="btn" type="submit">登记为 MISSING（历史结果保留）</button></p>
+  </form>
+</section>
+
+{% if snapshot %}
+<section class="card">
+  <h2>任务配置快照</h2>
+  <pre class="muted">{{ snapshot | tojson(indent=2) }}</pre>
+</section>
+{% endif %}
+{% endblock %}

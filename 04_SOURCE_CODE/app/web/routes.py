@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """S01 Web 路由：首页（设备清单+未知队列）、设备详情（参数/GPS 表单+历史）、保存与预览。"""
 import sqlite3
+from pathlib import Path
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
 from ..db import connect
+from ..services import daily_stats as daily_svc
 from ..services import devices as svc
+from ..services import incremental as upload_svc
+from ..services import reporting as report_svc
 from ..services import weather as weather_svc
 from ..services.devices import ConflictError, ValidationError
+from ..services.incremental import FrozenDatasetBlocked, UploadConflict, UploadValidationError
 from ..services.weather import ValidationError as WeatherValidationError
 
 bp = Blueprint("web", __name__)
@@ -177,3 +182,105 @@ def save_weather(device_id: str):
         return render_template("error.html", title="天气校验失败（后端拒绝）", errors=e.errors), 400
     finally:
         conn.close()
+
+
+# ---------------- S03：每日统计 / 增量上传 / 缺测 ----------------
+
+def _valid_device(device_id: str) -> None:
+    if device_id not in ("2000", "2001", "2002", "2003", "2005"):
+        abort(404)
+
+
+@bp.route("/daily")
+def daily_index():
+    conn = get_conn()
+    try:
+        rows = daily_svc.all_latest_stats(conn)
+        conflicts = upload_svc.list_conflicts(conn)
+        runs = conn.execute(
+            "SELECT run_id, device_id, status, created_at, params_snapshot_json "
+            "FROM analysis_runs ORDER BY created_at DESC LIMIT 30"
+        ).fetchall()
+    finally:
+        conn.close()
+    return render_template("daily.html", rows=rows, conflicts=conflicts, runs=runs)
+
+
+@bp.route("/daily/upload", methods=["GET", "POST"])
+def daily_upload():
+    if request.method == "GET":
+        return render_template("daily_upload.html",
+                               devices=("2000", "2001", "2002", "2003", "2005"))
+    device_id = request.form.get("device_id", "").strip()
+    _valid_device(device_id)
+    raw_path = request.form.get("file_path", "").strip()
+    if not raw_path:
+        return render_template("error.html", title="上传校验失败",
+                               errors=["必须给出原始 CSV 的本机路径（只读上传）"]), 400
+    conn = get_conn()
+    try:
+        outcome = upload_svc.register_upload(
+            conn, device_id, Path(raw_path),
+            observed_date=request.form.get("observed_date") or None,
+            upload_date=request.form.get("upload_date") or None,
+            force=request.form.get("force") == "1",
+        )
+        verb = {"NEW": "上传", "REPROCESSED": "补传/重算", "BLOCKED": "登记（统计 BLOCKED）",
+                "DUPLICATE": "重复上传已跳过"}[outcome.decision]
+        flash(f"{device_id} {outcome.observed_date} {verb}完成：{outcome.status}；run_id="
+              f"`{outcome.run_id or 'NA'}`", "ok")
+        return redirect(url_for("web.daily_detail", device_id=device_id,
+                                observed_date=outcome.observed_date))
+    except UploadConflict as e:
+        return render_template("error.html", title="同日文件冲突（需人工审查）",
+                               errors=[str(e),
+                                       "确认后可在上传表单勾选「强制重传」，旧 run 保留为 SUPERSEDED。"]), 409
+    except FrozenDatasetBlocked as e:
+        return render_template("error.html", title="冻结数据集保护", errors=[str(e)]), 423
+    except UploadValidationError as e:
+        return render_template("error.html", title="上传校验失败", errors=[str(e)]), 400
+    finally:
+        conn.close()
+
+
+@bp.route("/daily/<device_id>/<observed_date>")
+def daily_detail(device_id: str, observed_date: str):
+    _valid_device(device_id)
+    conn = get_conn()
+    try:
+        row = daily_svc.latest_stat(conn, device_id, observed_date)
+        if row is None:
+            abort(404)
+        snapshot = None
+        if row["run_id"]:
+            found = conn.execute("SELECT params_snapshot_json FROM analysis_runs WHERE run_id=?",
+                                 (row["run_id"],)).fetchone()
+            if found:
+                import json
+                snapshot = json.loads(found["params_snapshot_json"])
+        artifacts = conn.execute(
+            "SELECT artifact_type, relative_path FROM s03_artifacts WHERE run_id=?",
+            (row["run_id"],),
+        ).fetchall() if row["run_id"] else []
+    finally:
+        conn.close()
+    metrics = report_svc.metric_rows(dict(row))
+    return render_template("daily_detail.html", row=row, metrics=metrics,
+                           snapshot=snapshot, artifacts=artifacts)
+
+
+@bp.route("/daily/<device_id>/<observed_date>/missing", methods=["POST"])
+def daily_mark_missing(device_id: str, observed_date: str):
+    _valid_device(device_id)
+    conn = get_conn()
+    try:
+        upload_svc.mark_missing(conn, device_id, observed_date,
+                                note=request.form.get("note") or "人工登记缺测")
+        flash(f"{device_id} {observed_date} 已登记为 MISSING（指标 NA，不填 0）", "ok")
+        return redirect(url_for("web.daily_detail", device_id=device_id,
+                                observed_date=observed_date))
+    except (UploadValidationError, FrozenDatasetBlocked) as e:
+        return render_template("error.html", title="缺测登记失败", errors=[str(e)]), 400
+    finally:
+        conn.close()
+

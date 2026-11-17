@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}S03 逐日增量上传{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>逐日增量上传（一天一文件、一台一批次）</h2>
+  <p class="muted">原始 CSV 全程只读；上传时计算 SHA-256，与归档登记比对。缺测日可不上传，后续补传；同日不同内容必须人工审查后勾选强制重传。</p>
+  <form method="post">
+    <div class="form-row">
+      <label>设备
+        <select name="device_id" required>
+          {% for d in devices %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>观测日（YYYY-MM-DD，留空则从文件名读取）
+        <input name="observed_date" placeholder="2026-10-31">
+      </label>
+    </div>
+    <label>原始 CSV 本机路径（只读）
+      <input name="file_path" required placeholder="C:\...\01_ORIGINAL_DATA\FISHFINDER\2000\探鱼-2000_2026-10-31.csv">
+    </label>
+    <div class="form-row">
+      <label>上传日期（YYYY-MM-DD，晚于观测日记 UPLOADED_LATE）
+        <input name="upload_date" placeholder="2026-11-17">
+      </label>
+      <label>强制重传（旧 run 仍保留为 SUPERSEDED）
+        <select name="force"><option value="0">否</option><option value="1">是（需先审查冲突）</option></select>
+      </label>
+    </div>
+    <p><button class="btn" type="submit">上传并生成日报</button>
+       <a href="{{ url_for('web.daily_index') }}">返回每日统计</a></p>
+  </form>
+</section>
+{% endblock %}
