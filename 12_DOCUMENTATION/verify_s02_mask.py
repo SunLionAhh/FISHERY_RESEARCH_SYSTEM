@@ -53,9 +53,9 @@ for i, s in enumerate(starts):
     record("K05 区间跨界", "INTERVAL", i, s, i + 1, CUTOFF, kept,
            "" if kept else reasons.get(i, res.reason_summary()))
 
-# K04：越界强回波改变幅度 → 区内结果不变
+# K04：越界强回波改变幅度 → 区内结果不变（界外用非 0 值，避免触发行内盲区规则）
 inside = [11.0, 22.0, 33.0]
-base = dm.mask_points([5.0, 5.1, 5.2, 5.201, 6.0], inside + [0.0, 0.0], CUTOFF)
+base = dm.mask_points([5.0, 5.1, 5.2, 5.201, 6.0], inside + [1.0, 2.0], CUTOFF)
 spike = dm.mask_points([5.0, 5.1, 5.2, 5.201, 6.0], inside + [65535.0, 1e9], CUTOFF)
 print(f"\nK04 越界幅度不变性：kept={base.kept_values} sum={sum(base.kept_values)} "
       f"vs kept={spike.kept_values} sum={sum(spike.kept_values)} "

@@ -56,15 +56,60 @@ def test_k04_invalid_and_unknown_distance_reasons():
 
 
 def test_k04_out_of_range_amplitude_change_does_not_affect_inside_result():
-    """越界强回波：改变界外幅度，区内保留值/计数/求和完全不变。"""
+    """越界强回波：改变界外幅度，区内保留值/计数/求和完全不变。
+
+    界外值用非 0 数（用户 2026-11-17 盲区口径下，行内首个 0 之前的槽位属盲区，
+    用 0 值会误触发行内盲区规则，与本用例意图无关）。
+    """
     distances = [5.0, 5.1, 5.2, 5.201, 6.0]
     inside = [11.0, 22.0, 33.0]
-    a = dm.mask_points(distances, inside + [0.0, 0.0], 5.2)
+    a = dm.mask_points(distances, inside + [1.0, 2.0], 5.2)
     b = dm.mask_points(distances, inside + [65535.0, 1e9], 5.2)
     assert a.kept_indices == b.kept_indices == (0, 1, 2)
     assert a.kept_values == b.kept_values == (11.0, 22.0, 33.0)
     assert sum(a.kept_values) == sum(b.kept_values)
     assert a.excluded_counts == b.excluded_counts == {dm.REASON_OUT_OF_RANGE: 2}
+
+
+# ---------------- 盲区（用户口径 2026-11-17：0.5m；行内首零之前=盲区） ----------------
+
+def test_blind_zone_row_rule_excludes_before_first_zero():
+    # 与 v2 一致的点映射：首格 0.5 m、格宽 0.0375
+    mapping = point_mapping(first_sample_distance_m=0.5, sample_interval_m=0.0375,
+                            point_count=5)
+    values = [9, 8, 0, 5, 6]
+    result = dm.build_mask(values, mapping, 5.2, row_range_m=37.5, row_point_count=5)
+    # 首零在索引 2 → 索引 0/1 属盲区（发射余脉，r=0.5/0.5375）；首零起 r=0.575/0.6125/0.65 保留
+    assert result.kept_indices == (2, 3, 4)
+    assert result.kept_values == (0.0, 5.0, 6.0)
+    assert result.excluded_counts == {dm.REASON_NEAR_FIELD: 2}
+
+
+def test_blind_zone_geometric_point_below_05_excluded():
+    values = [0.0] * 13 + [1.0, 1.0]
+    result = dm.build_mask(values, point_mapping(point_count=15), 5.2,
+                           row_range_m=37.5, row_point_count=15)
+    # 首值即 0 → 行内盲区为空；r<0.5m 的 13 个点按几何盲区排除（r_k=0.0375k，k=13 → 0.525 保留）
+    assert result.kept_indices == (13, 14)
+    assert result.excluded_counts == {dm.REASON_NEAR_FIELD: 13}
+
+
+def test_blind_zone_interval_within_or_crossing_05_excluded():
+    mapping = interval_mapping(first_sample_distance_m=0.4, sample_interval_m=0.1,
+                               point_count=4)
+    result = dm.build_mask([1, 2, 3, 4], mapping, 5.2, row_range_m=37.5, row_point_count=4)
+    # [0.4,0.5) 整段在盲区内 → 排除；[0.5,0.6) 起点即盲区边界 → 保留
+    assert result.kept_indices == (1, 2, 3)
+    assert result.excluded_counts == {dm.REASON_NEAR_FIELD: 1}
+
+
+def test_blind_zone_garbage_change_does_not_affect_kept():
+    mapping = point_mapping(first_sample_distance_m=0.5, sample_interval_m=0.0375,
+                            point_count=4)
+    a = dm.build_mask([11, 22, 0, 33], mapping, 5.2, row_range_m=37.5, row_point_count=4)
+    b = dm.build_mask([999, 1e9, 0, 33], mapping, 5.2, row_range_m=37.5, row_point_count=4)
+    assert a.kept_indices == b.kept_indices == (2, 3)
+    assert a.kept_values == b.kept_values == (0.0, 33.0)
 
 
 # ---------------- K05：区间采样与跨界 ----------------
@@ -83,9 +128,10 @@ def test_k05_crossing_interval_excluded_whole():
 
 def test_k05_interval_whole_inside_kept():
     result = dm.mask_intervals([0.0, 0.5, 4.5], 0.5, [5, 6, 7], 5.2)
-    assert result.kept_indices == (0, 1, 2)
-    assert result.kept_values == (5.0, 6.0, 7.0)
-    assert result.excluded_counts == {}
+    # [0.0,0.5) 整段在盲区内 → NEAR_FIELD；[0.5,1.0) 起点即盲区边界 → 保留
+    assert result.kept_indices == (1, 2)
+    assert result.kept_values == (6.0, 7.0)
+    assert result.excluded_counts == {dm.REASON_NEAR_FIELD: 1}
 
 
 def test_k05_interval_requires_positive_width():
@@ -158,7 +204,11 @@ def test_confirmed_point_mapping_builds_mask_through_mapping():
     values = [1] * 200
     result = dm.build_mask(values, mapping, 5.2, row_range_m=37.5, row_point_count=200)
     assert result.status == "OK"
-    # r_k = 0.0375 * k (k=1..200)；k <= 5.2/0.0375 = 138.67 → 138 点
-    expected_kept = int(math.floor(5.2 / 0.0375))
-    assert result.kept_count == expected_kept == 138
+    # r_k = 0.0375*k；r < 0.5m（k=1..13）为几何盲区，r <= 5.2m（k<=138）为截断内
+    # → 保留 k=14..138 共 125 点
+    assert result.excluded_counts == {dm.REASON_NEAR_FIELD: 13,
+                                      dm.REASON_OUT_OF_RANGE: 62}
+    assert result.kept_indices[0] == 13 and result.kept_values[0] == 1.0
+    expected_kept = int(math.floor(5.2 / 0.0375)) - 13
+    assert result.kept_count == expected_kept == 125
     assert result.kept_count < len(values)

@@ -2,6 +2,29 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-17（S02 增补：盲区口径落地，CodeBuddy）
+
+用户提供盲区口径：「信号强度列以第一个出现的 0 开始才算是数据盲区的结束；设备的数据盲区是 0.5 m」。全量实证后落地，S02 仍停在待验收，未开始 S03 统计。
+
+- **实证（两台全量 89.7s 重跑）**：首零索引（0 基）众数 2000=**17**（47.96%）、2001=**16**（46.65%），范围 15—63 / 11—62，随噪声波动；无 0 的行 0；首零前取值 1—255。0.5/17≈0.0294 与已确认格宽 0.0375 不一致 → **首零只作逐行盲区结束标志，不用于反推距离轴**；几何以映射 v2 为准。
+- **映射 v2（并行会话 2026-11-16 登记，本会话核实）**：INTERVAL、首格起点 0.5 m、格宽 0.0375 m、末格终点 38.0 m、CONFIRMED（证据含微信"百岁山"确认与首点 0.5 m 用户确认）→ 两台 `build_mask` **OK**，`issues.csv` P0×2 消除（10 → 8 项）；v1 UNKNOWN 只读保留，K06 阻断机制仍由测试证明。
+- **硬掩码落地两层盲区排除**（`distance_mapping.py`，唯一入口 `build_mask`）：① 行内首零之前 → `NEAR_FIELD`（位置性规则，优先级最高）；② 几何 r<0.5 m（点）/整段在盲区内或跨界盲区边界（区间）→ `NEAR_FIELD`。原有规则不变（无浮点容差、跨界截断整段排除、映射未核实 BLOCKED、不零填充）。
+- **审计/解析**：`csv_parser.first_zero_index()`；`audit_s02` 新增首零分布/首零前取值/无 0 行统计；`signal_array_audit.csv` 新增 `blind_zone_m`、`first_zero_*`、`pre_zero_*`、`candidate_spacing_if_blind_zone_boundary` 列；`DATA_AUDIT_REPORT.md` §4 盲区实证、§8/§10 掩码状态动态化。
+- **测试**：新增盲区 4 项 + 首零解析 1 项 + 行内盲区夹具断言；K04 幅度不变性用例界外值改非 0（避免误触发行内盲区，意图不变）。**136 passed**。
+- **文档**：`STAGE_S02.md` §13 增补、矩阵 K06 更新、索引状态与测试计数、`s02_verification/audit_run.txt` 与 `mask_run.txt` 刷新。
+- **待确认**：若用户本意为「首零固定对应 0.5 m（以首零定位距离轴）」，与格宽 0.0375 冲突，需重新登记映射版本；当前按「首零=逐行盲区结束标志」实现。
+- **未动**：两份原始 CSV（SHA-256 复验一致）、V4 包、S03 未开始。
+
+## 2026-11-16（距离映射 CONFIRMED 解阻，S03 前置门槛清除；状态 MAPPING_CONFIRMED_PENDING_S03）
+
+经微信“百岁山”确认采样参数 + 用户确认首点距离，对两台登记 CONFIRMED 映射 v2，解除 2000/2001 距离分析 BLOCKED；S03 前置门槛已清除，但尚未开始 S03 正式统计。
+
+- **确认参数**：`sample_mode=INTERVAL`（“一段距离区间”）；`sample_interval_m=0.0375`（“一格 3.75cm”）；`first_sample_distance_m=0.5`（用户确认，与盲区 0.5m 一致）；range=37.5、point_count=1000；末格终点 = 0.5 + 1000×0.0375 = **38.0m**（解释“末点不是 37.5”）。
+- **登记**：脚本 `scripts/register_confirmed_mapping.py`，对两台各登记 v2（support=CONFIRMED），v1（UNVERIFIED）只读保留不覆盖；`audit_logs` 记录 CONFIRM_MAPPING（actor=Administrator）。
+- **2001 适用依据**：五台种子数据登记为“同型号探鱼仪”，且 2000/2001 信号数组结构完全一致（1000 槽/37.5 量程/0-255）；采样参数为同型号固件级硬件特性，按同型号外推，evidence 已注明，可回滚。
+- **验证**：构造数据正式模式 `build_mask` status=OK、保留 125 格、第 125 格 [5.1875,5.225) 跨界整段排除；真实 CSV 首行（`14_TEMP/verify_real_mask.py`）两台 status=OK、kept=125（1 跨界 + 874 越界 = 1000）；全量 pytest **131 passed**。
+- **未做**：未开始 S03 正式统计；未改原始 CSV 与 V4 包；未打 `s02-accepted` tag（待用户签收）。
+
 ## 2026-11-16（S02 执行，CodeBuddy；状态 S02_DONE_PENDING_ACCEPTANCE）
 
 S01 复验通过 → 建 tag `s01-accepted` → 执行 S02（真实 CSV 解析与数据质量审计），停在 S02 等验收，未开始 S03。

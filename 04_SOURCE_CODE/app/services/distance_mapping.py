@@ -13,7 +13,11 @@
 3. 映射未核实（sample_mode=UNKNOWN / 首点距离缺失 / 状态非 CONFIRMED / 记录量程与映射不符）：
    原始导入可继续，但正式距离分析必须 BLOCKED 并说明缺项；禁止默认 37.5 m/1000 点推断下标。
 4. 掩码只做样本取舍并记录原因，不做零填充；被排除样本不得进入背景估计、平滑、事件、统计。
-5. 排除原因至少包含：人工越界、距离未知、无效数值，另保留近场/底部干扰扩展位。
+5. 排除原因至少包含：人工越界、距离未知、无效数值，另保留底部干扰扩展位。
+6. 盲区（用户口径 2026-11-17）：设备数据盲区 0.5 m——几何上 r < 0.5 m 的样本一律排除
+   （点样本按距离；区间样本整段在盲区内或跨界盲区边界的整段排除）；且每行信号数组以
+   第一个出现的 0 开始才算数据盲区结束——首零之前的槽位（发射余脉）一律按盲区排除，
+   不参与任何统计。排除原因记 `NEAR_FIELD`。
 """
 from __future__ import annotations
 
@@ -22,6 +26,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable, Sequence
+
+from .csv_parser import first_zero_index
 
 SAMPLE_MODE_POINT = "POINT"
 SAMPLE_MODE_INTERVAL = "INTERVAL"
@@ -37,8 +43,11 @@ REASON_CROSS_BOUNDARY = "CROSS_BOUNDARY_INTERVAL_EXCLUDED"  # 无拆分支持的
 REASON_DISTANCE_UNKNOWN = "DISTANCE_UNKNOWN"                # 该样本距离不可确定
 REASON_INVALID_VALUE = "INVALID_VALUE"                      # 非数值/NaN
 REASON_MAPPING_UNVERIFIED = "DISTANCE_MAPPING_UNVERIFIED"    # 映射未核实，整行阻断
-REASON_NEAR_FIELD = "NEAR_FIELD"                            # 预留：近场（S07 启用）
+REASON_NEAR_FIELD = "NEAR_FIELD"                            # 盲区：r<0.5m 或行内首零之前（用户 2026-11-17）
 REASON_BOTTOM = "BOTTOM_INTERFERENCE"                       # 预留：底部干扰（S07 启用）
+
+# 用户口径（2026-11-17）：设备数据盲区 0.5 m；与映射 v2 首格起点 0.5 m 一致。
+BLIND_ZONE_M = 0.5
 
 ALL_REASONS = (
     REASON_OUT_OF_RANGE, REASON_CROSS_BOUNDARY, REASON_DISTANCE_UNKNOWN,
@@ -130,8 +139,13 @@ def _is_finite_number(value) -> bool:
 
 def mask_points(distances: Sequence[float | None], values: Sequence[float | str | None],
                 cutoff_m: float, *, device_id: str = "unknown",
-                mapping_version: int | None = None) -> MaskResult:
-    """点样本掩码：r <= cutoff 保留，绝不使用浮点容差扩展上限。"""
+                mapping_version: int | None = None,
+                blind_zone_end_index: int | None = None) -> MaskResult:
+    """点样本掩码：r <= cutoff 保留，绝不使用浮点容差扩展上限。
+
+    盲区优先级最高（位置性规则）：行内首零之前的槽位、以及 r < 0.5 m 的样本，
+    一律按 `NEAR_FIELD` 排除。
+    """
     _validate_cutoff(cutoff_m)
     if len(distances) != len(values):
         raise ValueError("distances 与 values 长度必须一致")
@@ -141,6 +155,10 @@ def mask_points(distances: Sequence[float | None], values: Sequence[float | str 
     counts: Counter[str] = Counter()
 
     for i, (r, raw) in enumerate(zip(distances, values)):
+        if blind_zone_end_index is not None and i < blind_zone_end_index:
+            counts[REASON_NEAR_FIELD] += 1
+            reasons.append((i, REASON_NEAR_FIELD))
+            continue
         if not _is_finite_number(raw):
             counts[REASON_INVALID_VALUE] += 1
             reasons.append((i, REASON_INVALID_VALUE))
@@ -148,6 +166,10 @@ def mask_points(distances: Sequence[float | None], values: Sequence[float | str 
         if r is None or not _is_finite_number(r):
             counts[REASON_DISTANCE_UNKNOWN] += 1
             reasons.append((i, REASON_DISTANCE_UNKNOWN))
+            continue
+        if r < BLIND_ZONE_M:
+            counts[REASON_NEAR_FIELD] += 1
+            reasons.append((i, REASON_NEAR_FIELD))
             continue
         if r <= cutoff_m:
             kept_idx.append(i)
@@ -167,8 +189,13 @@ def mask_points(distances: Sequence[float | None], values: Sequence[float | str 
 def mask_intervals(starts: Sequence[float | None], interval_m: float,
                    values: Sequence[float | str | None], cutoff_m: float, *,
                    device_id: str = "unknown",
-                   mapping_version: int | None = None) -> MaskResult:
-    """区间样本掩码：整段在界内才保留；跨界（无拆分支持）整段排除。"""
+                   mapping_version: int | None = None,
+                   blind_zone_end_index: int | None = None) -> MaskResult:
+    """区间样本掩码：整段在界内才保留；跨界（无拆分支持）整段排除。
+
+    盲区优先级最高（位置性规则）：行内首零之前的槽位一律排除；几何上整段位于
+    盲区内（end <= 0.5m）或跨越盲区边界（start < 0.5m < end）的单元整段排除。
+    """
     _validate_cutoff(cutoff_m)
     if len(starts) != len(values):
         raise ValueError("starts 与 values 长度必须一致")
@@ -180,6 +207,10 @@ def mask_intervals(starts: Sequence[float | None], interval_m: float,
     counts: Counter[str] = Counter()
 
     for i, (start, raw) in enumerate(zip(starts, values)):
+        if blind_zone_end_index is not None and i < blind_zone_end_index:
+            counts[REASON_NEAR_FIELD] += 1
+            reasons.append((i, REASON_NEAR_FIELD))
+            continue
         if not _is_finite_number(raw):
             counts[REASON_INVALID_VALUE] += 1
             reasons.append((i, REASON_INVALID_VALUE))
@@ -189,6 +220,10 @@ def mask_intervals(starts: Sequence[float | None], interval_m: float,
             reasons.append((i, REASON_DISTANCE_UNKNOWN))
             continue
         end = start + interval_m
+        if end <= BLIND_ZONE_M or start < BLIND_ZONE_M < end:
+            counts[REASON_NEAR_FIELD] += 1
+            reasons.append((i, REASON_NEAR_FIELD))
+            continue
         if end <= cutoff_m:
             kept_idx.append(i)
             kept_val.append(float(raw))
@@ -240,12 +275,14 @@ def build_mask(signal_values: Sequence[float | str | None],
         distances = [mapping.first_sample_distance_m + i * (mapping.sample_interval_m or 0)
                      for i in range(len(signal_values))]
         return mask_points(distances, signal_values, cutoff_m,
-                           device_id=mapping.device_id, mapping_version=mapping.version)
+                           device_id=mapping.device_id, mapping_version=mapping.version,
+                           blind_zone_end_index=first_zero_index(signal_values))
 
     starts = [mapping.first_sample_distance_m + i * mapping.sample_interval_m
               for i in range(len(signal_values))]
     return mask_intervals(starts, mapping.sample_interval_m, signal_values, cutoff_m,
-                          device_id=mapping.device_id, mapping_version=mapping.version)
+                          device_id=mapping.device_id, mapping_version=mapping.version,
+                          blind_zone_end_index=first_zero_index(signal_values))
 
 
 # ---------------- 持久化：逐设备/量程/采样定义版本化 ----------------

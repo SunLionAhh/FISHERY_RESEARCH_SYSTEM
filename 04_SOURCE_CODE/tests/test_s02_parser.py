@@ -90,6 +90,14 @@ def test_parse_timestamp_variants():
     assert dt is None and err
 
 
+def test_first_zero_index_marks_blind_zone_end():
+    """用户口径：首个 0 = 盲区结束；无 0 返回 None。"""
+    assert cp.first_zero_index([255.0, 255.0, 0.0, 12.0]) == 2
+    assert cp.first_zero_index([0.0, 255.0]) == 0
+    assert cp.first_zero_index([1.0, None, 2.0]) is None
+    assert cp.first_zero_index([]) is None
+
+
 def test_signal_parse_marks_invalid_positions():
     values, empty, nonnum, trailing, errors = cp.parse_signal("1::x:4")
     assert values == [1.0, None, None, 4.0]
@@ -137,6 +145,10 @@ def test_audit_writes_eight_artifacts_with_blocked_mapping(tmp_path, conn):
     assert audit.rows_total == 3
     assert audit.same_second_groups == 1
     assert audit.depth_zero == 1
+    # 盲区：行1 首零在索引 2；行2/3 无 0
+    assert audit.sig_first_zero == {2: 1}
+    assert audit.sig_rows_no_zero == 2
+    assert audit.pre_zero_min == 255.0 and audit.pre_zero_max == 255.0
     assert audit.mask_status == "BLOCKED"  # 未登记映射 → 正式距离分析 BLOCKED
 
     audits = [audit]

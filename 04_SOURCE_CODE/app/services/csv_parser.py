@@ -14,7 +14,7 @@ import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Sequence
 
 SAMPLE_BYTES = 1 << 20  # 1 MiB 取样用于编码/分隔符探测
 
@@ -147,6 +147,18 @@ def parse_timestamp(raw: str) -> tuple[datetime | None, str, str | None]:
         except ValueError:
             continue
     return None, "", f"无法解析时间戳 {text!r}"
+
+
+def first_zero_index(values: Sequence[float | None]) -> int | None:
+    """返回第一个 0 的 0 基索引；无 0 时返回 None。
+
+    用户口径（2026-11-17）：信号数组以第一个出现的 0 开始才算数据盲区结束，
+    设备盲区 0.5 m——即首零之前的部分属盲区，不作为有效数据。
+    """
+    for i, v in enumerate(values):
+        if v == 0.0:
+            return i
+    return None
 
 
 def parse_float(raw: str) -> tuple[float | None, str | None]:

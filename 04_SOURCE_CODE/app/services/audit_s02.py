@@ -14,7 +14,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from . import distance_mapping as dm
-from .csv_parser import FileInspection, ParsedRow, inspect_file, iter_rows
+from .csv_parser import (FileInspection, ParsedRow, first_zero_index, inspect_file,
+                         iter_rows)
 
 ARTIFACTS = (
     "field_dictionary.csv",
@@ -29,6 +30,8 @@ ARTIFACTS = (
 
 EXPECTED_POINTS = 1000  # 用户提供，仅为审计对照，不作为切片依据
 DECLARED_RANGE_M = 37.5
+# 用户口径（2026-11-17）：信号数组以第一个 0 开始才算数据盲区结束；设备盲区 0.5 m。
+BLIND_ZONE_M = 0.5
 
 
 @dataclass
@@ -78,6 +81,11 @@ class DeviceAudit:
     sig_lengths: Counter = field(default_factory=Counter)        # 有效槽位数（剔除尾部空 token）
     sig_token_lengths: Counter = field(default_factory=Counter)  # 原始 token 数
     sig_trailing_empty_total: int = 0
+    sig_first_zero: Counter = field(default_factory=Counter)   # 首零索引分布（0 基）
+    sig_rows_no_zero: int = 0
+    pre_zero_min: float | None = None
+    pre_zero_max: float | None = None
+    pre_zero_invalid: int = 0
     ts_minute_precision_rows: int = 0
     sig_total_points: int = 0
     sig_empty_tokens: int = 0
@@ -246,6 +254,18 @@ def audit_device(device_id: str, path: Path, *, conn: sqlite3.Connection | None 
             audit.sig_lengths[row.effective_signal_len] += 1
             audit.sig_token_lengths[row.signal_len] += 1
             audit.sig_trailing_empty_total += row.signal_trailing_empty
+            fz = first_zero_index(row.signal)
+            if fz is None:
+                audit.sig_rows_no_zero += 1
+            else:
+                audit.sig_first_zero[fz] += 1
+                for v in row.signal[:fz]:
+                    if v is None:
+                        audit.pre_zero_invalid += 1
+                    elif audit.pre_zero_min is None or v < audit.pre_zero_min:
+                        audit.pre_zero_min = v
+                    elif audit.pre_zero_max is None or v > audit.pre_zero_max:
+                        audit.pre_zero_max = v
             audit.sig_total_points += row.effective_signal_len
             audit.sig_empty_tokens += row.signal_empty_tokens
             audit.sig_non_numeric += row.signal_non_numeric
@@ -338,6 +358,10 @@ def write_signal_array_audit(audits: list[DeviceAudit], out: Path) -> None:
         mode_len, mode_n = (lengths.most_common(1)[0] if lengths else (0, 0))
         total = sum(lengths.values()) or 1
         dist = ";".join(f"{k}点:{v}" for k, v in lengths.most_common(6))
+        fz_mode, fz_n = (a.sig_first_zero.most_common(1)[0] if a.sig_first_zero else (None, 0))
+        fz_total = sum(a.sig_first_zero.values()) or 1
+        fz_dist = ";".join(f"idx{k}:{v}" for k, v in sorted(a.sig_first_zero.items())[:12])
+        cand = f"{BLIND_ZONE_M / fz_mode:.5f}" if fz_mode else ""
         rows.append([
             a.device_id, a.rows_with_signal, a.sig_total_points,
             min(lengths) if lengths else 0, max(lengths) if lengths else 0,
@@ -353,6 +377,15 @@ def write_signal_array_audit(audits: list[DeviceAudit], out: Path) -> None:
             "UNVERIFIED",
             "原始行以冒号结尾：1001 个 token = 1000 个有效槽位 + 1 个尾部空项；"
             "1000 槽位是采样中心还是距离区间尚未核实，禁止由 37.5/1000 推定下标",
+            BLIND_ZONE_M,
+            "" if fz_mode is None else fz_mode,
+            f"{fz_n / fz_total:.4%}" if a.sig_first_zero else "",
+            "" if fz_mode is None else ("" if a.sig_first_zero and min(a.sig_first_zero) == max(a.sig_first_zero)
+                                        else f"{min(a.sig_first_zero)}—{max(a.sig_first_zero)}"),
+            a.sig_rows_no_zero, fz_dist,
+            "" if a.pre_zero_min is None else f"{a.pre_zero_min:g}",
+            "" if a.pre_zero_max is None else f"{a.pre_zero_max:g}",
+            a.pre_zero_invalid, cand,
             a.mask_status, a.mask_reason_summary, "；".join(a.mask_blocked_reasons),
         ])
     _write_csv(out / "signal_array_audit.csv",
@@ -361,8 +394,11 @@ def write_signal_array_audit(audits: list[DeviceAudit], out: Path) -> None:
                 "token_length_distribution", "trailing_empty_tokens", "empty_tokens",
                 "non_numeric_tokens", "min_value", "max_value", "zero_values", "zero_share",
                 "values_gt_255", "negative_values", "rows_len_ne_1000", "expected_points",
-                "point_or_interval", "point_or_interval_note", "mask_status",
-                "mask_reason_summary", "mask_blocked_reasons"], rows)
+                "point_or_interval", "point_or_interval_note", "blind_zone_m",
+                "first_zero_index_mode", "first_zero_mode_share", "first_zero_index_range",
+                "rows_no_zero", "first_zero_index_distribution", "pre_zero_min", "pre_zero_max",
+                "pre_zero_invalid", "candidate_spacing_if_blind_zone_boundary",
+                "mask_status", "mask_reason_summary", "mask_blocked_reasons"], rows)
 
 
 def write_timestamp_audit(audits: list[DeviceAudit], out: Path) -> None:
@@ -524,6 +560,10 @@ def write_issues(audits: list[DeviceAudit], out: Path) -> list[list]:
         if a.rows_len_ne_1000:
             add(a.device_id, "P1", "信号数组", "有效槽位数不等于 1000",
                 f"{a.rows_len_ne_1000}/{a.rows_total} 行：{dict(a.sig_lengths)}", "signal_array_audit.csv")
+        if a.sig_rows_no_zero:
+            add(a.device_id, "P2", "盲区", "存在无 0 的信号行",
+                f"{a.sig_rows_no_zero}/{a.rows_total} 行：无法按首零定位盲区结束"
+                f"（用户口径盲区 0.5 m）", "signal_array_audit.csv")
         if a.ts_minute_precision_rows:
             add(a.device_id, "P1", "时间", "时间戳仅到分钟（秒精度缺失）",
                 f"{a.ts_minute_precision_rows}/{a.rows_total} 行；不得与秒级时间轴直接对齐，"
@@ -620,6 +660,23 @@ def write_report(audits: list[DeviceAudit], issues: list[list], out: Path,
                      f"空项 {a.sig_empty_tokens}（尾部空项 {a.sig_trailing_empty_total}）；"
                      f"非数值 {a.sig_non_numeric}；值域 {a.sig_min}—{a.sig_max}；"
                      f"0 值占比 {zero_share}；>255：{a.sig_gt_255}；负值：{a.sig_negative}")
+        fz_mode, fz_n = (a.sig_first_zero.most_common(1)[0] if a.sig_first_zero else (None, 0))
+        fz_total = sum(a.sig_first_zero.values()) or 1
+        if fz_mode is not None:
+            cand = BLIND_ZONE_M / fz_mode
+            lines.append(f"  - 盲区（用户口径 0.5 m）：首零索引众数 **{fz_mode}**"
+                         f"（{fz_n / fz_total:.4%}，范围 {min(a.sig_first_zero)}—{max(a.sig_first_zero)}）；"
+                         f"无 0 的行 {a.sig_rows_no_zero}；首零前取值 {a.pre_zero_min}—{a.pre_zero_max}"
+                         f"（无效项 {a.pre_zero_invalid}）；候选单元宽度 0.5/{fz_mode}={cand:.5f} m"
+                         f"（仅候选，**非结论**，与 37.5/1000=0.0375 并列待用户确认）")
+        else:
+            lines.append(f"  - 盲区（用户口径 0.5 m）：全部 {a.rows_with_signal} 行均无 0，"
+                         f"无法按首零定位盲区结束")
+    lines.append("")
+    lines.append("**盲区口径（用户提供，2026-11-17）**：信号数组以第一个出现的 0 开始才算数据盲区结束；"
+                 "设备数据盲区 0.5 m。即首零之前的槽位属盲区（`NEAR_FIELD` 候选排除原因，S07 预留），"
+                 "首零及其之后才进入有效观测段。该口径与「1000 槽位=中心还是区间」「首点距离」共同决定映射，"
+                 "在用户确认语义并登记 `CONFIRMED` 映射版本之前，正式距离分析仍 BLOCKED。")
     lines.append("")
     lines.append("**数组结构**：原始行以冒号结尾，`split(':')` 得到 **1001 个 token**，其中最后 1 个为空；"
                  "有效数值槽位为 **1000**。审计同时记录 token 数与槽位数，避免把尾部空项误当第 1001 个采样。")
@@ -683,11 +740,18 @@ def write_report(audits: list[DeviceAudit], issues: list[list], out: Path,
     lines.append("")
     lines.append("- 硬掩码规则：点样本 `r <= cutoff` 保留、无浮点容差；区间样本整段在界内才保留，"
                  "跨界且无可拆分支持信息时**整段排除**。")
-    lines.append("- 当前两台设备的采样语义与首点距离均未核实 → **正式距离分析 BLOCKED**；"
-                 "原始导入与保存仍可继续，但不得输出任何正式截断统计。")
-    lines.append("- 排除原因记录：`DISTANCE_MAPPING_UNVERIFIED`（当前）、"
-                 "`OUT_OF_RANGE_MANUAL_CUTOFF`、`CROSS_BOUNDARY_INTERVAL_EXCLUDED`、"
-                 "`DISTANCE_UNKNOWN`、`INVALID_VALUE`。\n")
+    statuses = {a.mask_status for a in audits}
+    if statuses == {"OK"}:
+        lines.append("- 当前映射状态：两台设备映射最新版本均为 INTERVAL/CONFIRMED"
+                     "（首格起点 0.5 m、格宽 0.0375 m，2026-11-16 经用户确认登记）→ **硬掩码可用**。")
+    else:
+        lines.append("- 当前映射存在未核实项 → **正式距离分析 BLOCKED**；"
+                     "原始导入与保存仍可继续，但不得输出任何正式截断统计。")
+    lines.append("- 盲区规则（用户口径 2026-11-17）：设备盲区 0.5 m——r<0.5 m 或整段/跨界盲区"
+                 "边界的区间一律排除；每行数组首个 0 之前（发射余脉）按 `NEAR_FIELD` 排除。")
+    lines.append("- 排除原因记录：`OUT_OF_RANGE_MANUAL_CUTOFF`、`CROSS_BOUNDARY_INTERVAL_EXCLUDED`、"
+                 "`NEAR_FIELD`（盲区）、`DISTANCE_UNKNOWN`、`INVALID_VALUE`、"
+                 "`DISTANCE_MAPPING_UNVERIFIED`（映射未核实时）。\n")
 
     lines.append("## 9. 问题清单\n")
     lines.append(f"共 {len(issues)} 项，见 `issues.csv`。")
@@ -699,8 +763,13 @@ def write_report(audits: list[DeviceAudit], issues: list[list], out: Path,
     lines.append("**已核实**：文件存在、大小、SHA-256（与归档清单一致）、逐文件编码/分隔符/换行、"
                  "表头、行数、时间范围、同秒多记录、重复序号、断档、数组 token/槽位结构"
                  "（1001 token = 1000 有效槽位 + 尾部空项）、值域、2001 时间戳仅到分钟。")
-    lines.append("\n**未核实（不得据此做正式分析）**：1000 点是采样中心还是区间；首点距离；"
-                 "量程 37.5 m 与 1000 点的对应关系；水深字段定义；时区。")
-    lines.append("\n**BLOCKED**：2000/2001 的正式距离截断分析（`build_mask` 返回 BLOCKED）。"
-                 "S03 统计必须在映射核实后才能产出；本轮不生成任何未截断的正式统计。")
+    lines.append("\n**未核实（不得据此做正式分析）**：1000 槽位逐格对应关系以映射版本登记为准"
+                 "（当前 INTERVAL/CONFIRMED）；水深字段定义；时区。")
+    blocked = [a.device_id for a in audits if a.mask_status != "OK"]
+    if blocked:
+        lines.append(f"\n**BLOCKED**：{','.join(blocked)} 的正式距离截断分析（`build_mask` 返回 BLOCKED）。"
+                     "S03 统计必须在映射核实后才能产出；本轮不生成任何未截断的正式统计。")
+    else:
+        lines.append("\n**硬掩码可用**：两台设备映射均为 CONFIRMED，正式截断统计可以产出"
+                     "（本轮 S02 仍只做审计，不生成统计）。")
     (out / "DATA_AUDIT_REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
