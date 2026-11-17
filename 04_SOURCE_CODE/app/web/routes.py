@@ -2,6 +2,7 @@
 """S01 Web 路由：首页（设备清单+未知队列）、设备详情（参数/GPS 表单+历史）、保存与预览。"""
 import json
 import sqlite3
+import threading
 from pathlib import Path
 
 from flask import (Blueprint, abort, current_app, flash, redirect, render_template,
@@ -17,6 +18,9 @@ from ..services import s07_datasets as dataset_svc
 from ..services import s07_depth as depth_svc
 from ..services import s07_patterns as pattern_svc
 from ..services import spatial as spatial_svc
+from ..services import s09_animation as animation_svc
+from ..services import s09_figures as figure_svc
+from ..services import origin_bridge as origin_svc
 from ..services import beam_geometry as geometry_svc
 from ..services import intraday as intraday_svc
 from ..services import devices as svc
@@ -688,3 +692,53 @@ def s08_home():
                            analysis=analysis, dynamics=dynamics,
                            devices=",".join(devices), start=start, end=end,
                            observed_date=observed_date)
+
+
+def _origin_worker_thread(task_id: str, db_file: str, project_root: Path) -> None:
+    from ..db import connect as connect_worker
+    conn = connect_worker(db_file)
+    try:
+        origin_svc.run_task(conn, task_id, project_root)
+    finally:
+        conn.close()
+
+
+@bp.route("/s09", methods=["GET", "POST"])
+def s09_home():
+    """S09：16 类图、动画导出与 Origin 独立 Worker 任务状态。"""
+    conn = get_conn()
+    message = None
+    app_obj = current_app._get_current_object()
+    try:
+        if request.method == "POST":
+            action = request.form.get("action")
+            if action == "figures":
+                result = figure_svc.build_all(
+                    conn, Path(app_obj.config["PROJECT_ROOT"]),
+                    run_id=request.form.get("run_id") or "S09-RUN",
+                    dataset_id=request.form.get("dataset_id") or "DATASET_01_DUAL_STATION")
+                message = f"16 类图登记完成：{result['ok']} 项有数据，{result['blocked']} 项 BLOCKED/NO_DATA"
+            elif action == "animation":
+                formats = tuple(x for x in request.form.get("formats", "PNG_SEQUENCE,GIF,MP4,PDF").split(",") if x)
+                result = animation_svc.export(conn, Path(app_obj.config["PROJECT_ROOT"]), formats=formats)
+                message = f"动画导出完成：{result['frames']} 帧，{len(result['exports'])} 种格式"
+            elif action == "origin":
+                figure_ids = [x.strip() for x in request.form.get("figures", "").split(",") if x.strip()]
+                task = origin_svc.create_task(conn, Path(app_obj.config["PROJECT_ROOT"]), figure_ids)
+                threading.Thread(
+                    target=_origin_worker_thread,
+                    args=(task["task_id"], app_obj.config["DB_FILE"],
+                          Path(app_obj.config["PROJECT_ROOT"])),
+                    daemon=True).start()
+                message = f"Origin 任务 {task['task_id']} 已入队，独立 Worker 串行执行；刷新查看状态"
+            else:
+                message = f"未知操作：{action}"
+        figures = figure_svc.report(conn)
+        origin = origin_svc.report(conn)
+        animation = [dict(r) for r in conn.execute(
+            "SELECT * FROM animation_exports ORDER BY created_at DESC LIMIT 12")]
+    finally:
+        conn.close()
+    return render_template("s09.html", message=message, figures=figures,
+                           origin=origin, animation=animation,
+                           environment=origin_svc.probe_environment())

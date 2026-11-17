@@ -1,0 +1,73 @@
+﻿{
+    "log":  [
+                "2026-11-17T22:47:59.4896507+08:00 COM version=10.400131",
+                "2026-11-17T22:48:01.0037313+08:00 export F09-01.png=True",
+                "2026-11-17T22:48:01.4978333+08:00 export F09-02.png=True",
+                "2026-11-17T22:48:02.0398873+08:00 export F09-03.png=True",
+                "2026-11-17T22:48:02.5388844+08:00 export F09-04.png=True",
+                "2026-11-17T22:48:03.0634107+08:00 export F09-06.png=True",
+                "2026-11-17T22:48:03.9198447+08:00 export F09-07.png=True",
+                "2026-11-17T22:48:04.4373601+08:00 export F09-08.png=True",
+                "2026-11-17T22:48:04.9530729+08:00 export F09-12.png=True",
+                "2026-11-17T22:48:05.5022516+08:00 export F09-13.png=True",
+                "2026-11-17T22:48:06.0155493+08:00 export F09-14.png=True"
+            ],
+    "reopen_check":  "PASS:[F09_01]Sheet1",
+    "task_id":  "ORIGIN-20261117224750808941",
+    "opju_path":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\origin_project.opju",
+    "status":  "OK",
+    "error":  "",
+    "completed_at":  "2026-11-17T22:48:18.2761305+08:00",
+    "exports":  [
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-01",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-01.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-02",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-02.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-03",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-03.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-04",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-04.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-06",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-06.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-07",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-07.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-08",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-08.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-12",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-12.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-13",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-13.png"
+                    },
+                    {
+                        "format":  "png",
+                        "figure_id":  "F09-14",
+                        "file":  "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\origin\\exports\\F09-14.png"
+                    }
+                ]
+}

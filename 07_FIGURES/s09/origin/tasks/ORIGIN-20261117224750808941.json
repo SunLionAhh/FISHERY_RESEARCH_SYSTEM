@@ -1,0 +1,59 @@
+{
+  "task_id": "ORIGIN-20261117224750808941",
+  "figures": [
+    {
+      "figure_id": "F09-01",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-01.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-02",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-02.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-03",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-03.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-04",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-04.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-06",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-06.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-07",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-07.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-08",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-08.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-12",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-12.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-13",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-13.csv",
+      "y": "value"
+    },
+    {
+      "figure_id": "F09-14",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-14.csv",
+      "y": "value"
+    }
+  ],
+  "formats": [
+    "png"
+  ],
+  "output_dir": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/07_FIGURES/s09/origin/exports"
+}

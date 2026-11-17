@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S08（**五站 GPS 空间与动态分析完成**：版本化站位 GPS/坐标审计、站距与离线坐标示意；每日五站/日期×站位/昼夜/水层/周月空间比较；空间同步与格局稳定性诚实 BLOCKED/INSUFFICIENT_DATA；环境联合与离散小时动态帧；223 测试全过**，见 `STAGE_S08.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S08_DONE_PENDING_ACCEPTANCE**（用户已签收 S07 并建 `s07-accepted` tag；S08 停在验收，未开始 S09） |
+| 当前阶段 | S09（**OriginPro 桥接、16 类科研图与动态导出完成**：COM 闭环/OPJU 重开 PASS；16 类登记 12 有数据 4 阻断；正式图色板外 0；S08 96 帧导出 PNG 序列/GIF/MP4/PDF；228 测试全过**，见 `STAGE_S09.md` 与 `CHANGELOG.md` 顶部） |
+| 当前状态 | **S09_DONE_PENDING_ACCEPTANCE**（用户已签收 S08 并建 `s08-accepted` tag；S09 停在验收，未开始 S10） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-17（S08 完成：GPS/站距/离线地图/空间比较/动态帧 + Web/CLI） |
+| 更新时间 | 2026-11-17（S09 完成：Origin COM 闭环/16 类图/动画导出 + Web/CLI） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -129,12 +129,13 @@
 | intraday analysis_id | `S06-DDC45D6F9491`（真实 480 个 15 分钟格、120 个小时格）；2000/2001 坐标系未声明，天文分段全部 PROVISIONAL |
 | s07 pattern_id | `2`（规律版本；真实 4 日 L1，旧 v1 留痕）；分层/QC 按 `S07_LAYER_QCV1` 与文件哈希绑定 |
 | s08 station_location / station_distance | 只接入 2000/2001 两条用户提供坐标；P 码 NULL，坐标系 UNDECLARED；站距 157.809 m 标 PROVISIONAL，`HAVERSINE_WGS84_ASSUMED_UNDECLARED` |
+| s09 figure_registry / origin_tasks | 16 类登记，12 OK / 4 BLOCKED-NO_DATA；Origin 任务 `ORIGIN-20261117223449`（3 图×3 格式）与 `ORIGIN-20261117224750808941`（10 图）均 OK、重开 PASS；正式图色板外 0 |
 | origin_job_id | 无（S09） |
 | dataset_id | `DATASET_01_DUAL_STATION` **FROZEN v5**（实际边界 2026-10-31—11-03，正式同步时间 NULL，5 个文件哈希/7 个 run 关联）；`DATASET_02_FIVE_STATION` PLANNED |
-| 最新 Git 提交 | S07 提交 `4b659ed`（S06 为 `62bff10`）；tag **`s00-accepted`—`s07-accepted`**（S08 代码尚未提交，待验收后提交） |
-| 最新测试结果 | pytest **223 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8）；S03 独立复算两台 PASS；颜色板外 0 PASS |
+| 最新 Git 提交 | S08 提交 `80bf877`（S07 为 `4b659ed`）；tag **`s00-accepted`—`s08-accepted`**（S09 代码尚未提交，待验收后提交） |
+| 最新测试结果 | pytest **228 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8 + S09 5）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S08.md`（待验收）｜`STAGE_S07.md`（已签收）｜`10_TEST_REPORTS/s08_verification/`（GPS/站距/地图/空间统计/动态帧证据） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S09.md`（待验收）｜`STAGE_S08.md`（已签收）｜`10_TEST_REPORTS/s09_verification/`（环境/图登记/Origin 闭环/动画/配色证据） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -155,12 +156,12 @@
 
 ## 下一步
 
-**2026-11-17 S08 已完成，等待验收；验收通过前不得开始 S09。** 详见 `STAGE_S08.md`：
+**2026-11-17 S09 已完成，等待验收；验收通过前不得开始 S10。** 详见 `STAGE_S09.md`：
 
-1. **GPS/站距**：只接入用户提供的两台真实坐标（2000/2001），P 码不自动分配，其余三台 UNKNOWN；坐标系未声明，站距 157.809 m 仅 PROVISIONAL 示意，跨坐标系拒绝混算。
-2. **地图与覆盖**：离线坐标示意，无在线底图/投影/鱼群轨迹/密度插值；2000 覆盖 CIRCLE_ONLY（R=5.2），2001 缺参数 UNKNOWN，朝向缺则方向足迹 UNKNOWN。
-3. **空间比较/统计**：每日五站、日期×站位、昼夜、三水层、周/月输出齐全；真实两站仅 1 个共同有效日，相关与稳定度均 INSUFFICIENT_DATA，不给空间规律结论。
-4. **环境/动态**：风速 PROVISIONAL、其余 BLOCKED，站间环境比较 BLOCKED；离散小时帧 + 滑块/播放/倍速/单站切换 + 环境同步，缺测 NA；223 passed。
+1. **环境/桥接**：OriginPro 2027 COM 实测 OK，`originpro`/`pywin32` 未安装标 BLOCKED；PowerShell 独立 Worker 完成 CSV→工作簿→绘图→OPJU→重开 PASS，10 窗口任务 PASS。
+2. **16 类图**：12 类有数据、4 类 BLOCKED/NO_DATA；正式 PNG/PDF/SVG 由 MATPLOTLIB 同源导出，色板外 0；Origin 试用版水印导出只作桥接留痕。
+3. **动态导出**：S08 96 帧导出 PNG 序列/GIF/MP4/PDF，帧数与 NA 一致性留痕；无轨迹、无密度插值。
+4. **测试**：228 passed，21 个原始 CSV 哈希 21/21 不变；停在 S09 等验收。
 
 **以下为已签收的 S06 摘要（归档）**，详见 `STAGE_S06.md`：
 

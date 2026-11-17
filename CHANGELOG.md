@@ -2,6 +2,18 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-17（S09 执行，CodeBuddy；用户「S08验收通过，继续」后启动，状态 S09_DONE_PENDING_ACCEPTANCE）
+
+S08 验收通过后先提交 `80bf877` 并建 tag **`s08-accepted`**，备份正式库（`11_BACKUPS/s09_pre_run_20261117/`，SHA-256 `BF54D204…E98D3`），再执行 S09 OriginPro 桥接、16 类科研图与动态导出；停在 S09 等验收，未开始 S10。
+
+- **环境实测**：OriginPro 2027（10.400131）COM 首次因首次运行许可对话框失败，完成设置后 COM_OK；`originpro`/`pywin32` 未安装，Python 包兼容 BLOCKED；本机试用授权有 demo 水印，Learning Edition 状态未确认。
+- **桥接闭环**：PowerShell COM 独立 Worker 串行执行 CSV→工作簿→绘图→轴题→OPJU→PNG/PDF/SVG→重开核对；3 图×3 格式与 10 图任务均 PASS，重开核对 `[F09_01]Sheet1`；Origin 导出只作桥接留痕，不作正式图。
+- **16 类图**：注册 16 类，12 类有数据、4 类 BLOCKED/NO_DATA（F09-05 底界未确认；F09-09/10/11 无可直接映射结果）；正式 PNG/PDF/SVG 由 MATPLOTLIB 同源导出，`check_figure_colors.py` 色板外 0。
+- **动态导出**：S08 96 个离散帧导出 PNG 序列/GIF/MP4/PDF，帧数与 NA 不补 0 一致性留痕；无轨迹、无密度插值。
+- **入口与测试**：`/s09` 网页只入队不阻塞；`scripts/s09_pipeline.py` 五个子命令；新增 5 项测试，**228 passed**；21 个原始 CSV 哈希 21/21 不变。
+- **修复**：任务 ID 微秒化、同名导出预删除防模态框超时、MATPLOTLIB 配色从色板统一设置、Origin `impCSV` 失败改为 CSV 解析后 COM `SetData`。
+- **未动**：21 个原始 CSV、V4 包、S08 既有断言；未开始 S10。
+
 ## 2026-11-17（S08 执行，CodeBuddy；用户「S07验收通过，继续」后启动，状态 S08_DONE_PENDING_ACCEPTANCE）
 
 S07 验收通过后先提交 `4b659ed` 并建 tag **`s07-accepted`**，备份正式库（`11_BACKUPS/s08_pre_run_20261117/`，SHA-256 `245790CF…36D701C`），再执行 S08 五站 GPS 空间与动态分析；停在 S08 等验收，未开始 S09。

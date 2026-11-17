@@ -1,0 +1,9 @@
+﻿COM=OK
+Version=10.400131
+ProductCode=13
+Exe=Origin64.exe 10.4.0 / ProductVersion 10.4
+originpro_python_package=NOT_INSTALLED
+pywin32_python_package=NOT_INSTALLED
+license_dialog=TRIAL_MODE_REMAINING_3_DAYS (observed 2026-11-17)
+learning_edition=UNCONFIRMED_BY_COM_REGISTRY
+True

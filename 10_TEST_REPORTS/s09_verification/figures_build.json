@@ -1,0 +1,104 @@
+﻿{
+  "run_id": "S09-RUN-20261117",
+  "dataset_id": "DATASET_01_DUAL_STATION",
+  "figures": [
+    {
+      "figure_id": "F09-01",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-01.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-01.png"
+    },
+    {
+      "figure_id": "F09-02",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-02.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-02.png"
+    },
+    {
+      "figure_id": "F09-03",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-03.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-03.png"
+    },
+    {
+      "figure_id": "F09-04",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-04.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-04.png"
+    },
+    {
+      "figure_id": "F09-05",
+      "status": "BLOCKED",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-05.csv",
+      "png": null
+    },
+    {
+      "figure_id": "F09-06",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-06.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-06.png"
+    },
+    {
+      "figure_id": "F09-07",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-07.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-07.png"
+    },
+    {
+      "figure_id": "F09-08",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-08.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-08.png"
+    },
+    {
+      "figure_id": "F09-09",
+      "status": "NO_DATA",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-09.csv",
+      "png": null
+    },
+    {
+      "figure_id": "F09-10",
+      "status": "NO_DATA",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-10.csv",
+      "png": null
+    },
+    {
+      "figure_id": "F09-11",
+      "status": "NO_DATA",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-11.csv",
+      "png": null
+    },
+    {
+      "figure_id": "F09-12",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-12.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-12.png"
+    },
+    {
+      "figure_id": "F09-13",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-13.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-13.png"
+    },
+    {
+      "figure_id": "F09-14",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-14.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-14.png"
+    },
+    {
+      "figure_id": "F09-15",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-15.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-15.png"
+    },
+    {
+      "figure_id": "F09-16",
+      "status": "OK",
+      "csv": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-16.csv",
+      "png": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\F09-16.png"
+    }
+  ],
+  "ok": 12,
+  "blocked": 4
+}

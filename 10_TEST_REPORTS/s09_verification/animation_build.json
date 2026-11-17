@@ -1,0 +1,29 @@
+﻿{
+  "source": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\10_TEST_REPORTS\\s08_verification\\real_data\\dynamic_frames.csv",
+  "frames": 96,
+  "na_cells": 360,
+  "exports": [
+    {
+      "format": "PNG_SEQUENCE",
+      "path": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\animation\\frames\\frame_0000.png",
+      "sha256": "1cf0cc15151606d6cea6387ad22bfc082ac4a429505d0c7bfa251b537d2e28ca"
+    },
+    {
+      "format": "GIF",
+      "path": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\animation\\dynamic_frames.gif",
+      "sha256": "82913528d9af8036d33256bfc0c5e6f193e0dc96ddb2cb9c7a5b8c03176ebe83"
+    },
+    {
+      "format": "MP4",
+      "path": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\animation\\dynamic_frames.mp4",
+      "sha256": "ae1a4c507b3dfffbace6eec4963b423c8d74357e06d14b4cec991836903a1d59"
+    },
+    {
+      "format": "PDF",
+      "path": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\07_FIGURES\\s09\\animation\\dynamic_frames.pdf",
+      "sha256": "635987267b4eee13ef151db08b0e0788f08dcb42ce37d908a0ef52bd929678f3"
+    }
+  ],
+  "ffmpeg": "C:\\Program Files\\EVCapture\\ffmpeg.exe",
+  "note": "离散帧同源导出；无轨迹、无连续密度插值；NA 不补 0"
+}
