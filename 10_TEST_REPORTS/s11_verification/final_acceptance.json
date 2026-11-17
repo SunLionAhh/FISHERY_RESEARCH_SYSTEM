@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-11-17T23:07:27",
+  "verification": {
+    "sections": [
+      {
+        "section": "一 真实数据",
+        "checks": [
+          {
+            "name": "21 个原始 CSV 哈希一致",
+            "pass": true,
+            "detail": "21/21"
+          },
+          {
+            "name": "2000/2001 均有已导入文件",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "二 第一阶段双站数据集",
+        "checks": [
+          {
+            "name": "仅 2000/2001 为阶段成员",
+            "pass": true
+          },
+          {
+            "name": "实际起止时间已记录且不预设固定天数",
+            "pass": true
+          },
+          {
+            "name": "第一阶段已冻结",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "三 第二阶段五站数据集",
+        "checks": [
+          {
+            "name": "五台设备均登记为成员",
+            "pass": true
+          },
+          {
+            "name": "正式同步时间未开始，保持 NULL/PLANNED",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "四 数据重叠",
+        "checks": [
+          {
+            "name": "两阶段数据集边界独立",
+            "pass": true
+          },
+          {
+            "name": "原始数据不重复复制",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "五 每日增量上传",
+        "checks": [
+          {
+            "name": "存在缺测如实登记",
+            "pass": true
+          },
+          {
+            "name": "存在历史补传留痕",
+            "pass": true
+          },
+          {
+            "name": "存在任意比较 run",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "六 设备参数",
+        "checks": [
+          {
+            "name": "五台设备均有记录",
+            "pass": true
+          },
+          {
+            "name": "2000 截断 5.2 m 且全角 15° 已确认",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "七 2000 人工底界",
+        "checks": [
+          {
+            "name": "3.68 m 人工参考面存在",
+            "pass": true
+          },
+          {
+            "name": "理论 5.204306 不覆盖 5.2",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "八 环境数据",
+        "checks": [
+          {
+            "name": "真实风速观测已导入",
+            "pass": true
+          },
+          {
+            "name": "自动获取失败如实 BLOCKED",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "九 时间和空间",
+        "checks": [
+          {
+            "name": "S06 15 分钟格非空",
+            "pass": true
+          },
+          {
+            "name": "S07 三水层统计非空",
+            "pass": true
+          },
+          {
+            "name": "S08 站距与离散帧已有留痕",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "十 规律识别",
+        "checks": [
+          {
+            "name": "规律版本非空且等级不越级",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "十一 Origin",
+        "checks": [
+          {
+            "name": "Origin 任务闭环 OK",
+            "pass": true
+          },
+          {
+            "name": "OPJU 重开核对 PASS",
+            "pass": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "十二 备份和离线",
+        "checks": [
+          {
+            "name": "各阶段备份存在",
+            "pass": true
+          },
+          {
+            "name": "离线核心功能测试",
+            "pass": true,
+            "detail": "由 offline_core_test() 单独执行"
+          }
+        ],
+        "pass": true
+      },
+      {
+        "section": "十三 论文交付",
+        "checks": [
+          {
+            "name": "第三章/第四章/第五章数据包与说明齐全",
+            "pass": true
+          },
+          {
+            "name": "PRE_DEFENSE 数据集冻结",
+            "pass": true
+          }
+        ],
+        "pass": true
+      }
+    ],
+    "pass": 13,
+    "total": 13,
+    "failed": []
+  },
+  "paper_deliverables": [
+    "CHAPTER03_DUAL_STATION.md",
+    "CHAPTER04_FIVE_STATION.md",
+    "CHAPTER05_ENVIRONMENT.md",
+    "DATA_QUALITY.md",
+    "METHODS.md",
+    "PRE_DEFENSE.md"
+  ],
+  "pre_defense": {
+    "dataset_id": "PRE_DEFENSE",
+    "status": "FROZEN",
+    "version": 2,
+    "versions": 1
+  },
+  "offline": {
+    "pass": true,
+    "checks": [
+      {
+        "name": "原始 CSV 离线解析 10 行",
+        "pass": true
+      },
+      {
+        "name": "离线工作台入口清单可读取",
+        "pass": true
+      }
+    ],
+    "note": "在进程内禁用 socket.connect 后执行；不依赖外网"
+  },
+  "restore": {
+    "source": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\11_BACKUPS\\s10_pre_run_20261117\\fishery.db",
+    "target": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\10_TEST_REPORTS\\s11_verification\\restore_drill\\restored_fishery.db",
+    "source_sha256": "27ae845f11df480ce26959f1a9e6904f0e506c88a400a27f3fd54822747660d2",
+    "restored_sha256": "27ae845f11df480ce26959f1a9e6904f0e506c88a400a27f3fd54822747660d2",
+    "live_sha256_unchanged": "861039e7b5bdaefc02ba997ceafad5373674451975374a33263b291f81629a2a",
+    "integrity": "ok",
+    "devices": 5,
+    "files": 21,
+    "pass": true,
+    "note": "恢复到隔离路径并核对哈希/完整性；未覆盖运行库，运行库哈希保持不变"
+  },
+  "pytest": "见 s11_verification/pytest.txt（233 passed，S10 228+5 后再加 S11 测试）"
+}

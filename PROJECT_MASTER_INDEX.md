@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S10（**Flask 完整科研工作台整合完成**：31 类入口冒烟 31/31 PASS；设备/日期/阶段全局选择、人工截断版本横幅、质量/缺测/阻断概览、联动 CSV/MD、备份清单、本地绑定与一键启动；233 测试全过**，见 `STAGE_S10.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S10_DONE_PENDING_ACCEPTANCE**（用户已签收 S09 并建 `s09-accepted` tag；S10 停在验收，未开始 S11） |
+| 当前阶段 | S11（**最终系统回归与预答辩验收完成**：13/13 验收章节 PASS；论文第三/四/五章数据包+方法/质量/预答辩索引齐全；PRE_DEFENSE 数据集 FROZEN；隔离恢复与离线测试 PASS；238 测试全过**，见 `STAGE_S11.md` 与 `CHANGELOG.md` 顶部） |
+| 当前状态 | **S11_ACCEPTED_FINAL**（用户已最终验收并建 tag `s11-accepted`；S00—S11 全部完成，开发停止） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-17（S10 完成：31 入口/联动导出/一键启动/本地绑定） |
+| 更新时间 | 2026-11-17（S11 完成：13/13 验收/论文包/PRE_DEFENSE 冻结/恢复离线） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -131,12 +131,13 @@
 | s08 station_location / station_distance | 只接入 2000/2001 两条用户提供坐标；P 码 NULL，坐标系 UNDECLARED；站距 157.809 m 标 PROVISIONAL，`HAVERSINE_WGS84_ASSUMED_UNDECLARED` |
 | s09 figure_registry / origin_tasks | 16 类登记，12 OK / 4 BLOCKED-NO_DATA；Origin 任务 `ORIGIN-20261117223449`（3 图×3 格式）与 `ORIGIN-20261117224750808941`（10 图）均 OK、重开 PASS；正式图色板外 0 |
 | s10 workbench | 31 类入口清单；全局选择 + 截断横幅 + 联动 CSV/MD；31/31 冒烟 PASS，`restart_recovery=true`；一键启动 `启动工作台.bat` |
+| s11 final acceptance | `PRE_DEFENSE` FROZEN v2；13/13 章节 PASS；论文包 6 文件；隔离恢复 PASS；离线核心 PASS；238 测试全过 |
 | origin_job_id | 无（S09） |
 | dataset_id | `DATASET_01_DUAL_STATION` **FROZEN v5**（实际边界 2026-10-31—11-03，正式同步时间 NULL，5 个文件哈希/7 个 run 关联）；`DATASET_02_FIVE_STATION` PLANNED |
-| 最新 Git 提交 | S09 提交 `490ebf6`（S08 为 `80bf877`）；tag **`s00-accepted`—`s09-accepted`**（S10 代码尚未提交，待验收后提交） |
-| 最新测试结果 | pytest **233 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8 + S09 5 + S10 5）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS |
+| 最新 Git 提交 | S11 最终提交（见 `git log`；S10 为 `7ec58f6`）；tag **`s00-accepted`—`s11-accepted`** 全部建立 |
+| 最新测试结果 | pytest **238 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8 + S09 5 + S10 5 + S11 5）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S10.md`（待验收）｜`STAGE_S09.md`（已签收）｜`10_TEST_REPORTS/s10_verification/`（31 入口冒烟/联动导出/备份/测试证据） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S11.md`（已最终签收）｜`STAGE_S10.md`（已签收）｜`10_TEST_REPORTS/s11_verification/`（13/13 验收/冻结/恢复/离线/测试证据） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -157,12 +158,12 @@
 
 ## 下一步
 
-**2026-11-17 S10 已完成，等待验收；验收通过前不得开始 S11。** 详见 `STAGE_S10.md`：
+**2026-11-17 S11 已最终验收签收（tag `s11-accepted`）；S00—S11 全部完成，开发停止。** 详见 `STAGE_S11.md`：
 
-1. **入口**：31 类工作台入口中文导航，真实 GET 冒烟 31/31 PASS；不重写 S01—S09 既有页面。
-2. **联动**：设备/日期/阶段全局选择、人工截断版本横幅、质量/缺测/阻断概览、同源 CSV/MD 导出；真实联动 8 行。
-3. **安全/启动**：仅绑定 127.0.0.1、`debug=False`；项目根一键启动 BAT；重启同一库后工作台 200（`restart_recovery=true`）。
-4. **测试**：233 passed，21 个原始 CSV 哈希 21/21 不变；备份 SHA-256 可见，实际覆盖恢复留 S11 演练。
+1. **验收**：14 章要求归并 13 组自动回归，13/13 PASS；覆盖真实数据、两阶段数据集、重叠、上传、参数、底界、环境、时空、规律、Origin、备份离线、论文交付。
+2. **冻结与论文**：PRE_DEFENSE 数据集 FROZEN；第三/四/五章数据包、方法、质量与预答辩索引六文件齐全，五站数据不足明确 BLOCKED。
+3. **恢复与离线**：隔离路径恢复备份 PASS（SHA/完整性/记录数），运行库哈希不变；禁用 socket 后核心 CSV 解析与工作台入口可用。
+4. **测试**：238 passed，21 个原始 CSV 哈希 21/21 不变；BLOCKED/UNVERIFIED 项如实列于 STAGE_S11 §5。
 
 **以下为已签收的 S06 摘要（归档）**，详见 `STAGE_S06.md`：
 
