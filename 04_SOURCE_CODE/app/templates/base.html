@@ -59,8 +59,9 @@ ul.errors { color: var(--warn); }
 <body>
 <header>
   <h1>渔业声学监测科研工作台</h1>
-  <span class="sub">S01 参数/GPS + S03 每日统计 + S04 任意比较 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）
-    ｜ <a href="/daily">每日统计</a> ｜ <a href="/daily/upload">逐日上传</a> ｜ <a href="/compare">任意比较</a></span>
+  <span class="sub">S01 参数/GPS + S03 每日统计 + S04 任意比较 + S05 环境接入 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）
+    ｜ <a href="/daily">每日统计</a> ｜ <a href="/daily/upload">逐日上传</a> ｜ <a href="/compare">任意比较</a>
+    ｜ <a href="/environment">环境数据</a> ｜ <a href="/environment/analysis">环境联合分析</a></span>
 </header>
 <main>
   {% with messages = get_flashed_messages(with_categories=true) %}

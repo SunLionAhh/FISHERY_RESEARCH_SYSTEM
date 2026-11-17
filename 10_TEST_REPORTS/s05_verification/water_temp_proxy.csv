@@ -1,0 +1,5 @@
+﻿observed_at,water_temp_c,unit,quality_flag,source_note
+2026-10-31T12:00:00,22.105864,CELSIUS,DERIVED,由同一声学 CSV 的水温列按日跨设备平均派生，不是独立环境观测
+2026-11-01T12:00:00,22.086137,CELSIUS,DERIVED,由同一声学 CSV 的水温列按日跨设备平均派生，不是独立环境观测
+2026-11-02T12:00:00,21.986199,CELSIUS,DERIVED,由同一声学 CSV 的水温列按日跨设备平均派生，不是独立环境观测
+2026-11-03T12:00:00,21.757723,CELSIUS,DERIVED,由同一声学 CSV 的水温列按日跨设备平均派生，不是独立环境观测

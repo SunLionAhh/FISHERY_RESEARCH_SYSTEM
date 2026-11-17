@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S04（**任意时间/天数/设备比较引擎完成**：日期集合与小时窗、跨午夜不重不漏、声明时区 UTC 对账、任意设备子集与站位筛选、8 组指定日期比较、3/7/30/N 有效日与滚动基线、差值/百分比/NA 与自动总结；真实 5 组比较落盘；184 测试全过**，见 `STAGE_S04.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S04_DONE_PENDING_ACCEPTANCE**（用户已签收 S03 并建 `s03-accepted` tag；S04 停在验收，未开始 S05） |
+| 当前阶段 | S05（**环境数据接入与联合分析完成**：CSV/XLSX 导入、字段映射/时区/单位/质量检查/来源归档五表；风速 288 行真实导入（168 历史 + 120 预报排除）、水温代理 4 行标 DERIVED；7 组候选时滞全输出 + Fisher CI + Holm + 多因素诊断；潮汐/风向因数据缺失 BLOCKED；自动获取评估全 BLOCKED；196 测试全过**，见 `STAGE_S05.md` 与 `CHANGELOG.md` 顶部） |
+| 当前状态 | **S05_DONE_PENDING_ACCEPTANCE**（用户已签收 S04 并建 `s04-accepted` tag；S05 停在验收，未开始 S06） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-17（S04 完成：筛选/比较/基线/总结 + Web/CLI + 真实对账） |
+| 更新时间 | 2026-11-17（S05 完成：环境导入/配对/滞后/联合 + Web/CLI + 真实对账） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -125,12 +125,13 @@
 | import_batch_id | 已生成 7 个逐日批次（2000/2001 的 10-31；2000 的 11-01、11-02、11-03 含重算），见 `import_batches` |
 | run_id | 已生成 7 个（含重算与补传）；最新：`RUN-2000-20261102-…cb7d60`、`RUN-2000-20261103-…802e30`；旧 run 标 `SUPERSEDED` 不删除 |
 | comparison_id | 已生成 11 个 S04 比较留痕（含调试与最终 5 组），最新 `CMP-4AA00A342509`；查询口径与结果 JSON 存 `comparison_runs` |
+| environment batch_id | `ENV-B373122FA489`（真实风速 288 行）、`ENV-D8F7C909B208`（水温代理 4 行）；原文件归档于 `02_IMPORTED_DATA/ENVIRONMENT_ARCHIVE/`；自动获取 `FETCH-FE91F63EA6` BLOCKED |
 | origin_job_id | 无（S09） |
-| dataset_id | 无（DATASET_01~04 待 S07 冻结；S03/S04 结论不绑定 dataset 前不发布五站结论） |
-| 最新 Git 提交 | S03 提交 `1dfa91a`（S02 为 `6c04e9e`）；tag **`s00-accepted`、`s01-accepted`、`s02-accepted`、`s03-accepted`**（S04 代码尚未提交，待验收后提交） |
-| 最新测试结果 | pytest **184 passed**（S02 136 + S03 22 + S04 26）；S03 独立复算两台 PASS；颜色板外 0 PASS |
+| dataset_id | 无（DATASET_01~04 待 S07 冻结；S03—S05 结论不绑定 dataset 前不发布五站结论） |
+| 最新 Git 提交 | S04 提交 `1658a38`（S03 为 `1dfa91a`）；tag **`s00-accepted`、`s01-accepted`、`s02-accepted`、`s03-accepted`、`s04-accepted`**（S05 代码尚未提交，待验收后提交） |
+| 最新测试结果 | pytest **196 passed**（S02 136 + S03 22 + S04 26 + S05 12）；S03 独立复算两台 PASS；颜色板外 0 PASS |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S04.md`（待验收）｜`STAGE_S03.md`（已签收）｜`10_TEST_REPORTS/s04_verification/`（比较证据） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S05.md`（待验收）｜`STAGE_S04.md`（已签收）｜`10_TEST_REPORTS/s05_verification/`（导入/分析证据） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -151,7 +152,14 @@
 
 ## 下一步
 
-**2026-11-17 S04 已完成，等待验收；验收通过前不得开始 S05。** 详见 `STAGE_S04.md`：
+**2026-11-17 S05 已完成，等待验收；验收通过前不得开始 S06。** 详见 `STAGE_S05.md`：
+
+1. **导入**：CSV/XLSX 字段识别、时区 UTC 对账、单位白名单、缺测/异常/重复/来源冲突、来源登记与原件归档；真实风速 288 行（168 模型历史 + 120 预报排除）。
+2. **水温**：无独立水温文件；按日跨设备从声学 CSV 派生 4 行代理并标 `DERIVED`，只作同源描述、不进入联合解释变量。
+3. **联合与滞后**：7 组时滞全输出、有效样本折减、Fisher CI、Holm 校正、多因素诊断；风速 120 对 r≈−0.10~−0.18、Holm p=1，不出关联结论；R²=0.0092。
+4. **诚实阻断**：潮汐只有 PNG 截图不估读、风向无列不伪造、自动数据源未获确认全部 BLOCKED；196 passed，原始 CSV 21/21 哈希不变。
+
+**以下为已签收的 S04 摘要（归档）**，详见 `STAGE_S04.md`：
 
 1. **筛选**：日期区间两端包含、非连续日期集合、任意天数（日历/有效日）、`[start,end)` 小时窗与跨午夜归属（不重复不漏）、声明时区并输出 UTC 半开区间；未知时区/设备/站位直接拒绝。
 2. **比较**：V4 指定 8 组日期比较（真实 4 日覆盖前 5 组，第 5/7 日组标 `INSUFFICIENT_DATES` 不伪造；合成 7 日序列验算公式）；任意设备对照（2001 vs 2000 同日 +389.56%，各自有效时长规范化）。

@@ -9,6 +9,9 @@ from flask import (Blueprint, abort, current_app, flash, redirect, render_templa
 from ..db import connect
 from ..services import comparison as compare_svc
 from ..services import daily_stats as daily_svc
+from ..services import environment_analysis as env_analysis_svc
+from ..services import environment_fetch as fetch_svc
+from ..services import environment_import as env_import_svc
 from ..services import devices as svc
 from ..services import incremental as upload_svc
 from ..services import reporting as report_svc
@@ -350,3 +353,116 @@ def compare_run():
         conn.close()
     return render_template("compare_result.html", result=result)
 
+
+@bp.get("/environment")
+def environment_home():
+    conn = get_conn()
+    try:
+        sources = [dict(r) for r in conn.execute(
+            "SELECT * FROM environment_source ORDER BY created_at DESC")]
+        batches = [dict(r) for r in conn.execute(
+            "SELECT b.*, s.name AS source_name FROM environment_import_batch b "
+            "JOIN environment_source s ON s.source_id=b.source_id "
+            "ORDER BY b.created_at DESC LIMIT 30")]
+        counts = [dict(r) for r in conn.execute(
+            "SELECT variable, quality_flag, COUNT(*) n FROM environment_observation "
+            "GROUP BY variable, quality_flag ORDER BY variable")]
+        fetch_log = [dict(r) for r in conn.execute(
+            "SELECT * FROM environment_fetch_log ORDER BY requested_at DESC LIMIT 20")]
+    finally:
+        conn.close()
+    return render_template("environment.html", sources=sources, batches=batches,
+                           counts=counts, fetch_log=fetch_log,
+                           evaluation=fetch_svc.evaluate(),
+                           variables=env_import_svc.VARIABLES)
+
+
+@bp.post("/environment/import")
+def environment_import():
+    form = request.form
+    action = form.get("action") or "preview"
+    path = Path(form.get("file_path") or "")
+    preview, outcome, error = None, None, None
+    if not path.exists() or path.suffix.lower() not in (".csv", ".xlsx", ".xlsm"):
+        error = "文件不存在或不是 CSV/XLSX"
+    else:
+        try:
+            if form.get("suggest"):
+                headers, _, metadata, sheet, header_row, _ = env_import_svc.read_table(path)
+                mapping = env_import_svc.suggest_mapping(
+                    headers, variable=form.get("variable") or "WIND_SPEED",
+                    timezone=form.get("timezone") or "Asia/Shanghai", metadata=metadata)
+                mapping.sheet = form.get("sheet") or sheet
+                if form.get("header_row"):
+                    mapping.header_row = int(form["header_row"])
+                else:
+                    mapping.header_row = header_row
+            else:
+                mapping = env_import_svc.Mapping(
+                    variable=form.get("variable") or "WIND_SPEED",
+                    timezone=form.get("timezone") or "Asia/Shanghai",
+                    datetime_column=form.get("datetime_col") or None,
+                    date_column=form.get("date_col") or None,
+                    time_column=form.get("time_col") or None,
+                    value_column=form.get("value_col") or None,
+                    unit_column=form.get("unit_col") or None,
+                    unit_literal=form.get("unit") or None,
+                    quality_column=form.get("quality_col") or None,
+                    location_key=form.get("location_key") or None)
+            if not mapping.value_column:
+                raise env_import_svc.ImportValidationError("必须指定数值列；可勾选自动识别字段")
+            if action == "preview":
+                preview = env_import_svc.preview_file(path, mapping).as_dict()
+            else:
+                conn = get_conn()
+                try:
+                    outcome = env_import_svc.commit_import(
+                        conn, path, mapping, form.get("source_id") or "",
+                        project_root=Path(current_app.config["PROJECT_ROOT"]))
+                finally:
+                    conn.close()
+        except (env_import_svc.ImportValidationError, ValueError, OSError) as exc:
+            error = str(exc)
+    conn = get_conn()
+    try:
+        sources = [dict(r) for r in conn.execute("SELECT * FROM environment_source ORDER BY name")]
+    finally:
+        conn.close()
+    if error:
+        flash(error)
+    return render_template("environment.html", sources=sources, batches=[], counts=[],
+                           fetch_log=[], evaluation=fetch_svc.evaluate(),
+                           variables=env_import_svc.VARIABLES,
+                           preview=preview, outcome=outcome, form=form)
+
+
+@bp.post("/environment/fetch-attempt")
+def environment_fetch_attempt():
+    conn = get_conn()
+    try:
+        result = fetch_svc.attempt(conn, request.form.get("adapter") or "", {"requested_by": "web"})
+        flash(f"{result['adapter']}：{result['status']} — {result.get('error') or '已尝试'}")
+    finally:
+        conn.close()
+    return redirect(url_for("web.environment_home"))
+
+
+@bp.route("/environment/analysis", methods=["GET", "POST"])
+def environment_analysis():
+    result = None
+    error = None
+    if request.method == "POST":
+        form = request.form
+        devices = tuple(d.strip() for d in (form.get("devices") or "2000").split(",") if d.strip())
+        conn = get_conn()
+        try:
+            result = env_analysis_svc.run(
+                conn, devices=devices, start_date=form.get("start_date") or None,
+                end_date=form.get("end_date") or None,
+                timezone_name=form.get("timezone") or "Asia/Shanghai",
+                tolerance_s=int(form.get("tolerance") or env_analysis_svc.DEFAULT_TOLERANCE_S))
+        except (ValueError, env_analysis_svc.AnalysisUnavailable) as exc:
+            error = str(exc)
+        finally:
+            conn.close()
+    return render_template("environment_analysis.html", result=result, error=error)

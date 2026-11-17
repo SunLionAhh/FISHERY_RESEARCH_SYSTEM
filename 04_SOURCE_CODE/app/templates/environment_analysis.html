@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>S05 环境—声学联合分析</h2>
+<p class="hint">候选时滞 0/1/2/3/6/12/24 小时全量输出；环境在前、声学在后。相关不等于因果；预报与派生代理资料不当作独立实测证据。</p>
+<form class="compare-form" method="post" action="/environment/analysis">
+  <label>设备（逗号分隔） <input name="devices" value="2000"></label>
+  <label>开始日期 <input name="start_date" placeholder="2026-10-31"></label>
+  <label>结束日期 <input name="end_date" placeholder="2026-11-03"></label>
+  <label>时区 <input name="timezone" value="Asia/Shanghai"></label>
+  <label>匹配容差（秒） <input name="tolerance" value="1800"></label>
+  <button>运行分析</button>
+</form>
+{% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+
+{% if result %}
+<h3>范围</h3>
+<p>分析 ID <code>{{ result.analysis_id }}</code>｜设备 {{ result.scope.devices | join(',') }}｜声学小时 {{ result.scope.n_acoustic_hours }}｜容差 {{ result.scope.tolerance_seconds }} s</p>
+
+<h3>各环境变量可用性</h3>
+<table><thead><tr><th>变量</th><th>状态</th><th>观测数</th><th>有效配对</th><th>质量标记</th><th>说明</th></tr></thead><tbody>
+{% for key, v in result.variables.items() %}
+<tr><td>{{ key }}</td><td>{{ v.status }}</td><td>{{ v.n_observations or 0 }}</td><td>{{ v.n_pairs or 0 }}</td>
+<td>{{ (v.quality_flags or []) | join(',') }}</td>
+<td>{{ v.reason or v.proxy_warning or v.tide_note or v.wind_direction or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+
+<h3>候选时滞（含置信区间与 Holm 校正）</h3>
+{% for key, block in result.lag_analysis.items() %}
+<h4>{{ key }}</h4>
+{% if block.status == 'BLOCKED' %}<p class="error-box">{{ block.reason }}</p>{% else %}
+<table><thead><tr><th>滞后(h)</th><th>配对数</th><th>有效样本</th><th>r</th><th>95% CI</th><th>p</th><th>p_Holm</th><th>状态</th></tr></thead><tbody>
+{% for r in block.results %}<tr><td>{{ r.lag_hours }}</td><td>{{ r.n_pairs }}</td><td>{{ r.n_eff or '—' }}</td><td>{{ r.r if r.r is not none else 'NA' }}</td><td>{{ r.ci95 | join(' ~ ') if r.ci95 and r.ci95[0] is not none else 'NA' }}</td><td>{{ r.p_two_sided if r.p_two_sided is not none else 'NA' }}</td><td>{{ r.p_holm if r.p_holm is not none else 'NA' }}</td><td>{{ r.status }}</td></tr>{% endfor %}
+</tbody></table>
+<p class="hint">{{ block.lag_direction }}｜搜索范围 {{ block.search_range_hours | join(', ') }} 小时｜{{ block.note }}</p>
+{% endif %}
+{% endfor %}
+
+<h3>多因素联合</h3>
+<pre>{{ result.joint_analysis | tojson(indent=2) }}</pre>
+<p class="error-box">{{ result.disclaimer }}</p>
+{% endif %}
+{% endblock %}
