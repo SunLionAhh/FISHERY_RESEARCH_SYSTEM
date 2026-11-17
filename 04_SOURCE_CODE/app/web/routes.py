@@ -3,9 +3,11 @@
 import sqlite3
 from pathlib import Path
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import (Blueprint, abort, current_app, flash, redirect, render_template,
+                   request, url_for)
 
 from ..db import connect
+from ..services import comparison as compare_svc
 from ..services import daily_stats as daily_svc
 from ..services import devices as svc
 from ..services import incremental as upload_svc
@@ -275,7 +277,8 @@ def daily_mark_missing(device_id: str, observed_date: str):
     conn = get_conn()
     try:
         upload_svc.mark_missing(conn, device_id, observed_date,
-                                note=request.form.get("note") or "人工登记缺测")
+                                note=request.form.get("note") or "人工登记缺测",
+                                project_root=Path(current_app.config["PROJECT_ROOT"]))
         flash(f"{device_id} {observed_date} 已登记为 MISSING（指标 NA，不填 0）", "ok")
         return redirect(url_for("web.daily_detail", device_id=device_id,
                                 observed_date=observed_date))
@@ -283,4 +286,67 @@ def daily_mark_missing(device_id: str, observed_date: str):
         return render_template("error.html", title="缺测登记失败", errors=[str(e)]), 400
     finally:
         conn.close()
+
+
+def _compare_form_context(conn, form=None) -> dict:
+    devices = [dict(r) for r in conn.execute(
+        "SELECT device_id, station_id FROM devices ORDER BY device_id")]
+    stations = [dict(r) for r in conn.execute("SELECT station_id, name FROM stations ORDER BY station_id")]
+    return {"devices": devices, "stations": stations, "form": form or {},
+            "timezone_note": compare_svc.SOURCE_TIME_NOTE,
+            "endpoint_rule": compare_svc.ENDPOINT_RULE}
+
+
+@bp.route("/compare", methods=["GET", "POST"])
+def compare_index():
+    conn = get_conn()
+    try:
+        context = _compare_form_context(conn, dict(request.form) if request.method == "POST" else {})
+        context["runs"] = compare_svc.list_runs(conn)
+    finally:
+        conn.close()
+    return render_template("compare.html", **context)
+
+
+@bp.route("/compare/run", methods=["POST"])
+def compare_run():
+    form = request.form
+    raw = {
+        "devices": [v for v in form.getlist("devices") if v],
+        "stations": [v for v in form.getlist("stations") if v],
+        "start_date": form.get("start_date"), "end_date": form.get("end_date"),
+        "dates": form.get("dates"), "hour_start": form.get("hour_start"),
+        "hour_end": form.get("hour_end"), "day_count": form.get("day_count"),
+        "day_count_mode": form.get("day_count_mode") or "calendar",
+        "timezone": form.get("timezone") or compare_svc.DEFAULT_TIMEZONE,
+        "include_invalid": form.get("include_invalid") == "on",
+    }
+    criteria = compare_svc.Criteria.from_dict(raw)
+    conn = get_conn()
+    try:
+        try:
+            result = compare_svc.run(conn, criteria, name=form.get("name") or "网页比较")
+        except (compare_svc.ComparisonValidationError, compare_svc.ComparisonEmptyError) as e:
+            context = _compare_form_context(conn, raw)
+            context["runs"] = compare_svc.list_runs(conn)
+            context["errors"] = [str(e)]
+            return render_template("compare.html", **context), 400
+        baseline = None
+        if form.get("baseline_mode"):
+            try:
+                baseline = compare_svc.build_baseline(
+                    conn, criteria, form["baseline_reference_date"],
+                    n=int(form.get("baseline_n") or 7), mode=form["baseline_mode"],
+                    start=form.get("baseline_start"), end=form.get("baseline_end"))
+                result["baseline"] = baseline
+                result["summary"] = compare_svc.summarize(
+                    result["selection"],
+                    [c for matrix in (result["date_comparison_matrix"], result["device_comparison_matrix"])
+                     for c in matrix["cases"] if c.get("status") == "OK"],
+                    baseline)
+            except (compare_svc.ComparisonValidationError, compare_svc.ComparisonEmptyError) as e:
+                result["baseline_error"] = str(e)
+    finally:
+        conn.close()
+    return render_template("compare_result.html", result=result)
 

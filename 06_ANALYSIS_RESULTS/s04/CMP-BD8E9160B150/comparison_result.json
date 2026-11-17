@@ -1,0 +1,824 @@
+{
+  "comparison_id": "CMP-BD8E9160B150",
+  "name": "真实-跨午夜",
+  "generated_at": "2026-11-17T11:42:00Z",
+  "selection": {
+    "criteria": {
+      "devices": [
+        "2000"
+      ],
+      "stations": [],
+      "start_date": "2026-11-01",
+      "end_date": "2026-11-02",
+      "dates": [],
+      "hour_start": 22,
+      "hour_end": 2,
+      "day_count": null,
+      "day_count_mode": "calendar",
+      "timezone": "Asia/Shanghai",
+      "day_hours": [
+        6,
+        18
+      ],
+      "include_invalid": false
+    },
+    "resolved_devices": [
+      "2000"
+    ],
+    "resolved_dates": [
+      "2026-11-01",
+      "2026-11-02"
+    ],
+    "hour_indices": [
+      22,
+      23,
+      0,
+      1
+    ],
+    "window_count": 2,
+    "windows": [
+      {
+        "device_id": "2000",
+        "observed_date": "2026-11-01",
+        "stat_id": 5,
+        "run_id": "RUN-2000-20261101-20261117T023916Z-e91986",
+        "status": "UPLOADED_LATE",
+        "observation_status": "COMPLETE",
+        "window_hours": [
+          22,
+          23,
+          0,
+          1
+        ],
+        "window_start_date": "2026-11-01",
+        "window_next_date": "2026-11-02",
+        "local_window_start": "2026-11-01T22:00:00",
+        "local_window_end": "2026-11-02T02:00:00",
+        "utc_window_start": "2026-11-01T14:00:00Z",
+        "utc_window_end": "2026-11-01T18:00:00Z",
+        "window_kind": "cross_midnight",
+        "partial": false,
+        "estimated": true,
+        "valid_records": 31647,
+        "candidate_events": 1581,
+        "kept_samples": 3437453,
+        "valid_observation_duration_s": 14162.749070183792,
+        "coverage_ratio": 0.9835242409849856,
+        "candidate_event_rate_per_hour": 401.8711319246821,
+        "signal_mean": null,
+        "signal_median": null,
+        "signal_p95": null,
+        "activity_peak_hour": 0,
+        "activity_peak_value": 786,
+        "day_night_diff": null,
+        "day_night_night_events": null,
+        "water_temp_mean": null,
+        "hourly_candidate_events": null,
+        "hourly_valid_records": null,
+        "notes": [
+          "日内子窗口有效时长/覆盖率按小时有效记录占比估算（estimated=true），非 S03 精确值",
+          "跨午夜窗口的 [0,2) 小时取自次日 2026-11-02 的统计行，归属起始日，不重复计入次日窗口",
+          "子窗口无小时级直方图与水温，信号分布/水温指标为 NA（不伪造）"
+        ]
+      },
+      {
+        "device_id": "2000",
+        "observed_date": "2026-11-02",
+        "stat_id": 8,
+        "run_id": "RUN-2000-20261102-20261117T024834Z-cb7d60",
+        "status": "REPROCESSED",
+        "observation_status": "COMPLETE",
+        "window_hours": [
+          22,
+          23
+        ],
+        "window_start_date": "2026-11-02",
+        "window_next_date": "2026-11-03",
+        "local_window_start": "2026-11-02T22:00:00",
+        "local_window_end": "2026-11-03T02:00:00",
+        "utc_window_start": "2026-11-02T14:00:00Z",
+        "utc_window_end": "2026-11-02T18:00:00Z",
+        "window_kind": "cross_midnight",
+        "partial": true,
+        "estimated": true,
+        "valid_records": 16090,
+        "candidate_events": 676,
+        "kept_samples": 1731718,
+        "valid_observation_duration_s": 7193.084210035103,
+        "coverage_ratio": 0.9990394736159866,
+        "candidate_event_rate_per_hour": 338.3249700601133,
+        "signal_mean": null,
+        "signal_median": null,
+        "signal_p95": null,
+        "activity_peak_hour": 22,
+        "activity_peak_value": 440,
+        "day_night_diff": null,
+        "day_night_night_events": null,
+        "water_temp_mean": null,
+        "hourly_candidate_events": null,
+        "hourly_valid_records": null,
+        "notes": [
+          "日内子窗口有效时长/覆盖率按小时有效记录占比估算（estimated=true），非 S03 精确值",
+          "跨午夜窗口的 [0,2) 小时取自次日 2026-11-03 的统计行，归属起始日，不重复计入次日窗口",
+          "跨午夜窗口次日 2026-11-03 无统计行，只计入起始日可得小时（partial=true）",
+          "子窗口无小时级直方图与水温，信号分布/水温指标为 NA（不伪造）"
+        ]
+      }
+    ],
+    "excluded": [],
+    "endpoint_rule": "日期区间 [start_date, end_date] 两端包含；小时区间 [hour_start, hour_end) 左闭右开；hour_end < hour_start 表示跨午夜，窗口归属起始日期，消耗当日 [start,24) 与次日 [0,end) 的小时。",
+    "timezone": "Asia/Shanghai",
+    "timezone_note": "原始 CSV 时间戳为设备本地时间；未附带时区元数据，按 Asia/Shanghai(UTC+08:00) 声明比对口径，不冒充实测时区。",
+    "day_night_note": "昼夜按可配置约定 06:00—18:00 / 18:00—06:00 划分（非天文日出日落，S06 再引入晨昏）。",
+    "source": "v_latest_daily_statistics（S03 最新统计行；缺测不填 0）"
+  },
+  "date_comparison_matrix": {
+    "cases": [
+      {
+        "label": "D1_vs_D2",
+        "subject": {
+          "device_id": "2000",
+          "observed_date": "2026-11-01",
+          "window_kind": "cross_midnight"
+        },
+        "reference": {
+          "device_id": "2000",
+          "observed_date": "2026-11-02",
+          "window_kind": "cross_midnight"
+        },
+        "metrics": [
+          {
+            "metric": "valid_records",
+            "label": "有效记录数（条）",
+            "subject": 31647,
+            "reference": 16090,
+            "difference": 15557,
+            "change_percent": 96.68738346799253,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "candidate_events",
+            "label": "候选回波事件（次）",
+            "subject": 1581,
+            "reference": 676,
+            "difference": 905,
+            "change_percent": 133.87573964497042,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "kept_samples",
+            "label": "区内有效样本量（点）",
+            "subject": 3437453,
+            "reference": 1731718,
+            "difference": 1705735,
+            "change_percent": 98.49958249553333,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "candidate_event_rate_per_hour",
+            "label": "候选事件率（次/有效观测小时）",
+            "subject": 401.8711319246821,
+            "reference": 338.3249700601133,
+            "difference": 63.54616186456883,
+            "change_percent": 18.782581094525185,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "coverage_ratio",
+            "label": "有效覆盖率（0—1）",
+            "subject": 0.9835242409849856,
+            "reference": 0.9990394736159866,
+            "difference": -0.015515232631000964,
+            "change_percent": -1.5530149749583118,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "LOWER"
+          },
+          {
+            "metric": "valid_observation_duration_s",
+            "label": "有效观测时长（s）",
+            "subject": 14162.749070183792,
+            "reference": 7193.084210035103,
+            "difference": 6969.6648601486895,
+            "change_percent": 96.89397005008338,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "signal_mean",
+            "label": "区内信号均值（0—255）",
+            "subject": null,
+            "reference": null,
+            "difference": null,
+            "change_percent": null,
+            "pct_note": "参考值或比较值为 NA",
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "NA"
+          },
+          {
+            "metric": "signal_median",
+            "label": "区内信号中位数（0—255）",
+            "subject": null,
+            "reference": null,
+            "difference": null,
+            "change_percent": null,
+            "pct_note": "参考值或比较值为 NA",
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "NA"
+          },
+          {
+            "metric": "signal_p95",
+            "label": "区内信号 P95（0—255）",
+            "subject": null,
+            "reference": null,
+            "difference": null,
+            "change_percent": null,
+            "pct_note": "参考值或比较值为 NA",
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "NA"
+          },
+          {
+            "metric": "activity_peak_hour",
+            "label": "活动峰值小时（0—23）",
+            "subject": 0,
+            "reference": 22,
+            "difference": -22,
+            "change_percent": -100.0,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "LOWER"
+          },
+          {
+            "metric": "activity_peak_value",
+            "label": "活动峰值（次/小时）",
+            "subject": 786,
+            "reference": 440,
+            "difference": 346,
+            "change_percent": 78.63636363636364,
+            "pct_note": null,
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "HIGHER"
+          },
+          {
+            "metric": "day_night_diff",
+            "label": "昼—夜候选事件差（次）",
+            "subject": null,
+            "reference": null,
+            "difference": null,
+            "change_percent": null,
+            "pct_note": "参考值或比较值为 NA",
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "NA"
+          },
+          {
+            "metric": "water_temp_mean",
+            "label": "平均水温（°C）",
+            "subject": null,
+            "reference": null,
+            "difference": null,
+            "change_percent": null,
+            "pct_note": "参考值或比较值为 NA",
+            "effective_n": 3437453,
+            "coverage": 0.9835242409849856,
+            "coverage_estimated": true,
+            "result": "NA"
+          }
+        ],
+        "primary": {
+          "metric": "candidate_event_rate_per_hour",
+          "label": "候选事件率（次/有效观测小时）",
+          "subject": 401.8711319246821,
+          "reference": 338.3249700601133,
+          "difference": 63.54616186456883,
+          "change_percent": 18.782581094525185,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        "disclaimer": "候选事件为阈值算法结果，变化不得直接归因于真实鱼类数量变化。",
+        "device_id": "2000",
+        "status": "OK",
+        "subject_date": "2026-11-01",
+        "reference_dates": [
+          "2026-11-02"
+        ]
+      },
+      {
+        "device_id": "2000",
+        "case": "D4_vs_D1",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 4 日；不伪造第 4 日",
+        "required_dates": 4
+      },
+      {
+        "device_id": "2000",
+        "case": "D4_vs_D2",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 4 日；不伪造第 4 日",
+        "required_dates": 4
+      },
+      {
+        "device_id": "2000",
+        "case": "D4_vs_D3",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 4 日；不伪造第 4 日",
+        "required_dates": 4
+      },
+      {
+        "device_id": "2000",
+        "case": "D4_vs_prev3_mean",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 4 日；不伪造第 4 日",
+        "required_dates": 4
+      },
+      {
+        "device_id": "2000",
+        "case": "D5_vs_D3",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 5 日；不伪造第 5 日",
+        "required_dates": 5
+      },
+      {
+        "device_id": "2000",
+        "case": "D5_vs_prev4_mean",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 5 日；不伪造第 5 日",
+        "required_dates": 5
+      },
+      {
+        "device_id": "2000",
+        "case": "D7_vs_prev6_mean",
+        "status": "INSUFFICIENT_DATES",
+        "detail": "该设备仅 2 个可比较日，需 7 日；不伪造第 7 日",
+        "required_dates": 7
+      }
+    ],
+    "required_case_count": 8,
+    "note": "第5/7日与前N日平均按前N个可比较日算术平均；不把缺测日计入平均。"
+  },
+  "device_comparison_matrix": {
+    "cases": [],
+    "reference_device": "2000",
+    "note": "参考设备可指定；各设备按同日同口径窗口比较，不跨日混比。"
+  },
+  "baseline": null,
+  "summary": {
+    "highest": {
+      "label": "D1_vs_D2",
+      "subject": {
+        "device_id": "2000",
+        "observed_date": "2026-11-01",
+        "window_kind": "cross_midnight"
+      },
+      "reference": {
+        "device_id": "2000",
+        "observed_date": "2026-11-02",
+        "window_kind": "cross_midnight"
+      },
+      "metrics": [
+        {
+          "metric": "valid_records",
+          "label": "有效记录数（条）",
+          "subject": 31647,
+          "reference": 16090,
+          "difference": 15557,
+          "change_percent": 96.68738346799253,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "candidate_events",
+          "label": "候选回波事件（次）",
+          "subject": 1581,
+          "reference": 676,
+          "difference": 905,
+          "change_percent": 133.87573964497042,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "kept_samples",
+          "label": "区内有效样本量（点）",
+          "subject": 3437453,
+          "reference": 1731718,
+          "difference": 1705735,
+          "change_percent": 98.49958249553333,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "candidate_event_rate_per_hour",
+          "label": "候选事件率（次/有效观测小时）",
+          "subject": 401.8711319246821,
+          "reference": 338.3249700601133,
+          "difference": 63.54616186456883,
+          "change_percent": 18.782581094525185,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "coverage_ratio",
+          "label": "有效覆盖率（0—1）",
+          "subject": 0.9835242409849856,
+          "reference": 0.9990394736159866,
+          "difference": -0.015515232631000964,
+          "change_percent": -1.5530149749583118,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "LOWER"
+        },
+        {
+          "metric": "valid_observation_duration_s",
+          "label": "有效观测时长（s）",
+          "subject": 14162.749070183792,
+          "reference": 7193.084210035103,
+          "difference": 6969.6648601486895,
+          "change_percent": 96.89397005008338,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "signal_mean",
+          "label": "区内信号均值（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "signal_median",
+          "label": "区内信号中位数（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "signal_p95",
+          "label": "区内信号 P95（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "activity_peak_hour",
+          "label": "活动峰值小时（0—23）",
+          "subject": 0,
+          "reference": 22,
+          "difference": -22,
+          "change_percent": -100.0,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "LOWER"
+        },
+        {
+          "metric": "activity_peak_value",
+          "label": "活动峰值（次/小时）",
+          "subject": 786,
+          "reference": 440,
+          "difference": 346,
+          "change_percent": 78.63636363636364,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "day_night_diff",
+          "label": "昼—夜候选事件差（次）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "water_temp_mean",
+          "label": "平均水温（°C）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        }
+      ],
+      "primary": {
+        "metric": "candidate_event_rate_per_hour",
+        "label": "候选事件率（次/有效观测小时）",
+        "subject": 401.8711319246821,
+        "reference": 338.3249700601133,
+        "difference": 63.54616186456883,
+        "change_percent": 18.782581094525185,
+        "pct_note": null,
+        "effective_n": 3437453,
+        "coverage": 0.9835242409849856,
+        "coverage_estimated": true,
+        "result": "HIGHER"
+      },
+      "disclaimer": "候选事件为阈值算法结果，变化不得直接归因于真实鱼类数量变化。",
+      "device_id": "2000",
+      "status": "OK",
+      "subject_date": "2026-11-01",
+      "reference_dates": [
+        "2026-11-02"
+      ]
+    },
+    "lowest": {
+      "label": "D1_vs_D2",
+      "subject": {
+        "device_id": "2000",
+        "observed_date": "2026-11-01",
+        "window_kind": "cross_midnight"
+      },
+      "reference": {
+        "device_id": "2000",
+        "observed_date": "2026-11-02",
+        "window_kind": "cross_midnight"
+      },
+      "metrics": [
+        {
+          "metric": "valid_records",
+          "label": "有效记录数（条）",
+          "subject": 31647,
+          "reference": 16090,
+          "difference": 15557,
+          "change_percent": 96.68738346799253,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "candidate_events",
+          "label": "候选回波事件（次）",
+          "subject": 1581,
+          "reference": 676,
+          "difference": 905,
+          "change_percent": 133.87573964497042,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "kept_samples",
+          "label": "区内有效样本量（点）",
+          "subject": 3437453,
+          "reference": 1731718,
+          "difference": 1705735,
+          "change_percent": 98.49958249553333,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "candidate_event_rate_per_hour",
+          "label": "候选事件率（次/有效观测小时）",
+          "subject": 401.8711319246821,
+          "reference": 338.3249700601133,
+          "difference": 63.54616186456883,
+          "change_percent": 18.782581094525185,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "coverage_ratio",
+          "label": "有效覆盖率（0—1）",
+          "subject": 0.9835242409849856,
+          "reference": 0.9990394736159866,
+          "difference": -0.015515232631000964,
+          "change_percent": -1.5530149749583118,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "LOWER"
+        },
+        {
+          "metric": "valid_observation_duration_s",
+          "label": "有效观测时长（s）",
+          "subject": 14162.749070183792,
+          "reference": 7193.084210035103,
+          "difference": 6969.6648601486895,
+          "change_percent": 96.89397005008338,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "signal_mean",
+          "label": "区内信号均值（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "signal_median",
+          "label": "区内信号中位数（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "signal_p95",
+          "label": "区内信号 P95（0—255）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "activity_peak_hour",
+          "label": "活动峰值小时（0—23）",
+          "subject": 0,
+          "reference": 22,
+          "difference": -22,
+          "change_percent": -100.0,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "LOWER"
+        },
+        {
+          "metric": "activity_peak_value",
+          "label": "活动峰值（次/小时）",
+          "subject": 786,
+          "reference": 440,
+          "difference": 346,
+          "change_percent": 78.63636363636364,
+          "pct_note": null,
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "HIGHER"
+        },
+        {
+          "metric": "day_night_diff",
+          "label": "昼—夜候选事件差（次）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        },
+        {
+          "metric": "water_temp_mean",
+          "label": "平均水温（°C）",
+          "subject": null,
+          "reference": null,
+          "difference": null,
+          "change_percent": null,
+          "pct_note": "参考值或比较值为 NA",
+          "effective_n": 3437453,
+          "coverage": 0.9835242409849856,
+          "coverage_estimated": true,
+          "result": "NA"
+        }
+      ],
+      "primary": {
+        "metric": "candidate_event_rate_per_hour",
+        "label": "候选事件率（次/有效观测小时）",
+        "subject": 401.8711319246821,
+        "reference": 338.3249700601133,
+        "difference": 63.54616186456883,
+        "change_percent": 18.782581094525185,
+        "pct_note": null,
+        "effective_n": 3437453,
+        "coverage": 0.9835242409849856,
+        "coverage_estimated": true,
+        "result": "HIGHER"
+      },
+      "disclaimer": "候选事件为阈值算法结果，变化不得直接归因于真实鱼类数量变化。",
+      "device_id": "2000",
+      "status": "OK",
+      "subject_date": "2026-11-01",
+      "reference_dates": [
+        "2026-11-02"
+      ]
+    },
+    "max_abs_amplitude": 63.54616186456883,
+    "device_mean_rate": {
+      "2000": 370.0980509923977
+    },
+    "device_gap": null,
+    "missing_count": 0,
+    "uncertainty_notes": [
+      "变化量来自 S03 硬掩码区内样本与阈值候选算法；不等同于真实鱼类数量变化，可能由观测覆盖、海况、设备差异、昼夜与算法阈值造成。",
+      "时区口径：原始时间戳未附时区元数据，按声明时区比较，不把推断当作实测（K26）。",
+      "日内子窗口覆盖率与有效时长为估算，全天窗口使用 S03 精确值；比较结果标注 estimated。",
+      "参考值为 0 时变化百分比记 NA；缺测/质检失败/阻断日不进入有效基线（K27）。",
+      "水层指标未纳入：S07 底界 QC 门禁尚未通过，禁止输出未经门禁的水层结论。"
+    ],
+    "markdown": "# S04 自动比较总结\n\n- 最高候选事件率：设备 2000 / 2026-11-01，401.8711 次/有效小时\n- 最低候选事件率：设备 2000 / 2026-11-01，401.8711 次/有效小时\n- 最大绝对变化幅度：63.5462 次/有效小时\n\n## 不确定性说明\n\n- 变化量来自 S03 硬掩码区内样本与阈值候选算法；不等同于真实鱼类数量变化，可能由观测覆盖、海况、设备差异、昼夜与算法阈值造成。\n- 时区口径：原始时间戳未附时区元数据，按声明时区比较，不把推断当作实测（K26）。\n- 日内子窗口覆盖率与有效时长为估算，全天窗口使用 S03 精确值；比较结果标注 estimated。\n- 参考值为 0 时变化百分比记 NA；缺测/质检失败/阻断日不进入有效基线（K27）。\n- 水层指标未纳入：S07 底界 QC 门禁尚未通过，禁止输出未经门禁的水层结论。"
+  }
+}

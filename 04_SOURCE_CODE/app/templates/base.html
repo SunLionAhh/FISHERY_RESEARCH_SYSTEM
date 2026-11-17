@@ -48,13 +48,19 @@ input, select { width: 100%; padding: 6px 8px; border: 1px solid var(--border-da
 ul.errors { color: var(--warn); }
 .flash { background: var(--soft-blue); border: 1px solid var(--border); color: var(--accent);
          padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
+.error-box { background: #fff4f4; border: 1px solid var(--warn); padding: 10px 14px; margin-bottom: 14px; }
+.hint { color: #55606b; font-size: 12px; line-height: 1.6; }
+.compare-form fieldset { border: 1px solid var(--border); margin: 0 0 12px; padding: 10px 14px; }
+.compare-form label { display: inline-block; margin: 4px 14px 4px 0; font-size: 13px; }
+.compare-form input, .compare-form select { display: block; margin-top: 3px; padding: 4px 6px; }
+.compare-form pre { white-space: pre-wrap; }
 </style>
 </head>
 <body>
 <header>
   <h1>渔业声学监测科研工作台</h1>
-  <span class="sub">S01 参数/GPS + S03 每日统计 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）
-    ｜ <a href="/daily">每日统计</a> ｜ <a href="/daily/upload">逐日上传</a></span>
+  <span class="sub">S01 参数/GPS + S03 每日统计 + S04 任意比较 · 本地 127.0.0.1 · 五台设备 2000/2001/2002/2003/2005（无 2004）
+    ｜ <a href="/daily">每日统计</a> ｜ <a href="/daily/upload">逐日上传</a> ｜ <a href="/compare">任意比较</a></span>
 </header>
 <main>
   {% with messages = get_flashed_messages(with_categories=true) %}

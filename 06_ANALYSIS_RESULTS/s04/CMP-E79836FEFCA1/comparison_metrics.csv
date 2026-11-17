@@ -1,0 +1,17 @@
+﻿case,device_id,subject_date,reference_dates,metric,label,subject,reference,difference,change_percent,pct_note,effective_n,coverage,coverage_estimated,result
+D1_vs_D2,2000,,,,,,,,,该设备仅 1 个可比较日，需 2 日；不伪造第 2 日,,,,INSUFFICIENT_DATES
+D4_vs_D1,2000,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_D2,2000,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_D3,2000,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_prev3_mean,2000,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D5_vs_D3,2000,,,,,,,,,该设备仅 1 个可比较日，需 5 日；不伪造第 5 日,,,,INSUFFICIENT_DATES
+D5_vs_prev4_mean,2000,,,,,,,,,该设备仅 1 个可比较日，需 5 日；不伪造第 5 日,,,,INSUFFICIENT_DATES
+D7_vs_prev6_mean,2000,,,,,,,,,该设备仅 1 个可比较日，需 7 日；不伪造第 7 日,,,,INSUFFICIENT_DATES
+D1_vs_D2,2001,,,,,,,,,该设备仅 1 个可比较日，需 2 日；不伪造第 2 日,,,,INSUFFICIENT_DATES
+D4_vs_D1,2001,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_D2,2001,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_D3,2001,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D4_vs_prev3_mean,2001,,,,,,,,,该设备仅 1 个可比较日，需 4 日；不伪造第 4 日,,,,INSUFFICIENT_DATES
+D5_vs_D3,2001,,,,,,,,,该设备仅 1 个可比较日，需 5 日；不伪造第 5 日,,,,INSUFFICIENT_DATES
+D5_vs_prev4_mean,2001,,,,,,,,,该设备仅 1 个可比较日，需 5 日；不伪造第 5 日,,,,INSUFFICIENT_DATES
+D7_vs_prev6_mean,2001,,,,,,,,,该设备仅 1 个可比较日，需 7 日；不伪造第 7 日,,,,INSUFFICIENT_DATES

@@ -17,6 +17,7 @@ def app(tmp_path):
     db_file = tmp_path / "s01_test.db"
     application = create_app(db_file)
     application.config["DB_FILE"] = db_file
+    application.config["PROJECT_ROOT"] = tmp_path  # 测试产物隔离，不写真实 06_ANALYSIS_RESULTS
     yield application
 
 

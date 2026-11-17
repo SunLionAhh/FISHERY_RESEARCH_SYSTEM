@@ -4,13 +4,14 @@ from pathlib import Path
 
 from flask import Flask
 
-from .config import db_path
+from .config import PROJECT_ROOT, db_path
 from .db import connect, ensure_database
 
 
 def create_app(db_file: Path | None = None) -> Flask:
     app = Flask(__name__)
     app.config["DB_FILE"] = db_file or db_path()
+    app.config["PROJECT_ROOT"] = PROJECT_ROOT
     app.config["SECRET_KEY"] = "fishery-research-local-only"
 
     with connect(app.config["DB_FILE"]) as conn:
