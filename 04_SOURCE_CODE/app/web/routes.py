@@ -16,6 +16,7 @@ from ..services import environment_import as env_import_svc
 from ..services import s07_datasets as dataset_svc
 from ..services import s07_depth as depth_svc
 from ..services import s07_patterns as pattern_svc
+from ..services import spatial as spatial_svc
 from ..services import beam_geometry as geometry_svc
 from ..services import intraday as intraday_svc
 from ..services import devices as svc
@@ -588,3 +589,102 @@ def s07_home():
                            geometry=geometry, patterns_result=patterns_result,
                            datasets=datasets_report, pattern_versions=versions, qc_rows=qc_rows)
 
+
+def _optional_float(form, key):
+    raw = (form.get(key) or "").strip()
+    if not raw:
+        return None
+    return float(raw)
+
+
+@bp.route("/s08", methods=["GET", "POST"])
+def s08_home():
+    """S08：站位 GPS、离线坐标示意、空间比较与离散动态帧；缺站缺测一律 NA。"""
+    conn = get_conn()
+    message = None
+    analysis = None
+    dynamics = None
+    try:
+        devices = tuple(d.strip() for d in (request.form.get("devices") or
+                                            ",".join(spatial_svc.DEVICE_IDS)).split(",")
+                        if d.strip())
+        start = request.form.get("start_date") or "2026-10-31"
+        end = request.form.get("end_date") or "2026-11-03"
+        observed_date = request.form.get("observed_date") or start
+        if request.method == "POST":
+            try:
+                action = request.form.get("action")
+                if action == "sync":
+                    count = spatial_svc.sync_from_positions(conn, actor="web")
+                    spatial_svc.compute_distances(conn, observed_date, actor="web")
+                    message = f"已从 S01 接入 {count} 条位置记录；未提供的 P 码不自动分配"
+                elif action == "save_station":
+                    device_id = request.form.get("device_id")
+                    spatial_svc.upsert_station(
+                        conn, device_id, station_id=request.form.get("station_id") or None,
+                        longitude=_optional_float(request.form, "longitude"),
+                        latitude=_optional_float(request.form, "latitude"),
+                        coordinate_reference_system=request.form.get("coordinate_reference_system") or None,
+                        gps_accuracy_m=_optional_float(request.form, "gps_accuracy_m"),
+                        water_depth_m=_optional_float(request.form, "water_depth_m"),
+                        heading_deg=_optional_float(request.form, "heading_deg"),
+                        heading_reference=request.form.get("heading_reference") or None,
+                        position_source=request.form.get("position_source") or "USER_WEB",
+                        measured_at=request.form.get("measured_at") or None,
+                        effective_from=request.form.get("effective_from") or None,
+                        actor="web")
+                    spatial_svc.compute_distances(conn, observed_date, actor="web")
+                    message = f"{device_id} 站位已保存为新版本；历史记录保留"
+                elif action == "distances":
+                    result = spatial_svc.compute_distances(conn, observed_date, actor="web")
+                    message = (f"站距重算完成：{len(result['distances'])} 对"
+                               f"，拒绝混算 {len(result['excluded'])} 对")
+                elif action == "analyze":
+                    analysis = {
+                        "map": spatial_svc.map_payload(conn, observed_date),
+                        "activity": spatial_svc.daily_activity(conn, devices, start, end),
+                        "statistics": spatial_svc.spatial_statistics(conn, devices, start, end),
+                        "heatmaps": spatial_svc.heatmaps(conn, devices, start, end),
+                        "environment": spatial_svc.environment_joint(conn, devices, start, end),
+                    }
+                    dynamics = spatial_svc.dynamic_frames(
+                        conn, devices, start, end,
+                        step_hours=int(request.form.get("step_hours") or 1))
+                    analysis["dynamics"] = dynamics
+                    if request.form.get("save"):
+                        written = spatial_svc.write_outputs(
+                            analysis, Path(current_app.config["PROJECT_ROOT"]) /
+                            "10_TEST_REPORTS" / "s08_web")
+                        message = "分析完成并归档：" + "、".join(written)
+                    else:
+                        message = f"分析完成：{len(devices)} 站，{len(dynamics['frames'])} 个离散帧"
+                elif action == "frames":
+                    dynamics = spatial_svc.dynamic_frames(
+                        conn, devices, start, end,
+                        step_hours=int(request.form.get("step_hours") or 1))
+                    message = f"动态帧重建：{len(dynamics['frames'])} 帧（无轨迹、无插值）"
+                else:
+                    message = f"未知操作：{action}"
+            except (spatial_svc.SpatialValidationError, ValueError, KeyError) as exc:
+                message = str(exc)
+        map_data = spatial_svc.map_payload(conn, observed_date)
+        bounds = map_data.get("bounds")
+        map_points = []
+        for station in map_data["stations"]:
+            x = y = None
+            if bounds and station["longitude_deg"] is not None and station["latitude_deg"] is not None:
+                width = bounds["max_lon"] - bounds["min_lon"]
+                height = bounds["max_lat"] - bounds["min_lat"]
+                if width > 0 or height > 0:
+                    x = 10 + 80 * (station["longitude_deg"] - bounds["min_lon"]) / width if width > 0 else 50
+                    y = 85 - 80 * (station["latitude_deg"] - bounds["min_lat"]) / height if height > 0 else 50
+            map_points.append({"station": station, "x": x, "y": y})
+        station_rows = [dict(row) for row in conn.execute(
+            "SELECT * FROM station_location ORDER BY device_id,effective_from DESC LIMIT 30")]
+    finally:
+        conn.close()
+    return render_template("s08.html", message=message, map_data=map_data,
+                           map_points=map_points, station_rows=station_rows,
+                           analysis=analysis, dynamics=dynamics,
+                           devices=",".join(devices), start=start, end=end,
+                           observed_date=observed_date)

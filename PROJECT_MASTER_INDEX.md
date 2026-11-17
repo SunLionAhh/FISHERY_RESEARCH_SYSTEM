@@ -12,10 +12,10 @@
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S07（**深度、人工底界、三水层与长期规律完成**：按日期生效参数 + 波束几何全部基准通过（R=5.2 锁定、理论 5.204306 仅参考）；近底候选 PENDING_REVIEW 不额外排除；三水层样本与 S03 逐样本相等；L0—L3 证据等级、阶段数据集边界与冻结版本；215 测试全过**，见 `STAGE_S07.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S07_DONE_PENDING_ACCEPTANCE**（用户已签收 S06 并建 `s06-accepted` tag；S07 停在验收，未开始 S08） |
+| 当前阶段 | S08（**五站 GPS 空间与动态分析完成**：版本化站位 GPS/坐标审计、站距与离线坐标示意；每日五站/日期×站位/昼夜/水层/周月空间比较；空间同步与格局稳定性诚实 BLOCKED/INSUFFICIENT_DATA；环境联合与离散小时动态帧；223 测试全过**，见 `STAGE_S08.md` 与 `CHANGELOG.md` 顶部） |
+| 当前状态 | **S08_DONE_PENDING_ACCEPTANCE**（用户已签收 S07 并建 `s07-accepted` tag；S08 停在验收，未开始 S09） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-17（S07 完成：几何基准/分层/规律等级/数据集冻结 + Web/CLI） |
+| 更新时间 | 2026-11-17（S08 完成：GPS/站距/离线地图/空间比较/动态帧 + Web/CLI） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -82,7 +82,7 @@
 | 规格 | 确认时间 | 内容 | 强制范围 |
 | --- | --- | --- | --- |
 | `SPEC_BASELINE_V4` | 2026-11-14 19:13 / 19:17 | 「这是全部要求」「以 V4 为准」「没有 2004」 | 全项目现行开发依据；`12_DOCUMENTATION/V4_REQUIREMENTS_INDEX.md` |
-| `FIGURE_COLOR_SPEC_V1` 科研配色方案 | 2026-11-14 18:55 | 三套色板共 17 色 + 9 个中性色，唯一色值源 `figure_palette.json` | 07_FIGURES、S07/S09/S10 全部图表、论文插图、报告与 PPT 中的图、演示页 |
+| `FIGURE_COLOR_SPEC_V1` 科研配色方案 | 2026-11-14 18:55 | 三套色板共 17 色 + 9 个中性色，唯一色值源 `figure_palette.json` | 07_FIGURES、S07/S08/S09/S10 全部图表、论文插图、报告与 PPT 中的图、演示页 |
 | `SCOPE_DUAL_STATION_V1` 双站先行与持续上传 | 2026-11-14 19:04 / 19:17 补充 | 21 个 CSV 为第一阶段完整导出；2001 到 11-07 结束**不补传**；2002/2003/2005 后续上传 | S00—S11 全部阶段；增量上传须从早期阶段实现；五站功能不得删减 |
 
 - 所有绘图代码不得硬编码颜色；校验命令 `python3 12_DOCUMENTATION/check_figure_colors.py`，**色板外颜色数必须为 0**。
@@ -128,12 +128,13 @@
 | environment batch_id | `ENV-B373122FA489`（真实风速 288 行）、`ENV-D8F7C909B208`（水温代理 4 行）；原文件归档于 `02_IMPORTED_DATA/ENVIRONMENT_ARCHIVE/`；自动获取 `FETCH-FE91F63EA6` BLOCKED |
 | intraday analysis_id | `S06-DDC45D6F9491`（真实 480 个 15 分钟格、120 个小时格）；2000/2001 坐标系未声明，天文分段全部 PROVISIONAL |
 | s07 pattern_id | `2`（规律版本；真实 4 日 L1，旧 v1 留痕）；分层/QC 按 `S07_LAYER_QCV1` 与文件哈希绑定 |
+| s08 station_location / station_distance | 只接入 2000/2001 两条用户提供坐标；P 码 NULL，坐标系 UNDECLARED；站距 157.809 m 标 PROVISIONAL，`HAVERSINE_WGS84_ASSUMED_UNDECLARED` |
 | origin_job_id | 无（S09） |
 | dataset_id | `DATASET_01_DUAL_STATION` **FROZEN v5**（实际边界 2026-10-31—11-03，正式同步时间 NULL，5 个文件哈希/7 个 run 关联）；`DATASET_02_FIVE_STATION` PLANNED |
-| 最新 Git 提交 | S06 提交 `62bff10`（S05 为 `6a9bfbc`）；tag **`s00-accepted`、`s01-accepted`、`s02-accepted`、`s03-accepted`、`s04-accepted`、`s05-accepted`、`s06-accepted`**（S07 代码尚未提交，待验收后提交） |
-| 最新测试结果 | pytest **215 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11）；S03 独立复算两台 PASS；颜色板外 0 PASS |
+| 最新 Git 提交 | S07 提交 `4b659ed`（S06 为 `62bff10`）；tag **`s00-accepted`—`s07-accepted`**（S08 代码尚未提交，待验收后提交） |
+| 最新测试结果 | pytest **223 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8）；S03 独立复算两台 PASS；颜色板外 0 PASS |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S07.md`（待验收）｜`STAGE_S06.md`（已签收）｜`10_TEST_REPORTS/s07_verification/`（几何/分层/规律/数据集证据） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S08.md`（待验收）｜`STAGE_S07.md`（已签收）｜`10_TEST_REPORTS/s08_verification/`（GPS/站距/地图/空间统计/动态帧证据） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -154,12 +155,12 @@
 
 ## 下一步
 
-**2026-11-17 S07 已完成，等待验收；验收通过前不得开始 S08。** 详见 `STAGE_S07.md`：
+**2026-11-17 S08 已完成，等待验收；验收通过前不得开始 S09。** 详见 `STAGE_S08.md`：
 
-1. **几何**：按观测日期解析参数版本；2000 条件算例的全部规范基准通过（中心轴 5.204306 m、裁底体积 2.353045 m³），人工截断 5.2 m 锁定，理论值不覆盖。
-2. **分层/近底**：同一硬掩码一遍扫描生成三水层，样本合计与 S03 逐样本相等；近底 2,691,290 候选只标 PENDING_REVIEW，额外排除 0。
-3. **规律**：L0—L3 不按天数自动升级；真实 4 日 L1，峰时稳定度 0.25、曲线相关 0.13，不下稳定规律结论；新数据另存版本。
-4. **数据集**：第一阶段实际边界 2026-10-31—11-03、正式同步时间 NULL，5 文件哈希/7 run 快照；数据集 FROZEN v5，冻结历史可追溯；215 passed。
+1. **GPS/站距**：只接入用户提供的两台真实坐标（2000/2001），P 码不自动分配，其余三台 UNKNOWN；坐标系未声明，站距 157.809 m 仅 PROVISIONAL 示意，跨坐标系拒绝混算。
+2. **地图与覆盖**：离线坐标示意，无在线底图/投影/鱼群轨迹/密度插值；2000 覆盖 CIRCLE_ONLY（R=5.2），2001 缺参数 UNKNOWN，朝向缺则方向足迹 UNKNOWN。
+3. **空间比较/统计**：每日五站、日期×站位、昼夜、三水层、周/月输出齐全；真实两站仅 1 个共同有效日，相关与稳定度均 INSUFFICIENT_DATA，不给空间规律结论。
+4. **环境/动态**：风速 PROVISIONAL、其余 BLOCKED，站间环境比较 BLOCKED；离散小时帧 + 滑块/播放/倍速/单站切换 + 环境同步，缺测 NA；223 passed。
 
 **以下为已签收的 S06 摘要（归档）**，详见 `STAGE_S06.md`：
 

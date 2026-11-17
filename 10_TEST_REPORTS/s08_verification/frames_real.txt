@@ -1,0 +1,892 @@
+﻿{
+  "frames": [
+    {
+      "timestamp_local": "2026-10-31T00",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 161,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.5,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 5196,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.5,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T01",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 79,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.42,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 4314,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.42,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T02",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 199,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.77,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 8674,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.77,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T03",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 263,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.08,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 11138,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.08,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T04",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 1298,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.12,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 5045,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.12,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T05",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 941,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.91,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1426,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.91,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T06",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 324,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.15,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 761,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.15,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T07",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 224,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.55,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1347,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.55,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T08",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 374,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.72,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1692,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.72,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T09",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 459,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.91,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1701,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.91,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T10",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 2127,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.95,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 801,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.95,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T11",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 588,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.3,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 339,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.3,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T12",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 142,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": {
+              "value": 22.105864,
+              "quality_flag": "OK",
+              "source_id": "ENV-WATER-FISHFINDER-DERIVED"
+            },
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.9,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1347,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": {
+              "value": 22.105864,
+              "quality_flag": "OK",
+              "source_id": "ENV-WATER-FISHFINDER-DERIVED"
+            },
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.9,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T13",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 68,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.95,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1907,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.95,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T14",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 22,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.81,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1827,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.81,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T15",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 88,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.9,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 3455,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.9,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T16",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 1145,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.73,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 4042,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.73,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T17",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 690,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.51,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 944,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 6.51,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T18",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 727,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.87,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 2690,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.87,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T19",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 497,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.43,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 2477,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.43,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T20",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 838,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.14,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 2667,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 5.14,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T21",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 479,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.98,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 2282,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.98,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T22",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 523,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.92,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1606,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.92,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    },
+    {
+      "timestamp_local": "2026-10-31T23",
+      "timezone": "Asia/Shanghai",
+      "values": [
+        {
+          "device_id": "2000",
+          "candidate_events": 837,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.7,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        },
+        {
+          "device_id": "2001",
+          "candidate_events": 1106,
+          "status": "OK",
+          "environment": {
+            "WATER_TEMP": null,
+            "TIDE_HEIGHT": null,
+            "WIND_SPEED": {
+              "value": 4.7,
+              "quality_flag": "MODEL_HISTORICAL",
+              "source_id": "ENV-WIND-OPENMETEO"
+            },
+            "WIND_DIRECTION": null
+          }
+        }
+      ]
+    }
+  ],
+  "step_hours": 1,
+  "devices": [
+    "2000",
+    "2001"
+  ],
+  "variables": [
+    "WATER_TEMP",
+    "TIDE_HEIGHT",
+    "WIND_SPEED",
+    "WIND_DIRECTION"
+  ],
+  "legend": {
+    "activity_scale": "FIXED_PER_VIEW",
+    "missing": "NA"
+  },
+  "note": "离散站位活动与环境同屏；环境按本地 observed_at 对齐，缺测帧标 NA 而非 0；无鱼群轨迹、无连续密度插值"
+}

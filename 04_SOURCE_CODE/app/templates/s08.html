@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>S08 五站 GPS 空间、站间距离与动态时间轴</h2>
+<p class="hint">离线本地坐标示意图：不使用在线底图、不做地图投影、不虚构鱼群轨迹、不生成连续密度插值。坐标系未声明时站距为 PROVISIONAL 示意值；缺 P 码、缺坐标或缺测一律标 NA，不自动补位、不填 0。覆盖圆为人工斜距上限示意，不是实测足迹或鱼位置。</p>
+{% if message %}<div class="error-box">{{ message }}</div>{% endif %}
+
+<h3>站位录入与接入</h3>
+<form class="compare-form" method="post">
+  <input type="hidden" name="action" value="save_station">
+  <label>设备 <select name="device_id">{% for d in ['2000','2001','2002','2003','2005'] %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></label>
+  <label>站位标签（P1—P5，未给出留空） <input name="station_id" placeholder="留空保持 UNKNOWN"></label>
+  <label>经度 <input name="longitude" placeholder="121.xxxx"></label>
+  <label>纬度 <input name="latitude" placeholder="27.xxxx"></label>
+  <label>坐标系 <input name="coordinate_reference_system" placeholder="WGS84 / EPSG:4326；留空为 UNDECLARED"></label>
+  <label>GPS 精度(m) <input name="gps_accuracy_m"></label>
+  <label>水深(m) <input name="water_depth_m"></label>
+  <label>探头水平朝向(°) <input name="heading_deg" placeholder="0—359；留空为 UNKNOWN"></label>
+  <label>朝向基准 <input name="heading_reference"></label>
+  <label>坐标来源 <input name="position_source" value="USER_WEB"></label>
+  <label>测量日期 <input name="measured_at" placeholder="YYYY-MM-DD"></label>
+  <label>生效日期 <input name="effective_from" placeholder="YYYY-MM-DD"></label>
+  <button>保存为新版本</button>
+</form>
+<form class="compare-form" method="post">
+  <input type="hidden" name="action" value="sync">
+  <label>查询日期 <input name="observed_date" value="{{ observed_date }}"></label>
+  <button>从 S01 接入已有 GPS</button>
+</form>
+<form class="compare-form" method="post">
+  <input type="hidden" name="action" value="distances">
+  <label>计算日期 <input name="observed_date" value="{{ observed_date }}"></label>
+  <button>重算站间距离</button>
+</form>
+
+<h3>离线坐标示意（五站真实位置；缺坐标不绘制）</h3>
+<div class="card">
+<svg viewBox="0 0 100 100" width="100%" height="320" role="img" aria-label="五站离线坐标示意图">
+  <rect x="0" y="0" width="100" height="100" fill="#FFFFFF" stroke="#E8E8E8"></rect>
+  {% for p in map_points %}
+    {% if p.x is not none %}
+    <circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.6" fill="#0271AC"></circle>
+    <text x="{{ p.x + 3 }}" y="{{ p.y }}" font-size="4.2" fill="#2B2B2B">{{ p.station.label }}</text>
+    {% endif %}
+  {% endfor %}
+</svg>
+<p class="muted">纵向为纬度增大方向，横向为经度增大方向；仅按用户提供坐标的相对关系缩放。图例：蓝点为已提供坐标的站位；灰底不代表水面或海底。</p>
+</div>
+<table><thead><tr><th>站位</th><th>设备</th><th>经纬度</th><th>坐标系</th><th>审计</th><th>朝向</th><th>覆盖示意</th><th>活动率(次/h)</th></tr></thead><tbody>
+{% for s in map_data.stations %}
+<tr>
+  <td>{{ s.label }}</td><td>{{ s.device_id }}</td>
+  <td>{{ s.longitude_deg if s.longitude_deg is not none else 'NA' }} / {{ s.latitude_deg if s.latitude_deg is not none else 'NA' }}</td>
+  <td>{{ s.crs }}</td><td>{{ s.coordinate_audit.status }}（{{ s.coordinate_audit.flags | join(',') or '无' }}）</td>
+  <td>{{ s.heading_deg if s.heading_deg is not none else 'UNKNOWN' }}</td>
+  <td>{{ s.coverage.status }}{% if s.coverage.cutoff_m is defined %} / {{ s.coverage.cutoff_m }} m{% endif %}</td>
+  <td>{{ s.activity.rate_per_hour | round(3) if s.activity and s.activity.rate_per_hour is not none else 'NA' }}</td>
+</tr>
+{% else %}<tr><td colspan="8">暂无站位记录；请先从 S01 接入或逐台录入</td></tr>{% endfor %}
+</tbody></table>
+{% if map_data.unknown_devices %}<p class="hint">缺坐标设备：{{ map_data.unknown_devices | join('、') }}（保持 UNKNOWN，不分配 P 码）</p>{% endif %}
+
+<h3>站间距离</h3>
+<table><thead><tr><th>A</th><th>B</th><th>距离(m)</th><th>方法</th><th>状态</th><th>说明</th></tr></thead><tbody>
+{% for d in map_data.distances %}<tr><td>{{ d.station_a }}</td><td>{{ d.station_b }}</td><td>{{ d.distance_m | round(2) }}</td><td>{{ d.method }}</td><td>{{ d.status }}</td><td>{{ d.note }}</td></tr>
+{% else %}<tr><td colspan="6">暂无站距；坐标系未声明时只给 PROVISIONAL 近似，跨坐标系拒绝混算</td></tr>{% endfor %}
+</tbody></table>
+
+<h3>空间活动与统计</h3>
+<form class="compare-form" method="post">
+  <input type="hidden" name="action" value="analyze">
+  <label>设备 <input name="devices" value="{{ devices }}"></label>
+  <label>开始 <input name="start_date" value="{{ start }}"></label>
+  <label>结束 <input name="end_date" value="{{ end }}"></label>
+  <label>定位日期 <input name="observed_date" value="{{ observed_date }}"></label>
+  <label>帧步长(小时) <input name="step_hours" value="1"></label>
+  <label><input type="checkbox" name="save" value="1"> 归档 JSON/CSV</label>
+  <button>运行空间分析</button>
+</form>
+{% if analysis %}
+<p>有效暴露：{% for d, v in analysis.statistics.device_differences.items() %}{{ d }} {{ v.n_days }} 日 / {{ v.valid_hours_total | round(1) }} h{% if not loop.last %}；{% endif %}{% endfor %}</p>
+<table><thead><tr><th>设备对</th><th>共同日</th><th>同期 r</th><th>a 领先 1 日 r</th><th>状态</th></tr></thead><tbody>
+{% for p in analysis.statistics.pairs %}<tr><td>{{ p.device_a }}—{{ p.device_b }}</td><td>{{ p.n_common }}</td><td>{{ p.pearson_r | round(3) if p.pearson_r is not none else 'NA' }}</td><td>{{ p.lag1_a_lead_b_r | round(3) if p.lag1_a_lead_b_r is not none else 'NA' }}</td><td>{{ p.status }}</td></tr>
+{% else %}<tr><td colspan="5">暂无可比较的设备对</td></tr>{% endfor %}
+</tbody></table>
+<p>格局稳定度：{{ analysis.statistics.stability.status }}｜窗口 {{ analysis.statistics.stability.windows }}｜首位站占比 {{ analysis.statistics.stability.top_station_share | round(3) if analysis.statistics.stability.top_station_share is not none else 'NA' }}</p>
+<h4>日期×站位活动率（次/h；缺测 NA）</h4>
+<table><thead><tr><th>日期</th>{% for d in devices.split(',') %}<th>{{ d }}</th>{% endfor %}</tr></thead><tbody>
+{% for date in analysis.heatmaps.date_station | map(attribute='observed_date') | unique | list %}
+<tr><td>{{ date }}</td>{% for d in devices.split(',') %}<td>{{ analysis.activity[d][date].rate_per_hour | round(3) if d in analysis.activity and date in analysis.activity[d] and analysis.activity[d][date].rate_per_hour is not none else 'NA' }}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="6">暂无日活动数据</td></tr>{% endfor %}
+</tbody></table>
+<h4>昼夜×站位</h4>
+<table><thead><tr><th>设备</th><th>日期</th><th>状态</th><th>夜</th><th>昼</th><th>差值</th></tr></thead><tbody>
+{% for item in analysis.heatmaps.day_night_station %}<tr><td>{{ item.device_id }}</td><td>{{ item.observed_date }}</td><td>{{ item.status or 'NA' }}</td><td>{{ item.night_rate | round(3) if item.night_rate is not none else 'NA' }}</td><td>{{ item.day_rate | round(3) if item.day_rate is not none else 'NA' }}</td><td>{{ item.difference | round(3) if item.difference is not none else 'NA' }}</td></tr>
+{% else %}<tr><td colspan="6">暂无昼夜结果</td></tr>{% endfor %}
+</tbody></table>
+<h4>三水层×站位</h4>
+<table><thead><tr><th>设备</th><th>日期</th><th>水层</th><th>样本</th><th>候选事件</th></tr></thead><tbody>
+{% for item in analysis.heatmaps.layer_station %}<tr><td>{{ item.device_id }}</td><td>{{ item.observed_date }}</td><td>{{ item.layer }}</td><td>{{ item.kept_samples }}</td><td>{{ item.candidate_events }}</td></tr>
+{% else %}<tr><td colspan="5">暂无水层结果</td></tr>{% endfor %}
+</tbody></table>
+<h4>周/月空间变化</h4>
+<p>周：{% for item in analysis.heatmaps.weekly %}{{ item.device_id }}/{{ item.period }} {{ item.mean_rate | round(3) }}{% if not loop.last %}；{% endif %}{% endfor %}（窗口内顺序分箱，不等同自然周）</p>
+<p>月：{% for item in analysis.heatmaps.monthly %}{{ item.device_id }}/{{ item.period }} {{ item.mean_rate | round(3) }}{% if not loop.last %}；{% endif %}{% endfor %}</p>
+<h4>环境联合</h4>
+<table><thead><tr><th>变量</th><th>状态</th><th>观测数</th><th>站间比较</th><th>说明</th></tr></thead><tbody>
+{% for item in analysis.environment.results %}<tr><td>{{ item.variable }}</td><td>{{ item.status }}</td><td>{{ item.n_observations or 'NA' }}</td><td>{{ item.station_comparison.status }}{% if item.station_comparison.n_stations is defined %} / {{ item.station_comparison.n_stations }} 站{% endif %}</td><td>{{ item.reason }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+
+<h3>离散动态帧（播放/暂停/步进；无轨迹、无插值）</h3>
+{% if dynamics %}
+<div class="card">
+<label>时间滑块 <input type="range" id="frameRange" min="0" max="{{ dynamics.frames | length - 1 }}" value="0"></label>
+<label>设备 <select id="deviceSelect"><option value="ALL">五站同步</option>{% for d in dynamics.devices %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></label>
+<label>倍速 <select id="speedSelect"><option value="1">1×</option><option value="0.5">0.5×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+<p><button id="playBtn" type="button">播放</button> <button id="pauseBtn" type="button">暂停</button> <button id="prevBtn" type="button">上一步</button> <button id="nextBtn" type="button">下一步</button></p>
+<p id="frameTime" class="muted"></p>
+<table><thead><tr><th>设备</th><th>活动状态</th><th>候选事件</th><th>水温</th><th>潮位</th><th>风速</th><th>风向</th></tr></thead><tbody id="frameBody"></tbody></table>
+<p class="hint">颜色分级固定：浅蓝 0—2 次/h，中蓝 2—5，深蓝 &gt;5，灰色 NA。环境值来自 S05 来源，缺测不伪装成 0；站位值不连成轨迹。</p>
+</div>
+<script>
+const FRAMES = {{ dynamics.frames | tojson }};
+let frameIndex = 0, timer = null;
+function renderFrame() {
+  const frame = FRAMES[frameIndex] || {values: []};
+  document.getElementById('frameRange').value = frameIndex;
+  document.getElementById('frameTime').textContent = frame.timestamp_local + '（' + frame.timezone + '）';
+  const selected = document.getElementById('deviceSelect').value;
+  const body = document.getElementById('frameBody');
+  body.innerHTML = '';
+  frame.values.filter(v => selected === 'ALL' || v.device_id === selected).forEach(v => {
+    const tr = document.createElement('tr');
+    const classes = ['lvl-na', 'lvl-low', 'lvl-mid', 'lvl-high'];
+    const count = v.candidate_events;
+    const level = v.status === 'NA' || count === null ? 0 : (count > 5 ? 3 : (count >= 2 ? 2 : 1));
+    tr.innerHTML = '<td class="' + classes[level] + '">' + v.device_id + '</td><td>' + v.status +
+      '</td><td>' + (count === null ? 'NA' : count) + '</td>' +
+      ['WATER_TEMP','TIDE_HEIGHT','WIND_SPEED','WIND_DIRECTION'].map(k => {
+        const env = v.environment[k];
+        return '<td>' + (env ? (env.value.toFixed(3) + ' (' + env.quality_flag + ')') : 'NA') + '</td>';
+      }).join('');
+    body.appendChild(tr);
+  });
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+function play() {
+  stop();
+  const speed = parseFloat(document.getElementById('speedSelect').value) || 1;
+  timer = setInterval(() => { frameIndex = (frameIndex + 1) % FRAMES.length; renderFrame(); }, 1000 / speed);
+}
+document.getElementById('frameRange').addEventListener('input', e => { stop(); frameIndex = +e.target.value; renderFrame(); });
+document.getElementById('playBtn').addEventListener('click', play);
+document.getElementById('pauseBtn').addEventListener('click', stop);
+document.getElementById('prevBtn').addEventListener('click', () => { stop(); frameIndex = (frameIndex - 1 + FRAMES.length) % FRAMES.length; renderFrame(); });
+document.getElementById('nextBtn').addEventListener('click', () => { stop(); frameIndex = (frameIndex + 1) % FRAMES.length; renderFrame(); });
+document.getElementById('deviceSelect').addEventListener('change', renderFrame);
+renderFrame();
+</script>
+<style>
+.lvl-na { background:#F7F7F7; color:#8A8A8A; }
+.lvl-low { background:rgba(2,113,172,0.12); color:#2B2B2B; }
+.lvl-mid { background:rgba(2,113,172,0.28); color:#2B2B2B; }
+.lvl-high { background:rgba(2,113,172,0.48); color:#FFFFFF; }
+</style>
+{% else %}<p class="hint">运行空间分析后显示离散帧。</p>{% endif %}
+
+<h3>站位历史留痕</h3>
+<table><thead><tr><th>设备</th><th>P 码</th><th>经纬度</th><th>坐标系</th><th>来源</th><th>生效</th><th>失效</th></tr></thead><tbody>
+{% for row in station_rows %}<tr><td>{{ row.device_id }}</td><td>{{ row.station_id or 'NA' }}</td><td>{{ row.longitude_deg if row.longitude_deg is not none else 'NA' }} / {{ row.latitude_deg if row.latitude_deg is not none else 'NA' }}</td><td>{{ row.coordinate_reference_system or 'UNDECLARED' }}</td><td>{{ row.position_source }}</td><td>{{ row.effective_from }}</td><td>{{ row.effective_to or '至今' }}</td></tr>
+{% else %}<tr><td colspan="7">暂无</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

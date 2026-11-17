@@ -1,0 +1,117 @@
+﻿{
+  "stations": [
+    {
+      "label": "2000（P 码未提供）",
+      "station_id": null,
+      "device_id": "2000",
+      "longitude_deg": 121.2117505073547,
+      "latitude_deg": 27.99346353124773,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": true,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "CRS_UNDECLARED"
+        ],
+        "status": "PROVISIONAL"
+      },
+      "heading_deg": null,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "S01_DEVICE_POSITIONS",
+      "measured_at": "2026-10-31",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "CIRCLE_ONLY",
+        "cutoff_m": 5.2,
+        "center_axis_bottom_m": 5.20430590953299,
+        "directional_footprint": "UNKNOWN",
+        "parameter_effective_from": "2026-10-31",
+        "assumption": "水平底面 + 人工斜距上限；圆为理论覆盖示意，不是鱼位置/密度"
+      },
+      "activity": {
+        "status": "REPROCESSED",
+        "candidate_events": 13093,
+        "valid_hours": 22.163055555555555,
+        "coverage_ratio": 0.9234606481481481,
+        "rate_per_hour": 590.7578928898191
+      }
+    },
+    {
+      "label": "2001（P 码未提供）",
+      "station_id": null,
+      "device_id": "2001",
+      "longitude_deg": 121.2130272388458,
+      "latitude_deg": 27.99260143251764,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": true,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "CRS_UNDECLARED"
+        ],
+        "status": "PROVISIONAL"
+      },
+      "heading_deg": null,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "S01_DEVICE_POSITIONS",
+      "measured_at": "2026-10-31",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "UNKNOWN",
+        "reason": "float() argument must be a string or a real number, not 'NoneType'"
+      },
+      "activity": {
+        "status": "REPROCESSED",
+        "candidate_events": 68784,
+        "valid_hours": 23.783333333333335,
+        "coverage_ratio": 0.9909722222222223,
+        "rate_per_hour": 2892.1093202522775
+      }
+    }
+  ],
+  "bounds": {
+    "min_lon": 121.2117505073547,
+    "max_lon": 121.2130272388458,
+    "min_lat": 27.99260143251764,
+    "max_lat": 27.99346353124773
+  },
+  "distances": [
+    {
+      "distance_id": 1,
+      "station_a": "2000",
+      "station_b": "2001",
+      "device_a": "2000",
+      "device_b": "2001",
+      "distance_m": 157.80907150692417,
+      "method": "HAVERSINE_WGS84_ASSUMED_UNDECLARED",
+      "computed_at": "2026-11-17T13:47:36+00:00",
+      "crs_pair": "UNDECLARED",
+      "status": "PROVISIONAL",
+      "note": "双方坐标系均未声明；按经纬度数值以 WGS84 近似，仅作相对位置示意，不作正式站距"
+    }
+  ],
+  "unknown_devices": [
+    "2002",
+    "2003",
+    "2005"
+  ],
+  "map_mode": "OFFLINE_LOCAL_COORDINATE_SKETCH",
+  "station_selection": [
+    "2000（P 码未提供）",
+    "2001（P 码未提供）"
+  ],
+  "legend": {
+    "activity_scale": "FIXED_PER_VIEW",
+    "missing": "NA",
+    "circle": "理论斜距上限示意（非实测足迹）"
+  },
+  "note": "离线本地坐标示意图；不做在线底图、地图投影、鱼群轨迹或连续密度插值"
+}

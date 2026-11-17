@@ -1,0 +1,20 @@
+﻿{
+  "imported": 2,
+  "distances": {
+    "distances": [
+      {
+        "station_a": "2000",
+        "station_b": "2001",
+        "device_a": "2000",
+        "device_b": "2001",
+        "distance_m": 157.80907150692417,
+        "method": "HAVERSINE_WGS84_ASSUMED_UNDECLARED",
+        "crs_pair": "UNDECLARED",
+        "status": "PROVISIONAL",
+        "note": "双方坐标系均未声明；按经纬度数值以 WGS84 近似，仅作相对位置示意，不作正式站距"
+      }
+    ],
+    "excluded": [],
+    "note": "跨坐标系不混算；未声明坐标系的站距为 PROVISIONAL，不代表实测站距"
+  }
+}
