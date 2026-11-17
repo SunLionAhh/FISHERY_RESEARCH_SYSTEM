@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>S06 分析结果 {{ result.analysis_id }}</h2>
+<p>设备 {{ result.scope.devices | join(',') }}｜日期 {{ result.scope.dates[0] }} ~ {{ result.scope.dates[-1] }}｜时区 {{ result.scope.timezone }}｜15 分钟格 {{ result.scope.n_grid_cells }}</p>
+{% for note in result.notes %}<p class="hint">- {{ note }}</p>{% endfor %}
+{% if result.scope.blocked_inputs %}<p class="error-box">阻断输入：{% for b in result.scope.blocked_inputs %}{{ b.device_id }}/{{ b.observed_date }}（{{ b.reason }}）{% endfor %}</p>{% endif %}
+
+<h3>每日峰谷与形态（K25）</h3>
+<table><thead><tr><th>设备</th><th>日期</th><th>状态/形态</th><th>峰时格</th><th>谷时格</th><th>覆盖</th></tr></thead><tbody>
+{% for p in result.peaks.results %}<tr><td>{{ p.device_id }}</td><td>{{ p.observed_date }}</td><td>{{ p.get('pattern', p.status) }}</td><td>{{ p.get('peak_slot') | default('NA') }}</td><td>{{ p.get('trough_slot') | default('NA') }}</td><td>{{ p.get('coverage_ratio') | default('NA') }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h3>昼夜与晨昏（夜间按夜开始日期锚定）</h3>
+<table><thead><tr><th>设备</th><th>日期</th><th>状态</th><th>日出</th><th>日落</th><th>夜率/h</th><th>日率/h</th></tr></thead><tbody>
+{% for d in result.day_night.results %}<tr><td>{{ d.device_id }}</td><td>{{ d.observed_date }}</td><td>{{ d.status }}</td>
+<td>{{ d.get('solar', {}).get('sunrise', 'NA') }}</td><td>{{ d.get('solar', {}).get('sunset', 'NA') }}</td>
+<td>{{ d.get('pair', {}).get('night_rate_per_hour') | default('NA', true) }}</td><td>{{ d.get('pair', {}).get('day_rate_per_hour') | default('NA', true) }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h3>2 小时分组（低覆盖标 NA）</h3>
+<table><thead><tr><th>设备</th><th>日期</th><th>时段</th><th>事件</th><th>率/h</th><th>低覆盖</th></tr></thead><tbody>
+{% for g in result.two_hour_groups %}<tr><td>{{ g.device_id }}</td><td>{{ g.observed_date }}</td><td>{{ g.start_hour }}—{{ g.end_hour }}</td><td>{{ g.candidate_events }}</td><td>{{ g.rate_per_hour | default('NA', true) }}</td><td>{{ g.low_coverage }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h3>典型日（至少 {{ result.typical_day.min_days }} 个有效日）</h3>
+<table><thead><tr><th>设备</th><th>小时</th><th>均值率/h</th><th>有效日数</th><th>状态</th></tr></thead><tbody>
+{% for t in result.typical_day.hours %}{% if t.hour in (6,9,12,18,21) %}<tr><td>{{ t.device_id }}</td><td>{{ t.hour }}</td><td>{{ t.mean_rate_per_hour | default('NA', true) }}</td><td>{{ t.n_effective_days }}</td><td>{{ t.status }}</td></tr>{% endif %}{% endfor %}
+</tbody></table>
+
+<h3>环境与日内活动（探索性）</h3>
+<table><thead><tr><th>变量</th><th>状态</th><th>r</th><th>p_Holm</th><th>说明</th></tr></thead><tbody>
+{% for e in result.environment.results %}<tr><td>{{ e.variable }}</td><td>{{ e.status }}</td><td>{{ e.get('r') | default('NA', true) }}</td><td>{{ e.get('p_holm') | default('NA', true) }}</td><td>{{ e.get('reason', e.get('note', '')) }}</td></tr>{% endfor %}
+</tbody></table>
+<p class="error-box">{{ result.environment.disclaimer }}</p>
+<p><a href="/intraday">返回日内分析入口</a></p>
+{% endblock %}

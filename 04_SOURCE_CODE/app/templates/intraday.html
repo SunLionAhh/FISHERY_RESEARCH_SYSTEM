@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>S06 日内、昼夜与晨昏分析</h2>
+<p class="hint">15 分钟基础格来自 S03 原始文件哈希与统一硬掩码；低覆盖格标 NA，不填 0。夜段以夜开始日期锚定。坐标系未声明的天文结果为 PROVISIONAL，不冒充最终结论。</p>
+<form class="compare-form" method="post" action="/intraday">
+  <label>设备（逗号分隔） <input name="devices" value="2000"></label>
+  <label>开始日期 <input name="start_date" value="2026-10-31"></label>
+  <label>结束日期 <input name="end_date" value="2026-11-03"></label>
+  <label>时区 <input name="timezone" value="Asia/Shanghai"></label>
+  <label>名称 <input name="name" value="S06 日内分析"></label>
+  <button>生成日内分析</button>
+</form>
+<h3>历史分析</h3>
+<table><thead><tr><th>分析 ID</th><th>名称</th><th>算法版本</th><th>生成时间</th></tr></thead><tbody>
+{% for r in runs %}<tr><td><a href="/intraday/{{ r.run_id }}">{{ r.run_id }}</a></td><td>{{ r.name }}</td><td>{{ r.method_version }}</td><td>{{ r.created_at }}</td></tr>
+{% else %}<tr><td colspan="4">暂无分析</td></tr>{% endfor %}
+</tbody></table>
+{% endblock %}

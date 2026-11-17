@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """S01 Web 路由：首页（设备清单+未知队列）、设备详情（参数/GPS 表单+历史）、保存与预览。"""
+import json
 import sqlite3
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from ..services import daily_stats as daily_svc
 from ..services import environment_analysis as env_analysis_svc
 from ..services import environment_fetch as fetch_svc
 from ..services import environment_import as env_import_svc
+from ..services import intraday as intraday_svc
 from ..services import devices as svc
 from ..services import incremental as upload_svc
 from ..services import reporting as report_svc
@@ -466,3 +468,50 @@ def environment_analysis():
         finally:
             conn.close()
     return render_template("environment_analysis.html", result=result, error=error)
+
+@bp.get("/intraday")
+def intraday_home():
+    conn = get_conn()
+    try:
+        runs = [dict(r) for r in conn.execute(
+            "SELECT run_id,name,created_at,method_version FROM s06_analysis_run "
+            "ORDER BY created_at DESC LIMIT 20")]
+    finally:
+        conn.close()
+    return render_template("intraday.html", runs=runs, error=None)
+
+
+@bp.post("/intraday")
+def intraday_run():
+    form = request.form
+    devices = tuple(d.strip() for d in (form.get("devices") or "2000").split(",") if d.strip())
+    conn = get_conn()
+    try:
+        dates = intraday_svc.date_range(form["start_date"], form["end_date"])
+        result = intraday_svc.run(
+            conn, devices, dates, name=form.get("name") or "S06 日内分析",
+            timezone_name=form.get("timezone") or "Asia/Shanghai",
+            coverage_mode=form.get("coverage_mode") or "timestamp",
+            project_root=Path(current_app.config["PROJECT_ROOT"]))
+        intraday_svc.write_outputs(
+            result, Path(current_app.config["PROJECT_ROOT"]) / "10_TEST_REPORTS" / "s06_web")
+        flash(f"分析完成：{result['analysis_id']}（{len(result['grid_15min'])} 个 15 分钟格）")
+        return redirect(url_for("web.intraday_result", run_id=result["analysis_id"]))
+    except (KeyError, ValueError, intraday_svc.AnalysisUnavailable) as exc:
+        flash(str(exc))
+        return redirect(url_for("web.intraday_home"))
+    finally:
+        conn.close()
+
+
+@bp.get("/intraday/<run_id>")
+def intraday_result(run_id: str):
+    conn = get_conn()
+    try:
+        row = conn.execute("SELECT * FROM s06_analysis_run WHERE run_id=?", (run_id,)).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        abort(404)
+    result = json.loads(row["result_json"])
+    return render_template("intraday_result.html", result=result)
