@@ -1,0 +1,1 @@
+﻿{"entries_total": 31, "entries_pass": 31, "linked_rows": 8, "raw_csv_match": 21, "launcher_exists": true, "local_bind": true, "restart_recovery": true}

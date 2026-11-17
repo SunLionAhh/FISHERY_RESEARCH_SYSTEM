@@ -5,7 +5,7 @@ import sqlite3
 import threading
 from pathlib import Path
 
-from flask import (Blueprint, abort, current_app, flash, redirect, render_template,
+from flask import (Blueprint, Response, abort, current_app, flash, redirect, render_template,
                    request, url_for)
 
 from ..db import connect
@@ -21,6 +21,7 @@ from ..services import spatial as spatial_svc
 from ..services import s09_animation as animation_svc
 from ..services import s09_figures as figure_svc
 from ..services import origin_bridge as origin_svc
+from ..services import workbench as workbench_svc
 from ..services import beam_geometry as geometry_svc
 from ..services import intraday as intraday_svc
 from ..services import devices as svc
@@ -742,3 +743,67 @@ def s09_home():
     return render_template("s09.html", message=message, figures=figures,
                            origin=origin, animation=animation,
                            environment=origin_svc.probe_environment())
+
+
+def _workbench_selection():
+    device = request.args.get("device", "2000")
+    start = request.args.get("start", "")
+    end = request.args.get("end", "")
+    stage = request.args.get("stage", "")
+    devices = [d for d in workbench_svc.DEVICE_IDS if not device or d == device]
+    return device, start, end, stage, devices
+
+
+@bp.route("/workbench")
+def workbench_home():
+    """S10：31 类入口总览 + 全局选择 + 跨模块联动，不替代既有阶段页。"""
+    device, start, end, stage, devices = _workbench_selection()
+    conn = get_conn()
+    try:
+        ctx = workbench_svc.context(conn, device=device, start=start, end=end, stage=stage)
+        rows = workbench_svc.linked_view(conn, devices, start, end)
+    finally:
+        conn.close()
+    return render_template("workbench.html", ctx=ctx, rows=rows)
+
+
+@bp.route("/workbench/export.csv")
+def workbench_export_csv():
+    device, start, end, _stage, devices = _workbench_selection()
+    conn = get_conn()
+    try:
+        rows = workbench_svc.linked_view(conn, devices, start, end)
+    finally:
+        conn.close()
+    out = Path(current_app.config["PROJECT_ROOT"]) / "10_TEST_REPORTS" / "s10_verification" / "workbench_linked.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    workbench_svc.write_csv(rows, out)
+    return Response(out.read_text(encoding="utf-8-sig"), mimetype="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": "attachment; filename=workbench_linked.csv"})
+
+
+@bp.route("/workbench/report.md")
+def workbench_report():
+    device, start, end, stage, devices = _workbench_selection()
+    conn = get_conn()
+    try:
+        ctx = workbench_svc.context(conn, device=device, start=start, end=end, stage=stage)
+        rows = workbench_svc.linked_view(conn, devices, start, end)
+    finally:
+        conn.close()
+    out = Path(current_app.config["PROJECT_ROOT"]) / "10_TEST_REPORTS" / "s10_verification" / "workbench_report.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    workbench_svc.write_report(ctx, rows, out)
+    return Response(out.read_text(encoding="utf-8"), mimetype="text/markdown; charset=utf-8")
+
+
+@bp.route("/workbench/backups")
+def workbench_backups():
+    conn = get_conn()
+    try:
+        current = conn.execute("PRAGMA database_list").fetchall()
+        db_path = next((r[2] for r in current if r[1] == "main"), "")
+    finally:
+        conn.close()
+    backups = workbench_svc.backup_report(Path(current_app.config["PROJECT_ROOT"]))
+    return render_template("workbench_backups.html", backups=backups, db_path=db_path)

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>S10 备份与恢复</h2>
+<p class="hint">每阶段运行前建立正式库备份；恢复须在停止 Flask、核对 SHA-256 后复制回原库，并在恢复后复跑哈希与测试。当前库路径：{{ db_path }}</p>
+<table><thead><tr><th>备份目录</th><th>fishery.db 大小(bytes)</th><th>SHA-256</th></tr></thead><tbody>
+{% for b in backups %}<tr><td>{{ b.name }}</td><td>{{ b.bytes }}</td><td>{{ b.sha256 }}</td></tr>
+{% else %}<tr><td colspan="3">无备份</td></tr>{% endfor %}
+</tbody></table>
+<p><a href="/workbench">返回工作台</a></p>
+{% endblock %}

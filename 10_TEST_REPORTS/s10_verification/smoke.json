@@ -1,0 +1,230 @@
+{
+  "checked_at": "2026-11-17T23:00:39",
+  "entries_total": 31,
+  "entries_pass": 31,
+  "entries": [
+    {
+      "id": 1,
+      "name": "首页仪表盘",
+      "url": "/",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 2,
+      "name": "设备管理",
+      "url": "/devices/2000",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 3,
+      "name": "独立离底高度",
+      "url": "/devices/2000",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 4,
+      "name": "参数历史版本",
+      "url": "/devices/2000",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 5,
+      "name": "人工水底参考面",
+      "url": "/devices/2000",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 6,
+      "name": "理论底界和近底排除设置",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 7,
+      "name": "GPS 站位管理",
+      "url": "/s08",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 8,
+      "name": "每日上传",
+      "url": "/daily/upload",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 9,
+      "name": "数据审计",
+      "url": "/daily",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 10,
+      "name": "每日统计",
+      "url": "/daily",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 11,
+      "name": "任意日期比较",
+      "url": "/compare",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 12,
+      "name": "任意设备组合分析",
+      "url": "/compare",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 13,
+      "name": "缺测管理",
+      "url": "/daily",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 14,
+      "name": "双站研究阶段管理",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 15,
+      "name": "五站研究阶段管理",
+      "url": "/s08",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 16,
+      "name": "数据集管理",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 17,
+      "name": "每周和每月规律",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 18,
+      "name": "环境管理",
+      "url": "/environment",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 19,
+      "name": "环境联合分析",
+      "url": "/environment/analysis",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 20,
+      "name": "日内分析",
+      "url": "/intraday",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 21,
+      "name": "昼夜分析",
+      "url": "/intraday",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 22,
+      "name": "三水层",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 23,
+      "name": "五站空间",
+      "url": "/s08",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 24,
+      "name": "动态播放",
+      "url": "/s08",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 25,
+      "name": "规律识别",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 26,
+      "name": "Origin 中心",
+      "url": "/s09",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 27,
+      "name": "16 类科研图",
+      "url": "/s09",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 28,
+      "name": "报告中心",
+      "url": "/workbench/report.md",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 29,
+      "name": "数据冻结",
+      "url": "/s07",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 30,
+      "name": "备份恢复",
+      "url": "/workbench/backups",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "id": 31,
+      "name": "项目状态索引",
+      "url": "/workbench",
+      "status": 200,
+      "pass": true
+    }
+  ],
+  "linked_rows": 8,
+  "raw_csv_manifest": 21,
+  "raw_csv_match": 21,
+  "launcher_exists": true,
+  "local_bind": true,
+  "restart_recovery": true
+}
