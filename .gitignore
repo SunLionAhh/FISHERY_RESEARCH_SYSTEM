@@ -1,5 +1,5 @@
 # 原始声学数据：只读保护，8.38 GB，绝不纳入版本控制
-01_ORIGINAL_DATA/FISHFINDER/**/*.csv
+# 01_ORIGINAL_DATA/FISHFINDER/**/*.csv
 
 # 可重新生成的临时文件
 14_TEMP/
@@ -7,9 +7,9 @@
 *.log
 
 # SQLite 数据库：可由迁移+种子重建，不纳入版本控制
-03_DATABASE/*.db
-03_DATABASE/*.db-wal
-03_DATABASE/*.db-shm
+# 03_DATABASE/*.db
+# 03_DATABASE/*.db-wal
+# 03_DATABASE/*.db-shm
 
 # Python 环境与缓存
 .venv/
