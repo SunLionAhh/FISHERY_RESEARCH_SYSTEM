@@ -6,6 +6,9 @@
 *.tmp
 *.log
 
+# 服务器凭据：绝不纳入版本控制
+serverinfo.txt
+
 # SQLite 数据库：可由迁移+种子重建，不纳入版本控制
 # 03_DATABASE/*.db
 # 03_DATABASE/*.db-wal

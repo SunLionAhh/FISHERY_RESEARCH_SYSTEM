@@ -2,6 +2,7 @@
 """S03 增量上传：8 步场景、重复/冲突/迟到/补传、冻结保护、run_id 与网页入口。"""
 from __future__ import annotations
 
+import io
 import json
 
 import pytest
@@ -125,9 +126,26 @@ def test_web_daily_routes(client, s03_conn, tmp_path):
     path = write_fishfinder_csv(tmp_path / "探鱼-2000_2027-12-01.csv", "2000", "2027-12-01")
     inc.register_upload(s03_conn, "2000", path, project_root=tmp_path, output_root=tmp_path / "out")
     assert client.get("/daily").status_code == 200
-    assert client.get("/daily/upload").status_code == 200
+    upload_page = client.get("/daily/upload")
+    assert upload_page.status_code == 200
+    assert b"data-upload-zone" in upload_page.data
+    assert b'enctype="multipart/form-data"' in upload_page.data
     detail = client.get("/daily/2000/2027-12-01")
     assert detail.status_code == 200 and b"NA" in detail.data
     response = client.post("/daily/2000/2027-12-02/missing", data={"note": "测试缺测"})
     assert response.status_code == 302
     assert client.get("/daily/2000/2027-12-02").status_code == 200
+
+
+def test_web_daily_drop_upload(client, s03_conn, tmp_path):
+    date = "2028-01-15"
+    source = write_fishfinder_csv(tmp_path / "browser" / f"探鱼-2000_{date}.csv", "2000", date)
+    response = client.post(
+        "/daily/upload",
+        data={"device_id": "2000", "upload_file": (io.BytesIO(source.read_bytes()), source.name)},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 302
+    landed = sorted((tmp_path / "02_IMPORTED_DATA" / "FISHFINDER_UPLOADS" / "2000").rglob("*.csv"))
+    assert len(landed) == 1
+    assert sha256_file(landed[0]) == sha256_file(source)

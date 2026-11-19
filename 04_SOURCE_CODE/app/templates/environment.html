@@ -35,10 +35,19 @@
 <div class="section">
   <div class="section__head"><h2 class="section__title">手动导入</h2><span class="section__meta">CSV / XLSX</span></div>
   <div class="card">
-    <form method="post" action="/environment/import">
+    <form method="post" action="/environment/import" enctype="multipart/form-data">
+      <input type="hidden" name="uploaded_path" value="{{ uploaded_path or (form.get('uploaded_path') if form else '') }}">
       <div class="form-grid">
-        <div class="field" style="grid-column:1/-1"><label for="e-path">文件路径<span class="req">·</span></label>
-          <div class="control"><input id="e-path" name="file_path" placeholder="01_ORIGINAL_DATA/ENVIRONMENT/WIND/....xlsx"></div></div>
+        <div class="field" style="grid-column:1/-1"><label>数据文件<span class="req">·</span></label>
+          <div class="dropzone" data-upload-zone data-accept=".csv,.xlsx,.xlsm" data-auto-submit="1" data-submit-action="preview"
+               role="button" tabindex="0" aria-label="拖入环境数据文件，或点击选择">
+            <input class="dropzone__input" id="e-file" name="upload_file" type="file" accept=".csv,.xlsx,.xlsm">
+            <span class="dropzone__badge">拖放上传</span>
+            <div class="dropzone__title">将 CSV / XLSX 拖到这里，或点击选择文件</div>
+            <div class="dropzone__meta" data-upload-status>拖入后自动上传并预览，确认后再导入</div>
+          </div>
+          <div class="control" style="margin-top:10px"><input id="e-path" name="file_path" placeholder="备用：填写文件路径"></div>
+        </div>
         <div class="field"><label for="e-src">来源 ID</label><div class="control"><input id="e-src" name="source_id" value="{{ (form.get('source_id') if form else '') or 'ENV-WIND-OPENMETEO' }}"></div></div>
         <div class="field"><label for="e-var">变量</label><div class="control"><select id="e-var" name="variable">{% for v in variables %}<option value="{{ v }}" {% if form and form.get('variable') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
         <div class="field"><label for="e-tz">时区</label><div class="control"><input id="e-tz" name="timezone" value="{{ (form.get('timezone') if form else '') or 'Asia/Shanghai' }}"></div></div>

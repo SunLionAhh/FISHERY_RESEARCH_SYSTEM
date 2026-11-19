@@ -4,6 +4,7 @@ import json
 import sqlite3
 import threading
 from pathlib import Path
+from uuid import uuid4
 
 from flask import (Blueprint, Response, abort, current_app, flash, redirect, render_template,
                    request, url_for)
@@ -62,6 +63,50 @@ def parse_expected_version(form) -> int:
     if value < 0:
         raise ValidationError([f"预期版本号非法（expected_version={value}，必须为非负整数）"])
     return value
+
+
+FISHFINDER_UPLOAD_DIR = Path("02_IMPORTED_DATA") / "FISHFINDER_UPLOADS"
+ENVIRONMENT_UPLOAD_DIR = Path("14_TEMP") / "web_uploads"
+
+
+def _upload_filename(filename: str | None) -> str:
+    """只取文件名部分，保留中文名，同时阻断路径穿越与控制字符。"""
+    name = Path((filename or "").replace("\\", "/")).name
+    if not name or name in (".", "..") or any(ord(ch) < 32 for ch in name):
+        raise UploadValidationError("上传文件名不合法")
+    return name
+
+
+def _save_upload(file_storage, project_root: Path, relative_dir: Path,
+                 allowed_suffixes: tuple[str, ...]) -> Path:
+    """把浏览器拖入的文件落到项目内唯一目录，后续仍复用既有只读校验服务。"""
+    name = _upload_filename(file_storage.filename)
+    if Path(name).suffix.lower() not in allowed_suffixes:
+        raise UploadValidationError(f"仅支持 {', '.join(allowed_suffixes)} 文件：{name}")
+    target_dir = project_root / relative_dir / uuid4().hex[:12]
+    target_dir.mkdir(parents=True, exist_ok=False)
+    target = target_dir / name
+    file_storage.save(str(target))
+    return target
+
+
+def _resolve_saved_upload(project_root: Path, raw: str | None,
+                          relative_dir: Path) -> Path | None:
+    """预览后继续导入时，只接受本应用落在指定上传根内的路径。"""
+    if not raw:
+        return None
+    base = (project_root / relative_dir).resolve()
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = base / candidate
+    resolved = candidate.resolve()
+    try:
+        resolved.relative_to(base)
+    except ValueError as exc:
+        raise UploadValidationError("上传会话已失效，请重新拖入文件") from exc
+    if not resolved.is_file():
+        raise UploadValidationError("上传文件已不存在，请重新拖入文件")
+    return resolved
 
 
 @bp.route("/")
@@ -231,19 +276,29 @@ def daily_upload():
                                devices=("2000", "2001", "2002", "2003", "2005"))
     device_id = request.form.get("device_id", "").strip()
     _valid_device(device_id)
-    raw_path = request.form.get("file_path", "").strip()
-    if not raw_path:
-        return render_template("error.html", title="上传校验失败",
-                               errors=["必须给出原始 CSV 的本机路径（只读上传）"]), 400
+    project_root = Path(current_app.config["PROJECT_ROOT"])
+    try:
+        upload = request.files.get("upload_file")
+        if upload and upload.filename:
+            source_path = _save_upload(upload, project_root,
+                                       FISHFINDER_UPLOAD_DIR / device_id, (".csv",))
+        else:
+            raw_path = request.form.get("file_path", "").strip()
+            if not raw_path:
+                return render_template("error.html", title="上传校验失败",
+                                       errors=["请把 CSV 拖入上传区，或填写本机路径"]), 400
+            source_path = Path(raw_path)
+    except UploadValidationError as e:
+        return render_template("error.html", title="上传校验失败", errors=[str(e)]), 400
     conn = get_conn()
     try:
         outcome = upload_svc.register_upload(
-            conn, device_id, Path(raw_path),
+            conn, device_id, source_path,
             observed_date=request.form.get("observed_date") or None,
             upload_date=request.form.get("upload_date") or None,
             force=request.form.get("force") == "1",
-            project_root=Path(current_app.config["PROJECT_ROOT"]),
-            output_root=Path(current_app.config["PROJECT_ROOT"]) / "06_ANALYSIS_RESULTS",
+            project_root=project_root,
+            output_root=project_root / "06_ANALYSIS_RESULTS",
         )
         verb = {"NEW": "上传", "REPROCESSED": "补传/重算", "BLOCKED": "登记（统计 BLOCKED）",
                 "DUPLICATE": "重复上传已跳过"}[outcome.decision]
@@ -389,17 +444,32 @@ def environment_home():
     return render_template("environment.html", sources=sources, batches=batches,
                            counts=counts, fetch_log=fetch_log,
                            evaluation=fetch_svc.evaluate(),
-                           variables=env_import_svc.VARIABLES)
+                           variables=env_import_svc.VARIABLES, uploaded_path="")
 
 
 @bp.post("/environment/import")
 def environment_import():
     form = request.form
     action = form.get("action") or "preview"
-    path = Path(form.get("file_path") or "")
+    project_root = Path(current_app.config["PROJECT_ROOT"])
     preview, outcome, error = None, None, None
-    if not path.exists() or path.suffix.lower() not in (".csv", ".xlsx", ".xlsm"):
-        error = "文件不存在或不是 CSV/XLSX"
+    uploaded_path_for_form = form.get("uploaded_path") or ""
+    try:
+        upload = request.files.get("upload_file")
+        if upload and upload.filename:
+            path = _save_upload(upload, project_root, ENVIRONMENT_UPLOAD_DIR,
+                                (".csv", ".xlsx", ".xlsm"))
+            uploaded_path_for_form = str(path)
+        else:
+            path = _resolve_saved_upload(project_root, uploaded_path_for_form,
+                                         ENVIRONMENT_UPLOAD_DIR)
+            if path is None:
+                raw_path = form.get("file_path") or ""
+                path = Path(raw_path) if raw_path else None
+    except UploadValidationError as exc:
+        path, error = None, str(exc)
+    if path is None or not path.exists() or path.suffix.lower() not in (".csv", ".xlsx", ".xlsm"):
+        error = error or "文件不存在或不是 CSV/XLSX"
     else:
         try:
             if form.get("suggest"):
@@ -436,7 +506,8 @@ def environment_import():
                         project_root=Path(current_app.config["PROJECT_ROOT"]))
                 finally:
                     conn.close()
-        except (env_import_svc.ImportValidationError, ValueError, OSError) as exc:
+        except (env_import_svc.ImportValidationError, UploadValidationError,
+                ValueError, OSError) as exc:
             error = str(exc)
     conn = get_conn()
     try:
@@ -448,7 +519,8 @@ def environment_import():
     return render_template("environment.html", sources=sources, batches=[], counts=[],
                            fetch_log=[], evaluation=fetch_svc.evaluate(),
                            variables=env_import_svc.VARIABLES,
-                           preview=preview, outcome=outcome, form=form)
+                           preview=preview, outcome=outcome, form=form,
+                           uploaded_path=uploaded_path_for_form)
 
 
 @bp.post("/environment/fetch-attempt")

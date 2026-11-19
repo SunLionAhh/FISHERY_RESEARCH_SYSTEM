@@ -6,7 +6,7 @@
 
 <div class="section">
   <div class="card">
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       <div class="form-grid">
         <div class="field">
           <label for="up-device">设备</label>
@@ -23,8 +23,15 @@
       <div class="form-section">
         <div class="form-grid">
           <div class="field" style="grid-column:1/-1">
-            <label for="up-path">原始 CSV 本机路径<span class="req">·</span></label>
-            <div class="control"><input id="up-path" name="file_path" required placeholder="C:\...\01_ORIGINAL_DATA\FISHFINDER\2000\探鱼-2000_2026-10-31.csv"></div>
+            <label>原始 CSV 文件<span class="req">·</span></label>
+            <div class="dropzone" data-upload-zone data-accept=".csv" data-auto-submit="1"
+                 role="button" tabindex="0" aria-label="拖入原始 CSV 文件，或点击选择">
+              <input class="dropzone__input" id="up-file" name="upload_file" type="file" accept=".csv">
+              <span class="dropzone__badge">拖放上传</span>
+              <div class="dropzone__title">将 CSV 拖到这里，或点击选择文件</div>
+              <div class="dropzone__meta" data-upload-status>拖入后自动上传并生成日报</div>
+            </div>
+            <div class="control" style="margin-top:10px"><input id="up-path" name="file_path" placeholder="备用：填写本机路径"></div>
           </div>
           <div class="field">
             <label for="up-udate">上传日期</label>
@@ -52,7 +59,7 @@
 <details class="notes">
   <summary>口径与约束</summary>
   <div class="notes__body">
-    <p>一天一文件、一台一批次；原始 CSV 全程只读，上传时计算 SHA-256 与归档登记比对。</p>
+    <p>可把 CSV 直接拖入上传区，拖入后自动上传；原始 CSV 全程只读，上传时计算 SHA-256 与归档登记比对。一天一文件、一台一批次。</p>
     <p>观测日留空则从文件名读取；上传日期晚于观测日记 UPLOADED_LATE。缺测日可不上传，后续补传；同日不同内容须人工审查后勾选强制重传，旧 run 保留为 SUPERSEDED。</p>
   </div>
 </details>

@@ -2,8 +2,10 @@
 """S05 联合分析：全候选时滞、置信区间/多重比较、有效样本、缺变量 BLOCKED、网页入口。"""
 from __future__ import annotations
 
+import io
 import math
 import random
+import re
 from datetime import datetime, timedelta
 
 from app.services import environment_analysis as analysis
@@ -117,7 +119,10 @@ def test_statistical_helpers():
 
 
 def test_web_environment_routes(client, s03_conn, tmp_path):
-    assert client.get("/environment").status_code == 200
+    env_page = client.get("/environment")
+    assert env_page.status_code == 200
+    assert b"data-upload-zone" in env_page.data
+    assert b'enctype="multipart/form-data"' in env_page.data
     assert client.get("/environment/analysis").status_code == 200
     path = write_env_csv(tmp_path / "web_wind.csv", ["observed_at", "value", "unit"],
                          [["2026-10-31T00:00:00", 2.0, "m/s"]])
@@ -128,3 +133,27 @@ def test_web_environment_routes(client, s03_conn, tmp_path):
     assert response.status_code == 200 and b"wind.csv" in response.data
     attempt = client.post("/environment/fetch-attempt", data={"adapter": "NOAA_COOPS_TIDE"})
     assert attempt.status_code == 302
+
+
+def test_web_environment_drop_upload_preview_and_import(client, s03_conn, tmp_path):
+    register(s03_conn, "SRC-WEB-DROP")
+    source = write_env_csv(tmp_path / "drop_wind.csv", ["observed_at", "value", "unit"],
+                           [["2026-10-31T00:00:00", 2.0, "m/s"]])
+    mapping = {
+        "source_id": "SRC-WEB-DROP", "variable": "WIND_SPEED",
+        "timezone": "Asia/Shanghai", "value_col": "value",
+        "datetime_col": "observed_at", "unit_col": "unit",
+    }
+    preview = client.post(
+        "/environment/import",
+        data=dict(mapping, action="preview",
+                  upload_file=(io.BytesIO(source.read_bytes()), source.name)),
+        content_type="multipart/form-data",
+    )
+    assert preview.status_code == 200 and b"drop_wind.csv" in preview.data
+    match = re.search(rb'name="uploaded_path" value="([^"]+)"', preview.data)
+    assert match is not None
+    uploaded_path = match.group(1).decode("utf-8")
+    outcome = client.post("/environment/import",
+                          data=dict(mapping, action="import", uploaded_path=uploaded_path))
+    assert outcome.status_code == 200 and b"IMPORTED" in outcome.data
