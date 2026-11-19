@@ -4,31 +4,65 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import itertools
 import json
-import shutil
-from collections import Counter
 import math
+import shutil
 import sqlite3
 import statistics
+import uuid
+from collections import Counter
 from datetime import datetime, timezone as dt_timezone
 from pathlib import Path
 
 from . import beam_geometry as geo
 from . import comparison as cmp
 from . import daily_stats as ds
+from . import query_context as qc
 from . import s07_patterns as patterns
+from . import spatial_grouping as grouping
+from . import v41_contracts as v41
 
 METHOD_VERSION = "S08_SPATIAL_V1"
+COMBINATION_METHOD_VERSION = "S08_ANY_COMBINATION_V1"
 DEVICE_IDS = ("2000", "2001", "2002", "2003", "2005")
 UNDECLARED_CRS = "UNDECLARED"
 KNOWN_CRS = {"WGS84", "EPSG:4326", "CGCS2000", "EPSG:4490"}
 MIN_COVERAGE_RATIO = 0.5
 LOCAL_TIMEZONE = "Asia/Shanghai"
 ENV_VARIABLES = ("WATER_TEMP", "TIDE_HEIGHT", "WIND_SPEED", "WIND_DIRECTION")
+DEFAULT_DATASET_ID = "DATASET_01_DUAL_STATION"
+COMPARISON_MODES = ("independent", "common_valid", "baseline_change")
 
 
 class SpatialValidationError(ValueError):
     pass
+
+
+def parse_devices(value) -> list[str]:
+    """解析表单/CLI 中的设备选择；支持 1—5 台任意组合，顺序按五站固定次序。"""
+    if value is None:
+        raise SpatialValidationError("至少选择一台设备")
+    if isinstance(value, str):
+        tokens = [part.strip() for part in value.split(",") if part.strip()]
+    else:
+        try:
+            tokens = [str(part).strip() for part in value if str(part).strip()]
+        except TypeError as exc:
+            raise SpatialValidationError("设备选择格式不合法") from exc
+    return validate_devices(tokens)
+
+
+def validate_devices(devices) -> list[str]:
+    if devices is None:
+        raise SpatialValidationError("至少选择一台设备")
+    selected = list(dict.fromkeys(str(device).strip() for device in devices if str(device).strip()))
+    if not selected:
+        raise SpatialValidationError("至少选择一台设备")
+    unknown = [d for d in selected if d not in DEVICE_IDS]
+    if unknown:
+        raise SpatialValidationError("不支持的设备：" + "、".join(unknown))
+    return [d for d in DEVICE_IDS if d in selected]
 
 
 def _now() -> str:
@@ -248,16 +282,141 @@ def directional_footprint(heading_deg, geometry: dict, *, heading_reference: str
                      "人工斜距上限，未做坐标系转换，不是实测鱼群位置或密度")}
 
 
-def map_payload(conn: sqlite3.Connection, observed_date: str | None = None) -> dict:
-    points = locations(conn, observed_date)
+def _cross(a: tuple[float, float], b: tuple[float, float]) -> float:
+    return a[0] * b[1] - a[1] * b[0]
+
+
+def _polygon_area(points: list[tuple[float, float]]) -> float:
+    if len(points) < 3:
+        return 0.0
+    return abs(sum(_cross(points[i], points[(i + 1) % len(points)])
+                   for i in range(len(points))) / 2)
+
+
+def _ensure_ccw(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    signed = sum(_cross(points[i], points[(i + 1) % len(points)])
+                 for i in range(len(points)))
+    return points if signed >= 0 else list(reversed(points))
+
+
+def _line_intersection(p1, p2, q1, q2) -> tuple[float, float]:
+    r = (p2[0] - p1[0], p2[1] - p1[1])
+    s = (q2[0] - q1[0], q2[1] - q1[1])
+    denominator = _cross(r, s)
+    if abs(denominator) < 1e-12:
+        return p2
+    t = _cross((q1[0] - p1[0], q1[1] - p1[1]), s) / denominator
+    return (p1[0] + t * r[0], p1[1] + t * r[1])
+
+
+def _clip_convex(subject: list[tuple[float, float]],
+                 clip: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Sutherland-Hodgman：计算两个凸扇形的交集；仅作条件几何示意。"""
+    output = list(subject)
+    for index in range(len(clip)):
+        edge_start = clip[index]
+        edge_end = clip[(index + 1) % len(clip)]
+
+        def inside(point):
+            return _cross((edge_end[0] - edge_start[0], edge_end[1] - edge_start[1]),
+                          (point[0] - edge_start[0], point[1] - edge_start[1])) >= -1e-9
+
+        input_list = output
+        output = []
+        if not input_list:
+            break
+        previous = input_list[-1]
+        for current in input_list:
+            current_in, previous_in = inside(current), inside(previous)
+            if current_in:
+                if not previous_in:
+                    output.append(_line_intersection(previous, current, edge_start, edge_end))
+                output.append(current)
+            elif previous_in:
+                output.append(_line_intersection(previous, current, edge_start, edge_end))
+            previous = current
+    return output
+
+
+def _local_offset_m(left: dict, right: dict) -> tuple[float, float]:
+    """以左站为原点的局部切平面近似：x 向东、y 向北；短站距下仅作几何示意。"""
+    lon_a, lat_a = left["longitude_deg"], left["latitude_deg"]
+    lon_b, lat_b = right["longitude_deg"], right["latitude_deg"]
+    dx = haversine_m(lon_a, lat_a, lon_b, lat_a) * (1 if lon_b >= lon_a else -1)
+    dy = haversine_m(lon_a, lat_a, lon_a, lat_b) * (1 if lat_b >= lat_a else -1)
+    return dx, dy
+
+
+def _translated_sector(coverage: dict, offset: tuple[float, float]) -> list[tuple[float, float]] | None:
+    direction = coverage.get("directional_footprint") or {}
+    if direction.get("status") != "CONDITIONAL_SECTOR":
+        return None
+    points = [(float(x) + offset[0], float(y) + offset[1])
+              for x, y in direction.get("polygon_local_m", [])]
+    return _ensure_ccw(points) if len(points) >= 3 else None
+
+
+def _conditional_overlap(left_coverage: dict, right_coverage: dict,
+                         left_point: dict, right_point: dict) -> dict:
+    """方向扇形的条件重叠面积；缺朝向/缺坐标返回 UNKNOWN，不把缺测写成 0。"""
+    left_sector = _translated_sector(left_coverage, (0.0, 0.0))
+    right_sector = _translated_sector(right_coverage,
+                                      _local_offset_m(left_point, right_point))
+    if not left_sector or not right_sector:
+        reasons = []
+        if not left_sector:
+            reasons.append("A 站方向足迹不可用")
+        if not right_sector:
+            reasons.append("B 站方向足迹不可用")
+        return {"status": "UNKNOWN", "area_m2": None, "reason": "；".join(reasons)}
+    intersection = _clip_convex(left_sector, right_sector)
+    area = _polygon_area(intersection) if len(intersection) >= 3 else 0.0
+    return {
+        "status": "NO_OVERLAP" if area <= 1e-6 else "CONDITIONAL_OVERLAP",
+        "area_m2": round(area, 4),
+        "method": "LOCAL_TANGENT_SECTOR_INTERSECTION",
+        "heading_a_deg": (left_coverage.get("directional_footprint") or {}).get("heading_deg"),
+        "heading_b_deg": (right_coverage.get("directional_footprint") or {}).get("heading_deg"),
+        "heading_references": [
+            (left_coverage.get("directional_footprint") or {}).get("heading_reference"),
+            (right_coverage.get("directional_footprint") or {}).get("heading_reference")],
+        "note": ("按当日生效参数、人工斜距上限与用户提供朝向计算的条件几何交集；"
+                 "局部切平面近似，不是实测鱼群位置、密度或连通性证据"),
+    }
+
+
+def parameter_snapshot(conn: sqlite3.Connection, device_id: str, observed_date: str) -> dict:
+    """每台设备独立取当日生效参数与人工底界，不借用其他设备或当前指针。"""
+    try:
+        params = geo.effective_params(conn, device_id, observed_date)
+    except geo.GeometryUnavailable as exc:
+        return {"device_id": device_id, "status": "UNKNOWN", "reason": str(exc),
+                "analysis_cutoff_m": None, "parameter_version": None}
+    bottom = params.get("bottom_reference")
+    return {"device_id": device_id, "status": "OK",
+            "parameter_version": params.get("version"),
+            "effective_from": params.get("effective_from"),
+            "analysis_cutoff_m": params.get("analysis_cutoff_slant_m"),
+            "beam_angle_kind": params.get("beam_angle_kind"),
+            "bottom_reference_status": (bottom or {}).get("status") or "NO_REFERENCE",
+            "bottom_reference_id": (bottom or {}).get("reference_id")}
+
+
+def map_payload(conn: sqlite3.Connection, observed_date: str | None = None,
+                devices=None) -> dict:
+    selected = validate_devices(devices) if devices is not None else list(DEVICE_IDS)
+    points = [p for p in locations(conn, observed_date) if p["device_id"] in selected]
     activity = (daily_activity(conn, [p["device_id"] for p in points], observed_date, observed_date)
                 if observed_date else {})
     stations = []
     for point in points:
         label = point["station_id"] or f"{point['device_id']}（P 码未提供）"
         audit = coordinate_audit(point, points)
-        coverage = {"status": "UNKNOWN", "reason": "缺参数、缺坐标或坐标审计阻断"}
-        if audit["range_ok"] and not audit["suspected_latlon_swap"]:
+        snapshot = parameter_snapshot(conn, point["device_id"],
+                                      observed_date or point["effective_from"])
+        coverage = {"status": "UNKNOWN", "reason": "缺参数、缺坐标或坐标审计阻断",
+                    "parameter_snapshot": snapshot}
+        if audit["range_ok"] and not audit["suspected_latlon_swap"] and snapshot["status"] == "OK":
             params_date = observed_date or point["effective_from"]
             try:
                 params = geo.effective_params(conn, point["device_id"], params_date)
@@ -267,14 +426,23 @@ def map_payload(conn: sqlite3.Connection, observed_date: str | None = None) -> d
                     beam_value_deg=float(params["beam_angle_value_deg"]),
                     beam_kind=params["beam_angle_kind"],
                     cutoff_m=float(params["analysis_cutoff_slant_m"]))
+                radius = float(geometry["water_projection_max_forward_m"])
+                half_angle = float(geometry["inputs"]["internal_half_angle_deg"])
                 coverage = {"status": "CIRCLE_ONLY",
+                            "coverage_model": "CONDITIONAL_SECTOR",
                             "cutoff_m": geometry["cutoff_locked_m"],
+                            "coverage_radius_m": radius,
+                            "half_angle_deg": half_angle,
+                            "sector_area_m2": math.pi * radius * radius * half_angle / 180,
+                            "retained_footprint_area_m2": geometry["retained_footprint"]["area_m2"],
                             "center_axis_bottom_m": geometry["center_axis_bottom_m"],
                             "directional_footprint": directional_footprint(
                                 point["heading_deg"], geometry,
                                 heading_reference=point["heading_reference"]),
                             "parameter_effective_from": params["effective_from"],
-                            "assumption": "水平底面 + 人工斜距上限；圆为理论覆盖示意，不是鱼位置/密度"}
+                            "parameter_version": snapshot["parameter_version"],
+                            "analysis_cutoff_m": snapshot["analysis_cutoff_m"],
+                            "assumption": "水平底面 + 人工斜距上限；圆/扇形为理论覆盖示意，不是鱼位置/密度"}
             except (geo.GeometryUnavailable, ValueError, TypeError, KeyError) as exc:
                 coverage = {"status": "UNKNOWN", "reason": str(exc)}
         day_values = activity.get(point["device_id"], {}).get(observed_date) if observed_date else None
@@ -293,10 +461,16 @@ def map_payload(conn: sqlite3.Connection, observed_date: str | None = None) -> d
                "min_lat": min(s["latitude_deg"] for s in known),
                "max_lat": max(s["latitude_deg"] for s in known)} if known else None)
     distances = [dict(r) for r in conn.execute(
-        "SELECT * FROM station_distance ORDER BY station_a,station_b")]
+        "SELECT * FROM station_distance WHERE device_a IN (%s) AND device_b IN (%s) "
+        "ORDER BY station_a,station_b" % (",".join("?" for _ in selected) if selected else "NULL",
+                                          ",".join("?" for _ in selected) if selected else "NULL"),
+        (*selected, *selected))]
+    selected_set = set(selected)
+    visible = {s["device_id"] for s in stations}
     return {"stations": stations, "bounds": bounds, "distances": distances,
-            "unknown_devices": [d for d in DEVICE_IDS if d not in {s["device_id"] for s in stations}],
+            "unknown_devices": [d for d in selected if d not in visible],
             "map_mode": "OFFLINE_LOCAL_COORDINATE_SKETCH",
+            "selected_devices": list(selected),
             "station_selection": [s["label"] for s in stations],
             "legend": {"activity_scale": "FIXED_PER_VIEW", "missing": "NA",
                        "circle": "理论斜距上限示意（非实测足迹）"},
@@ -321,26 +495,69 @@ def daily_activity(conn: sqlite3.Connection, devices, start: str, end: str) -> d
     return result
 
 
-def _safe_pairs(left: dict, right: dict) -> list[tuple[float, float]]:
-    keys = sorted(set(left) & set(right))
-    return [(left[k]["rate_per_hour"], right[k]["rate_per_hour"]) for k in keys
+def time_curves(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
+    """按选中设备返回逐小时活动与覆盖；缺测/低覆盖保留 NA，不填 0。"""
+    devices = validate_devices(devices)
+    result = {device: [] for device in devices}
+    for row in conn.execute(
+            "SELECT device_id,observed_date,SUBSTR(slot_start,12,2) AS hour,"
+            "SUM(candidate_events) AS events,AVG(coverage_ratio) AS coverage,COUNT(*) AS slots "
+            "FROM s06_time_grid WHERE device_id IN (%s) AND observed_date BETWEEN ? AND ? "
+            "GROUP BY device_id,observed_date,hour ORDER BY device_id,observed_date,hour"
+            % ",".join("?" for _ in devices), (*devices, start, end)):
+        covered = row["coverage"] is not None and row["coverage"] >= MIN_COVERAGE_RATIO
+        result[row["device_id"]].append({
+            "timestamp_local": f"{row['observed_date']}T{row['hour']}",
+            "observed_date": row["observed_date"], "hour": int(row["hour"]),
+            "candidate_events": row["events"] if covered else None,
+            "coverage_ratio": row["coverage"], "source_slots": row["slots"],
+            "status": "OK" if covered else "NA"})
+    return result
+
+
+def common_valid_periods(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
+    """按当前选择重新计算共同有效日与共同有效小时；单站即该站自身有效时段。"""
+    devices = validate_devices(devices)
+    daily = daily_activity(conn, devices, start, end)
+    all_days = sorted(set().union(*(set(by_date) for by_date in daily.values())))
+    valid_days = [day for day in all_days
+                  if all(daily[device].get(day, {}).get("rate_per_hour") is not None
+                         for device in devices)]
+    curves = time_curves(conn, devices, start, end)
+    hour_maps = [{r["timestamp_local"]: r for r in curves[device] if r["status"] == "OK"}
+                 for device in devices]
+    common_hours = sorted(set.intersection(*[set(h) for h in hour_maps])) if hour_maps else []
+    return {"devices": list(devices), "common_dates": valid_days,
+            "common_hours": common_hours, "n_common_days": len(valid_days),
+            "n_common_hours": len(common_hours),
+            "method": "按当前设备选择的逐日 rate_per_hour 与逐小时覆盖交集重算；缺测为 NA"}
+
+
+def _safe_pairs(left: dict, right: dict, dates=None) -> list[tuple[float, float]]:
+    keys = set(left) & set(right)
+    if dates is not None:
+        keys &= set(dates)
+    return [(left[k]["rate_per_hour"], right[k]["rate_per_hour"]) for k in sorted(keys)
             if left[k].get("rate_per_hour") is not None and right[k].get("rate_per_hour") is not None]
 
 
+def _pair_stat(device_a: str, device_b: str, daily: dict, dates=None) -> dict:
+    values = _safe_pairs(daily[device_a], daily[device_b], dates)
+    r = patterns._pearson([x for x, _ in values], [y for _, y in values])
+    lagged = [(values[k][0], values[k + 1][1]) for k in range(len(values) - 1)]
+    lag_r = patterns._pearson([x for x, _ in lagged], [y for _, y in lagged])
+    return {"device_a": device_a, "device_b": device_b, "n_common": len(values),
+            "pearson_r": r, "lag1_a_lead_b_r": lag_r,
+            "status": "OK" if len(values) >= 3 and r is not None else "INSUFFICIENT_DATA",
+            "note": "同期相关与 a 领先 1 日的相关都只称关联/时差；未校正时间自相关，不能证明迁移"}
+
+
 def spatial_statistics(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
-    devices = tuple(devices)
+    devices = tuple(validate_devices(devices))
     daily = daily_activity(conn, devices, start, end)
     pairs = []
-    for i, a in enumerate(devices):
-        for b in devices[i + 1:]:
-            values = _safe_pairs(daily[a], daily[b])
-            r = patterns._pearson([x for x, _ in values], [y for _, y in values])
-            lagged = [(values[k][0], values[k + 1][1]) for k in range(len(values) - 1)]
-            lag_r = patterns._pearson([x for x, _ in lagged], [y for _, y in lagged])
-            pairs.append({"device_a": a, "device_b": b, "n_common": len(values),
-                          "pearson_r": r, "lag1_a_lead_b_r": lag_r,
-                          "status": "OK" if len(values) >= 3 and r is not None else "INSUFFICIENT_DATA",
-                          "note": "同期相关与 a 领先 1 日的相关都只称关联/时差；未校正时间自相关，不能证明迁移"})
+    for a, b in itertools.combinations(devices, 2):
+        pairs.append(_pair_stat(a, b, daily))
     differences = {}
     for device in devices:
         rates = [v["rate_per_hour"] for v in daily[device].values()
@@ -376,7 +593,34 @@ def spatial_statistics(conn: sqlite3.Connection, devices, start: str, end: str) 
     long_term = [{"device_id": device, "month": month,
                   "mean_rate": statistics.fmean(values), "n_days": len(values)}
                  for (device, month), values in sorted(monthly.items())]
+    common = common_valid_periods(conn, devices, start, end)
+    independent = []
+    for device in devices:
+        per_day = daily[device]
+        independent.append({
+            "device_id": device,
+            "n_days": len(per_day),
+            "valid_days": [day for day, value in per_day.items()
+                           if value.get("rate_per_hour") is not None],
+            "missing_days": [day for day, value in per_day.items()
+                             if value.get("rate_per_hour") is None],
+            "coverage_ratios": {day: value.get("coverage_ratio") for day, value in per_day.items()},
+            "description": differences[device],
+        })
     return {"pairs": pairs, "device_differences": differences,
+            "modes": {
+                "independent": {"status": "OK", "devices": independent,
+                                "note": "各站独立描述；缺测站显示 NA 与覆盖率，不填 0"},
+                "common_valid": {"status": "OK" if common["n_common_days"] else "INSUFFICIENT_DATA",
+                                 "devices": list(devices),
+                                 "common_dates": common["common_dates"],
+                                 "n_common_days": common["n_common_days"],
+                                 "n_common_hours": common["n_common_hours"],
+                                 "pairs": [_pair_stat(a, b, daily, common["common_dates"])
+                                           for a, b in itertools.combinations(devices, 2)],
+                                 "note": common["method"]},
+            },
+            "common_valid_periods": common,
             "stability": {"status": stability_status, "windows": len(weekly_leaders),
                           "top_station_share": top_share,
                           "note": "格局稳定度仅按窗口内首位站重复出现比例；未独立验证，不升级为长期结论"},
@@ -385,9 +629,12 @@ def spatial_statistics(conn: sqlite3.Connection, devices, start: str, end: str) 
 
 
 def heatmaps(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
+    devices = tuple(validate_devices(devices))
     daily = daily_activity(conn, devices, start, end)
     dates = sorted({d for device in daily.values() for d in device})
     date_station = [{"observed_date": day, "device_id": device,
+                     "status": daily[device].get(day, {}).get("status", "NA"),
+                     "coverage_ratio": daily[device].get(day, {}).get("coverage_ratio"),
                      "rate_per_hour": daily[device].get(day, {}).get("rate_per_hour")}
                     for device in devices for day in dates]
     day_night = []
@@ -436,6 +683,97 @@ def heatmaps(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
     }
 
 
+def _pair_distance(left: dict, right: dict) -> dict:
+    """按当前两站坐标与坐标系口径重算站距，不复用过期缓存。"""
+    audit_a, audit_b = left["coordinate_audit"], right["coordinate_audit"]
+    if left.get("longitude_deg") is None or right.get("longitude_deg") is None \
+            or audit_a.get("status") == "BLOCKED" or audit_b.get("status") == "BLOCKED":
+        return {"status": "UNKNOWN", "distance_m": None,
+                "reason": "缺坐标或坐标审计阻断，不计算站距"}
+    crs_a = (left.get("crs") or UNDECLARED_CRS).upper()
+    crs_b = (right.get("crs") or UNDECLARED_CRS).upper()
+    if crs_a != UNDECLARED_CRS and crs_b != UNDECLARED_CRS and crs_a != crs_b:
+        return {"status": "BLOCKED", "distance_m": None,
+                "reason": "坐标系不同且未转换，拒绝混算站距"}
+    undeclared = crs_a == UNDECLARED_CRS or crs_b == UNDECLARED_CRS
+    return {"status": "PROVISIONAL" if undeclared else "OK",
+            "distance_m": haversine_m(left["longitude_deg"], left["latitude_deg"],
+                                      right["longitude_deg"], right["latitude_deg"]),
+            "crs_pair": f"{crs_a} / {crs_b}",
+            "note": ("未声明坐标系，按 WGS84 近似，仅作相对位置示意"
+                     if undeclared else "同一声明坐标系内的球面距离近似")}
+
+
+def _coverage_summary(station: dict) -> dict:
+    coverage = station.get("coverage") or {}
+    direction = coverage.get("directional_footprint") or {}
+    return {
+        "status": coverage.get("status", "UNKNOWN"),
+        "cutoff_m": coverage.get("cutoff_m"),
+        "coverage_radius_m": coverage.get("coverage_radius_m"),
+        "half_angle_deg": coverage.get("half_angle_deg"),
+        "sector_area_m2": coverage.get("sector_area_m2"),
+        "retained_footprint_area_m2": coverage.get("retained_footprint_area_m2"),
+        "parameter_version": coverage.get("parameter_version"),
+        "analysis_cutoff_m": coverage.get("analysis_cutoff_m"),
+        "directional_status": direction.get("status", "UNKNOWN"),
+        "heading_deg": direction.get("heading_deg"),
+        "heading_reference": direction.get("heading_reference"),
+    }
+
+
+def pairwise_analysis(conn: sqlite3.Connection, devices, start: str, end: str,
+                      observed_date: str) -> dict:
+    """当前选择的每一对设备：站距、理论覆盖、条件重叠与活动差异；缺测不填 0。"""
+    selected = validate_devices(devices)
+    map_data = map_payload(conn, observed_date, selected)
+    stations = {station["device_id"]: station for station in map_data["stations"]}
+    daily = daily_activity(conn, selected, start, end)
+    pairs = []
+    for device_a, device_b in itertools.combinations(selected, 2):
+        left = stations.get(device_a, {"coordinate_audit": {"status": "BLOCKED"},
+                                       "coverage": {"status": "UNKNOWN"}})
+        right = stations.get(device_b, {"coordinate_audit": {"status": "BLOCKED"},
+                                        "coverage": {"status": "UNKNOWN"}})
+        distance = _pair_distance(left, right)
+        coverage_a, coverage_b = _coverage_summary(left), _coverage_summary(right)
+        overlap = ({"status": "UNKNOWN", "area_m2": None, "reason": distance["reason"]}
+                   if distance["status"] not in ("OK", "PROVISIONAL")
+                   else _conditional_overlap(left.get("coverage") or {},
+                                             right.get("coverage") or {}, left, right))
+        differences = []
+        for day in sorted(set(daily[device_a]) | set(daily[device_b])):
+            a_values = daily[device_a].get(day) or {}
+            b_values = daily[device_b].get(day) or {}
+            rate_a, rate_b = a_values.get("rate_per_hour"), b_values.get("rate_per_hour")
+            differences.append({
+                "observed_date": day,
+                "rate_a": rate_a, "rate_b": rate_b,
+                "difference_a_minus_b": (rate_a - rate_b
+                                         if rate_a is not None and rate_b is not None else None),
+                "status_a": a_values.get("status", "NA"), "status_b": b_values.get("status", "NA"),
+                "coverage_a": a_values.get("coverage_ratio"),
+                "coverage_b": b_values.get("coverage_ratio"),
+            })
+        valid = [row["difference_a_minus_b"] for row in differences
+                 if row["difference_a_minus_b"] is not None]
+        pairs.append({
+            "device_a": device_a, "device_b": device_b, "distance": distance,
+            "theoretical_coverage": {"device_a": coverage_a, "device_b": coverage_b},
+            "conditional_overlap": overlap,
+            "activity_difference": {
+                "by_date": differences, "n_common_days": len(valid),
+                "mean_difference_a_minus_b": statistics.fmean(valid) if valid else None,
+                "status": "OK" if len(valid) >= 3 else "INSUFFICIENT_DATA",
+                "note": "活动差异仅为同期描述；缺测日保留 NA 与覆盖率，不填 0",
+            },
+        })
+    return {"pairs": pairs, "devices": list(selected), "observed_date": observed_date,
+            "method_version": COMBINATION_METHOD_VERSION,
+            "note": ("站距与覆盖按当前两站当日生效参数重算；条件重叠是几何示意，"
+                     "不是实测鱼群位置、密度或站间连通性证据")}
+
+
 def environment_joint(conn: sqlite3.Connection, devices, start: str, end: str) -> dict:
     results = []
     device_set = set(devices)
@@ -476,8 +814,9 @@ def environment_joint(conn: sqlite3.Connection, devices, start: str, end: str) -
 
 
 def dynamic_frames(conn: sqlite3.Connection, devices, start: str, end: str,
-                   *, step_hours: int = 1) -> dict:
+                   *, step_hours: int = 1, run_id: str | None = None) -> dict:
     """离散时间帧：每帧只放该时刻已实测量的站位值，不插值、不连轨迹。"""
+    devices = validate_devices(devices)
     frames = []
     current = datetime.strptime(start, "%Y-%m-%d")
     last = datetime.strptime(end, "%Y-%m-%d")
@@ -510,9 +849,302 @@ def dynamic_frames(conn: sqlite3.Connection, devices, start: str, end: str,
             frames.append({"timestamp_local": stamp, "timezone": LOCAL_TIMEZONE, "values": values})
         current = datetime.fromordinal(current.toordinal() + 1)
     return {"frames": frames, "step_hours": step_hours, "devices": list(devices),
+            "selected_devices": list(devices), "run_id": run_id,
             "variables": list(ENV_VARIABLES),
             "legend": {"activity_scale": "FIXED_PER_VIEW", "missing": "NA"},
             "note": "离散站位活动与环境同屏；环境按本地 observed_at 对齐，缺测帧标 NA 而非 0；无鱼群轨迹、无连续密度插值"}
+
+
+def record_combination_run(conn: sqlite3.Connection, devices, start: str, end: str,
+                           observed_date: str, *, dataset_id: str | None = None,
+                           comparison_modes=None, actor: str = "S08", query_context=None,
+                           parameter_versions=None, grouping_mode: str = "default",
+                           group_members=None, aggregation_mode: str = "pooled",
+                           baseline_id: str | None = None, color_scale_id: str | None = None,
+                           metric_id: str = qc.DEFAULT_METRIC_ID,
+                           analysis_plan_version: str = qc.DEFAULT_ANALYSIS_PLAN_VERSION,
+                           mask_version: str = qc.DEFAULT_MASK_VERSION) -> dict:
+    """保存组合 run 与 V4.1 查询快照；同一查询的指纹防止新旧 run 混显。"""
+    selected = validate_devices(devices)
+    stamp = datetime.now(dt_timezone.utc).strftime("%Y%m%dT%H%M%S")
+    run_id = f"S08C-{stamp}-{uuid.uuid4().hex[:8]}"
+    snapshots = dict(parameter_versions or {})
+    if not snapshots:
+        snapshots = {device: parameter_snapshot(conn, device, observed_date)
+                     for device in selected}
+    modes = list(comparison_modes or COMPARISON_MODES)
+    dataset = dataset_id or DEFAULT_DATASET_ID
+    context = query_context or qc.build_query_context(
+        selected_devices=selected, start_date=start, end_date=end,
+        dataset_id=dataset, comparison_mode=modes[0] if modes else "independent",
+        aggregation_mode=aggregation_mode, grouping_mode=grouping_mode,
+        baseline_id=baseline_id, metric_id=metric_id,
+        analysis_plan_version=analysis_plan_version, parameter_versions=snapshots,
+        mask_version=mask_version, color_scale_id=color_scale_id)
+    context.run_id = run_id
+    context.parameter_versions = snapshots
+    context.dataset_id = dataset
+    context.aggregation_mode = aggregation_mode
+    context.grouping_mode = grouping_mode
+    context.comparison_mode = modes[0] if modes else "independent"
+    context.baseline_id = baseline_id
+    context.metric_id = metric_id
+    context.analysis_plan_version = analysis_plan_version
+    context.mask_version = mask_version
+    if color_scale_id:
+        context.color_scale_id = color_scale_id
+    row = {
+        "run_id": run_id,
+        "device_list": ",".join(selected),
+        "devices_json": json.dumps(selected, ensure_ascii=False),
+        "n_devices": len(selected),
+        "start_date": start, "end_date": end, "observed_date": observed_date,
+        "parameter_versions_json": json.dumps(snapshots, ensure_ascii=False, default=str),
+        "dataset_id": dataset,
+        "comparison_modes_json": json.dumps(modes, ensure_ascii=False),
+        "method_version": COMBINATION_METHOD_VERSION,
+        "created_at": _now(), "actor": actor,
+        "query_context_json": context.to_json(),
+        "query_fingerprint": context.query_fingerprint(),
+        "grouping_mode": grouping_mode,
+        "group_members_json": json.dumps(group_members or [], ensure_ascii=False, default=str),
+        "aggregation_mode": aggregation_mode,
+        "baseline_id": baseline_id,
+        "color_scale_id": context.color_scale_id,
+        "metric_id": metric_id,
+        "analysis_plan_version": analysis_plan_version,
+        "mask_version": mask_version,
+        "result_json": None,
+    }
+    columns = ",".join(row.keys())
+    placeholders = ",".join("?" for _ in row)
+    conn.execute(f"INSERT INTO spatial_combination_runs ({columns}) VALUES ({placeholders})",
+                 tuple(row.values()))
+    conn.commit()
+    row["parameter_versions"] = snapshots
+    row["devices"] = list(selected)
+    row["query_context"] = context.to_dict()
+    return row
+
+
+def store_combination_result(conn: sqlite3.Connection, run_id: str, result: dict) -> None:
+    """把同源结果写回 run，API 与页面只按 run_id 读取，避免新旧结果混显。"""
+    conn.execute(
+        "UPDATE spatial_combination_runs SET result_json=? WHERE run_id=?",
+        (json.dumps(result, ensure_ascii=False, default=str), run_id))
+    conn.commit()
+
+
+def _activity_rows(activity: dict, devices, dates) -> list[dict]:
+    rows = []
+    for device in devices:
+        for day in dates:
+            value = (activity.get(device) or {}).get(day)
+            if not value:
+                continue
+            rows.append({"date": day, "device_id": device,
+                         "numerator": value.get("candidate_events"),
+                         "denominator": value.get("valid_hours"),
+                         "coverage": value.get("coverage_ratio"),
+                         "status": value.get("status")})
+    return rows
+
+
+def _baseline_members(activity: dict, devices, baseline_id: str | None, end: str) -> tuple[list[str], str]:
+    valid_dates = sorted({day for device in devices for day, value
+                          in (activity.get(device) or {}).items()
+                          if value.get("rate_per_hour") is not None and day <= end})
+    baseline_id = baseline_id or "FIRST_VALID_DAY"
+    if baseline_id.startswith("PREV_"):
+        try:
+            count = int(baseline_id.split("_", 1)[1])
+        except ValueError:
+            count = 1
+        return valid_dates[-max(1, count):], f"前 {max(1, count)} 个有效日"
+    if baseline_id.startswith("DATE:"):
+        day = baseline_id.split(":", 1)[1]
+        return ([day] if day in valid_dates else []), f"指定日期 {day}"
+    return valid_dates[:1], "首个有效日"
+
+
+def _build_v41_payload(context: qc.QueryContext, activity: dict, statistics_payload: dict,
+                       *, metric_id: str, grouping_mode: str, custom_step_days: int,
+                       page: int, baseline_id: str | None, color_scale_id: str | None,
+                       start: str, end: str, low_coverage_threshold: float) -> dict:
+    selected = list(context.selected_devices)
+    contract = v41.metric_contract(metric_id)
+    date_set = context.date_set or grouping.inclusive_dates(start, end)
+    grouping_payload = grouping.build_groups(
+        start, end, grouping_mode, date_set,
+        custom_step_days=custom_step_days, page=page)
+    all_rows = _activity_rows(activity, selected, date_set)
+    metric_supported = metric_id == "CANDIDATE_EVENT_RATE"
+    usable_rows = all_rows if metric_supported else []
+    rates = [value.get("rate_per_hour") for device in selected
+             for value in (activity.get(device) or {}).values()
+             if value.get("rate_per_hour") is not None]
+    color_scale = v41.build_color_scale(metric_id, rates, config={
+        "color_scale_id": color_scale_id} if color_scale_id else None)
+
+    overview_cells = []
+    trend_dates = sorted(set(date_set))
+    for device in selected:
+        for day in trend_dates:
+            value = (activity.get(device) or {}).get(day)
+            overview_cells.append({
+                "device_id": device, "observed_date": day,
+                "numerator": (value or {}).get("candidate_events"),
+                "denominator": (value or {}).get("valid_hours"),
+                "coverage_ratio": (value or {}).get("coverage_ratio"),
+                "status": (value or {}).get("status"),
+                "value": (value or {}).get("rate_per_hour"),
+                "cell_status": v41.classify_cell(
+                    selected=True,
+                    numerator=(value or {}).get("candidate_events"),
+                    denominator=(value or {}).get("valid_hours"),
+                    coverage=(value or {}).get("coverage_ratio"),
+                    status=(value or {}).get("status"),
+                    low_coverage_threshold=low_coverage_threshold),
+            })
+    trend = [{"date": day,
+              "values": {device: (activity.get(device) or {}).get(day, {}).get("rate_per_hour")
+                         for device in selected}}
+             for day in trend_dates]
+
+    group_summaries = []
+    for group in grouping_payload["groups"]:
+        rows = [row for row in usable_rows if row["date"] in group["dates"]]
+        per_device = {}
+        for device in selected:
+            per_device[device] = v41.aggregate_observations(
+                [row for row in rows if row["device_id"] == device],
+                context.aggregation_mode, metric_id)
+        common_dates = sorted({row["date"] for row in rows}
+                              - {row["date"] for row in rows
+                                 if row["device_id"] not in selected})
+        valid_by_device = [{row["date"] for row in rows if row["device_id"] == device
+                            and row["numerator"] is not None}
+                           for device in selected]
+        common = sorted(set.intersection(*valid_by_device)) if valid_by_device else []
+        group_summaries.append({**group,
+                                "per_device": per_device,
+                                "common_valid_dates": common,
+                                "n_common_valid_days": len(common),
+                                "n_present_dates": len(common_dates)})
+
+    members, member_note = _baseline_members(activity, selected, baseline_id, end)
+    baseline_rows = [row for row in usable_rows if row["date"] in members]
+    current_agg = v41.aggregate_observations(usable_rows, context.aggregation_mode, metric_id)
+    baseline_agg = v41.aggregate_observations(baseline_rows, context.aggregation_mode, metric_id)
+    comparison = v41.compare_with_baseline(
+        current_agg["selected_value"], baseline_agg["selected_value"],
+        metric_id=metric_id, baseline_id=baseline_id, baseline_members=members,
+        cutoff_date=end, baseline_version=member_note)
+    if not metric_supported:
+        comparison = {"status": "BLOCKED_DATA_SOURCE",
+                      "reason": "当前 S03/S08 日值只提供候选事件率；出现比例需帧级候选标记",
+                      "baseline_members": members}
+
+    return {
+        "metric": {**contract, "data_status": "OK" if metric_supported else "BLOCKED_DATA_SOURCE"},
+        "query_context": context.to_dict(),
+        "color_scale": color_scale,
+        "overview": {"cells": overview_cells, "trend": trend,
+                     "n_cells": len(overview_cells),
+                     "note": "设备×日期完整总览；未选择、缺测、低覆盖、有效零值分状态显示"},
+        "spatial_groups": {**grouping_payload, "group_summaries": group_summaries},
+        "compare": comparison,
+        "patterns": v41.pattern_cards(
+            DEVICE_IDS, selected, run_id=context.run_id,
+            statistics=statistics_payload.get("device_differences", {})),
+        "pattern_evidence": {**v41.evidence_summary({}),
+                             "reason": "当前组合分析不自动判定规律证据；需 S07 冻结规则与独立验证"},
+        "status": {"run_state": "READY", "default_map_limit": grouping.MAX_DEFAULT_GROUPS,
+                   "metric_data_status": "OK" if metric_supported else "BLOCKED_DATA_SOURCE"},
+    }
+
+
+def analyze_combination(conn: sqlite3.Connection, devices, start: str, end: str,
+                        observed_date: str, *, step_hours: int = 1,
+                        dataset_id: str | None = None, actor: str = "S08",
+                        query_context=None, metric_id: str = qc.DEFAULT_METRIC_ID,
+                        grouping_mode: str = "default", aggregation_mode: str = "pooled",
+                        baseline_id: str | None = None, color_scale_id: str | None = None,
+                        custom_step_days: int = 7, page: int = 1,
+                        date_set=None, daily_windows=None, environment_filters=None,
+                        depth_mode: str = "ALL", layer: str | None = None,
+                        comparison_mode: str | None = None,
+                        analysis_plan_version: str = qc.DEFAULT_ANALYSIS_PLAN_VERSION,
+                        mask_version: str = qc.DEFAULT_MASK_VERSION,
+                        low_coverage_threshold: float = MIN_COVERAGE_RATIO) -> dict:
+    """任意 1—5 台设备 + V4.1 同查询契约；所有视图共用同一 run 与查询快照。"""
+    selected = validate_devices(devices)
+    snapshots = {device: parameter_snapshot(conn, device, observed_date)
+                 for device in selected}
+    dataset = dataset_id or DEFAULT_DATASET_ID
+    modes = ([comparison_mode] + [mode for mode in COMPARISON_MODES if mode != comparison_mode]
+             if comparison_mode else list(COMPARISON_MODES))
+    context = query_context or qc.build_query_context(
+        selected_devices=selected, start_date=start, end_date=end,
+        date_set=date_set, daily_windows=daily_windows,
+        comparison_mode=modes[0], baseline_id=baseline_id,
+        aggregation_mode=aggregation_mode, grouping_mode=grouping_mode,
+        dataset_id=dataset, metric_id=metric_id,
+        analysis_plan_version=analysis_plan_version, parameter_versions=snapshots,
+        mask_version=mask_version, color_scale_id=color_scale_id,
+        depth_mode=depth_mode, layer=layer, environment_filters=environment_filters)
+    run = record_combination_run(
+        conn, selected, start, end, observed_date, dataset_id=dataset,
+        comparison_modes=modes, actor=actor, query_context=context,
+        parameter_versions=snapshots, grouping_mode=grouping_mode,
+        group_members=[], aggregation_mode=aggregation_mode, baseline_id=baseline_id,
+        color_scale_id=color_scale_id, metric_id=metric_id,
+        analysis_plan_version=analysis_plan_version, mask_version=mask_version)
+    activity = daily_activity(conn, selected, start, end)
+    statistics_payload = spatial_statistics(conn, selected, start, end)
+    v41_payload = _build_v41_payload(
+        context, activity, statistics_payload, metric_id=metric_id,
+        grouping_mode=grouping_mode, custom_step_days=custom_step_days, page=page,
+        baseline_id=baseline_id, color_scale_id=color_scale_id, start=start, end=end,
+        low_coverage_threshold=low_coverage_threshold)
+    context.color_scale_id = v41_payload["color_scale"]["color_scale_id"]
+    run["color_scale_id"] = context.color_scale_id
+    group_members = [{key: group[key] for key in
+                      ("index", "date_start", "date_end", "planned_days", "selected_days", "dates")}
+                     for group in v41_payload["spatial_groups"]["groups"]]
+    run["group_members"] = group_members
+    conn.execute("UPDATE spatial_combination_runs SET color_scale_id=?, query_context_json=?, "
+                 "group_members_json=? WHERE run_id=?",
+                 (context.color_scale_id, context.to_json(),
+                  json.dumps(group_members, ensure_ascii=False, default=str), run["run_id"]))
+    dynamics = dynamic_frames(conn, selected, start, end,
+                              step_hours=step_hours, run_id=run["run_id"])
+    result = {
+        "run": run, "run_id": run["run_id"], "devices": list(selected),
+        "selected_devices": list(selected),
+        "query_context": context.to_dict(),
+        "map": map_payload(conn, observed_date, selected),
+        "activity": activity,
+        "time_curves": time_curves(conn, selected, start, end),
+        "statistics": statistics_payload,
+        "common_valid_periods": statistics_payload["common_valid_periods"],
+        "pairwise": pairwise_analysis(conn, selected, start, end, observed_date),
+        "heatmaps": heatmaps(conn, selected, start, end),
+        "environment": environment_joint(conn, selected, start, end),
+        "dynamics": dynamics,
+        "v41": v41_payload,
+        "overview": v41_payload["overview"],
+        "spatial_groups": v41_payload["spatial_groups"],
+        "patterns": v41_payload["patterns"],
+        "pattern_evidence": v41_payload["pattern_evidence"],
+        "compare": v41_payload["compare"],
+        "color_scale": v41_payload["color_scale"],
+        "start_date": start, "end_date": end, "observed_date": observed_date,
+        "dataset_id": run["dataset_id"],
+        "method_version": COMBINATION_METHOD_VERSION,
+    }
+    store_combination_result(conn, run["run_id"], result)
+    return result
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict]) -> None:
@@ -555,6 +1187,70 @@ def write_outputs(result: dict, output_dir: Path) -> list[str]:
                 for device, by_date in activity.items()
                 for day, values in by_date.items()])
     written.append("spatial_activity.csv")
+    run = result.get("run")
+    if run:
+        _write_csv(output_dir / "combination_run.csv",
+                   ["run_id", "device_list", "n_devices", "start_date", "end_date",
+                    "observed_date", "parameter_versions_json", "dataset_id",
+                    "comparison_modes_json", "method_version", "created_at", "actor",
+                    "query_fingerprint", "grouping_mode", "group_members_json",
+                    "aggregation_mode", "baseline_id", "color_scale_id", "metric_id",
+                    "analysis_plan_version", "mask_version", "query_context_json"],
+                   [run])
+        written.append("combination_run.csv")
+    curves = result.get("time_curves", {})
+    if curves:
+        _write_csv(output_dir / "time_curves.csv",
+                   ["device_id", "timestamp_local", "candidate_events", "coverage_ratio",
+                    "source_slots", "status"],
+                   [{"device_id": device, **point} for device, points in curves.items()
+                    for point in points])
+        written.append("time_curves.csv")
+    pairwise = result.get("pairwise", {}).get("pairs", [])
+    if pairwise:
+        _write_csv(output_dir / "pairwise_analysis.csv",
+                   ["device_a", "device_b", "distance_status", "distance_m",
+                    "overlap_status", "overlap_area_m2", "n_common_days",
+                    "mean_difference_a_minus_b", "status"],
+                   [{"device_a": pair["device_a"], "device_b": pair["device_b"],
+                     "distance_status": pair["distance"]["status"],
+                     "distance_m": pair["distance"]["distance_m"],
+                     "overlap_status": pair["conditional_overlap"]["status"],
+                     "overlap_area_m2": pair["conditional_overlap"]["area_m2"],
+                     "n_common_days": pair["activity_difference"]["n_common_days"],
+                     "mean_difference_a_minus_b":
+                         pair["activity_difference"]["mean_difference_a_minus_b"],
+                     "status": pair["activity_difference"]["status"]}
+                    for pair in pairwise])
+        written.append("pairwise_analysis.csv")
+    v41_data = result.get("v41", {})
+    if v41_data:
+        (output_dir / "query_context.json").write_text(
+            json.dumps(v41_data.get("query_context", {}), ensure_ascii=False, indent=2),
+            encoding="utf-8")
+        written.append("query_context.json")
+        (output_dir / "color_scale.json").write_text(
+            json.dumps(v41_data.get("color_scale", {}), ensure_ascii=False, indent=2),
+            encoding="utf-8")
+        written.append("color_scale.json")
+        _write_csv(output_dir / "v41_overview.csv",
+                   ["device_id", "observed_date", "numerator", "denominator",
+                    "coverage_ratio", "status", "value", "cell_status"],
+                   v41_data.get("overview", {}).get("cells", []))
+        written.append("v41_overview.csv")
+        _write_csv(output_dir / "spatial_groups.csv",
+                   ["index", "date_start", "date_end", "planned_days", "selected_days",
+                    "n_common_valid_days", "grouping_mode"],
+                   [{**{key: group.get(key) for key in
+                        ("index", "date_start", "date_end", "planned_days",
+                         "selected_days", "n_common_valid_days")},
+                     "grouping_mode": v41_data.get("spatial_groups", {}).get("grouping_mode")}
+                    for group in v41_data.get("spatial_groups", {}).get("group_summaries", [])])
+        written.append("spatial_groups.csv")
+        _write_csv(output_dir / "pattern_cards.csv",
+                   ["device_id", "status", "label", "l_level", "reason"],
+                   v41_data.get("patterns", []))
+        written.append("pattern_cards.csv")
     frames = result.get("dynamics", {}).get("frames", [])
     frame_rows = []
     for frame in frames:

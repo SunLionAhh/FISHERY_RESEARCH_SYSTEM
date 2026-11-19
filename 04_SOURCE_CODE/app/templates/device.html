@@ -1,178 +1,227 @@
 {% extends "base.html" %}
-{% block title %}设备 {{ d.device_id }} · 参数与GPS · 渔业声学监测科研工作台{% endblock %}
+{% block title %}设备 {{ d.device_id }} · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}设备 {{ d.device_id }}{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="{{ url_for('web.index') }}">返回设备清单</a>{% endblock %}
 {% block content %}
-<p><a href="{{ url_for('web.index') }}">← 返回设备清单</a></p>
 
-<div class="card">
-  <h2>设备 {{ d.device_id }} 当前参数（版本 v{{ d.param.version if d.param else '—' }}）</h2>
-  <p class="muted">站位：{{ d.station_id if d.station_id else '未分配' }}（站位未提供时保持未分配，禁止伪造站位名称或坐标）</p>
-  {% if d.param %}
-  <table>
-    <tr><th>字段</th><th>值</th><th>说明</th></tr>
-    <tr><td>人工分析截断斜距</td><td><b>{{ d.param.analysis_cutoff_slant_m }} m</b></td><td>硬上限，永不覆盖；理论 5.2043 m（如派生）仅参考</td></tr>
-    <tr><td>离底参考输入类型</td><td>{{ d.param.clearance_input_type }}</td><td>VERTICAL=垂直离底高度；AXIS_SLANT=中心轴斜距</td></tr>
-    <tr><td>垂直离底高度</td><td>{{ d.param.vertical_bottom_clearance_m or '—' }} {% if d.param.derived_vertical_clearance_m %}<span class="badge ok">派生 {{ d.param.derived_vertical_clearance_m }} m</span>{% endif %}</td><td>派生值按倾角换算，标记 is_derived</td></tr>
-    <tr><td>中心轴斜距</td><td>{{ d.param.axis_slant_m or '—' }} {% if d.param.derived_axis_slant_m %}<span class="badge ok">派生 {{ d.param.derived_axis_slant_m }} m</span>{% endif %}</td><td>派生值仅参考</td></tr>
-    <tr><td>倾角</td><td>{{ d.param.downward_tilt_deg or 'UNKNOWN' }} {{ d.param.tilt_reference or '' }}</td><td>相对水平面向下为正</td></tr>
-    <tr><td>波束角</td><td>{{ d.param.beam_angle_value_deg }}° {{ d.param.beam_angle_kind }}</td><td>内部半角 β = {{ d.param.beam_half_angle_deg }}°</td></tr>
-    <tr><td>方位角</td><td>{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else 'UNKNOWN' }}</td><td>真北 0°、顺时针；用户后天提供</td></tr>
-  </table>
-  {% else %}
-  <p class="muted">尚无参数版本；请在下方表单首次填写（UNKNOWN 不自动填默认值）。</p>
-  {% endif %}
+<div class="section">
+  <div class="kv">
+    <div class="kv__item"><div class="kv__k">站位</div><div class="kv__v sm">{{ d.station_id or '未分配' }}</div><span class="sr-only">站位：{{ d.station_id or '未分配' }}</span></div>
+    <div class="kv__item"><div class="kv__k">参数版本</div><div class="kv__v sm mono">v{{ d.param.version if d.param else '—' }}</div></div>
+    {% if d.param %}
+    <div class="kv__item"><div class="kv__k">人工分析截断斜距</div><div class="kv__v">{{ d.param.analysis_cutoff_slant_m }}<span class="u">m</span></div><div class="kv__note">硬上限</div></div>
+    <div class="kv__item"><div class="kv__k">离底参考输入类型</div><div class="kv__v sm mono">{{ d.param.clearance_input_type }}</div></div>
+    <div class="kv__item"><div class="kv__k">垂直离底高度</div><div class="kv__v sm">{{ d.param.vertical_bottom_clearance_m or '—' }}<span class="u">m</span></div>
+      {% if d.param.derived_vertical_clearance_m %}<div class="kv__note"><span class="badge ok">派生 {{ d.param.derived_vertical_clearance_m }} m</span></div>{% endif %}</div>
+    <div class="kv__item"><div class="kv__k">中心轴斜距</div><div class="kv__v sm">{{ d.param.axis_slant_m or '—' }}<span class="u">m</span></div>
+      {% if d.param.derived_axis_slant_m %}<div class="kv__note"><span class="badge ok">派生 {{ d.param.derived_axis_slant_m }} m</span></div>{% endif %}</div>
+    <div class="kv__item"><div class="kv__k">倾角</div><div class="kv__v">{{ d.param.downward_tilt_deg or '—' }}<span class="u">°</span></div><div class="kv__note">{{ d.param.tilt_reference or '' }}</div></div>
+    <div class="kv__item"><div class="kv__k">波束角</div><div class="kv__v">{{ d.param.beam_angle_value_deg }}<span class="u">° · {{ d.param.beam_angle_kind }}</span></div><div class="kv__note">半角 β {{ d.param.beam_half_angle_deg }}°</div></div>
+    <div class="kv__item"><div class="kv__k">方位角</div><div class="kv__v">{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '—' }}<span class="u">°</span></div></div>
+    {% else %}
+    <div class="kv__item" style="grid-column:1/-1"><div class="empty">尚无参数版本，请在下方表单首次填写</div></div>
+    {% endif %}
+  </div>
 </div>
 
-<div class="card">
-  <h2>填写 / 更新参数（每次保存生成新版本，旧版本不可覆盖）</h2>
-  <form method="post" action="{{ url_for('web.save_params', device_id=d.device_id) }}">
-    <input type="hidden" name="expected_version" value="{{ d.param.version if d.param else 0 }}">
-    <div class="form-row">
-      <label>人工分析截断斜距（m，必填硬上限）
-        <input name="analysis_cutoff_slant_m" value="{{ d.param.analysis_cutoff_slant_m if d.param else '' }}"></label>
-      <label>离底参考输入类型
-        <select name="clearance_input_type">
-          {% for t in ['VERTICAL','AXIS_SLANT','UNKNOWN'] %}
-          <option value="{{ t }}" {% if d.param and d.param.clearance_input_type == t %}selected{% endif %}>{{ t }}</option>
-          {% endfor %}
-        </select></label>
-      <label>垂直离底高度（m，VERTICAL 时必填）
-        <input name="vertical_bottom_clearance_m" value="{{ d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '' }}"></label>
-      <label>中心轴斜距（m，AXIS_SLANT 时必填）
-        <input name="axis_slant_m" value="{{ d.param.axis_slant_m if d.param and d.param.clearance_input_type=='AXIS_SLANT' else '' }}"></label>
-      <label>倾角（°，相对水平面向下为正）
-        <input name="downward_tilt_deg" value="{{ d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '' }}"></label>
-      <label>倾角基准
-        <input name="tilt_reference" value="{{ d.param.tilt_reference if d.param and d.param.tilt_reference else '' }}"></label>
-      <label>波束角数值（°）
-        <input name="beam_angle_value_deg" value="{{ d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '' }}"></label>
-      <label>波束角类型（必须显式选择）
-        <select name="beam_angle_kind">
-          {% for t in ['FULL','HALF','UNKNOWN'] %}
-          <option value="{{ t }}" {% if d.param and d.param.beam_angle_kind == t %}selected{% endif %}>{{ t }}</option>
-          {% endfor %}
-        </select></label>
-      <label>方位角（°，真北 0°顺时针；可留空=UNKNOWN）
-        <input name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"></label>
-      <label>方位角基准
-        <input name="heading_reference" value="TRUE_NORTH_CW"></label>
-      <label>测量方式
-        <input name="measurement_method" value="USER_PROVIDED"></label>
-      <label>不确定性（文字说明）
-        <input name="uncertainty" value=""></label>
-      <label>来源（必填，可追溯）
-        <input name="source" value="{{ d.param.source if d.param else 'USER_PROVIDED' }}"></label>
-      <label>生效起始日期（必填，如 2026-10-31）
-        <input name="effective_from" value="2026-10-31"></label>
-      <label>修改原因
-        <input name="change_reason" value=""></label>
-    </div>
-    <p><button class="btn" type="submit">保存为新版本</button>
-       <a href="{{ url_for('web.params_preview', device_id=d.device_id, clearance_input_type=d.param.clearance_input_type if d.param else 'VERTICAL', vertical_bottom_clearance_m=d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '', axis_slant_m='', downward_tilt_deg=d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '', beam_angle_value_deg=d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '', beam_angle_kind=d.param.beam_angle_kind if d.param else 'FULL', analysis_cutoff_slant_m=d.param.analysis_cutoff_slant_m if d.param and d.param.analysis_cutoff_slant_m is not none else '', source='preview', effective_from='2026-10-31') }}">保存前影响预览（JSON）</a></p>
-    <p class="muted">影响预览说明派生值与截断上限是否受影响；并发提交若预期版本过期将返回 409。</p>
-  </form>
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title">填写 / 更新参数</h2>
+    <span class="section__meta">每次保存生成新版本</span>
+  </div>
+  <div class="card">
+    <form method="post" action="{{ url_for('web.save_params', device_id=d.device_id) }}">
+      <input type="hidden" name="expected_version" value="{{ d.param.version if d.param else 0 }}">
+
+      <div class="form-section" style="border-top:0;margin-top:0;padding-top:0">
+        <div class="form-section__title">几何</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="p-cut">人工分析截断斜距<span class="req">·</span></label>
+            <div class="control"><input id="p-cut" name="analysis_cutoff_slant_m" value="{{ d.param.analysis_cutoff_slant_m if d.param else '' }}"><span class="unit">m</span></div>
+          </div>
+          <div class="field">
+            <label for="p-type">离底参考输入类型</label>
+            <div class="control"><select id="p-type" name="clearance_input_type">
+              {% for t in ['VERTICAL','AXIS_SLANT','UNKNOWN'] %}<option value="{{ t }}" {% if d.param and d.param.clearance_input_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+            </select></div>
+          </div>
+          <div class="field">
+            <label for="p-vert">垂直离底高度</label>
+            <div class="control"><input id="p-vert" name="vertical_bottom_clearance_m" value="{{ d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '' }}"><span class="unit">m</span></div>
+          </div>
+          <div class="field">
+            <label for="p-axis">中心轴斜距</label>
+            <div class="control"><input id="p-axis" name="axis_slant_m" value="{{ d.param.axis_slant_m if d.param and d.param.clearance_input_type=='AXIS_SLANT' else '' }}"><span class="unit">m</span></div>
+          </div>
+          <div class="field">
+            <label for="p-tilt">倾角</label>
+            <div class="control"><input id="p-tilt" name="downward_tilt_deg" value="{{ d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '' }}"><span class="unit">°</span></div>
+          </div>
+          <div class="field">
+            <label for="p-tref">倾角基准</label>
+            <div class="control"><input id="p-tref" name="tilt_reference" value="{{ d.param.tilt_reference if d.param and d.param.tilt_reference else '' }}"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section__title">波束与方位</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="p-beam">波束角数值</label>
+            <div class="control"><input id="p-beam" name="beam_angle_value_deg" value="{{ d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '' }}"><span class="unit">°</span></div>
+          </div>
+          <div class="field">
+            <label for="p-bkind">波束角类型</label>
+            <div class="control"><select id="p-bkind" name="beam_angle_kind">
+              {% for t in ['FULL','HALF','UNKNOWN'] %}<option value="{{ t }}" {% if d.param and d.param.beam_angle_kind == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+            </select></div>
+          </div>
+          <div class="field">
+            <label for="p-head">方位角</label>
+            <div class="control"><input id="p-head" name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"><span class="unit">°</span></div>
+          </div>
+          <div class="field">
+            <label for="p-href">方位角基准</label>
+            <div class="control"><input id="p-href" name="heading_reference" value="TRUE_NORTH_CW"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section__title">溯源与生效</div>
+        <div class="form-grid">
+          <div class="field"><label for="p-method">测量方式</label><div class="control"><input id="p-method" name="measurement_method" value="USER_PROVIDED"></div></div>
+          <div class="field"><label for="p-unc">不确定性</label><div class="control"><input id="p-unc" name="uncertainty" value=""></div></div>
+          <div class="field"><label for="p-src">来源<span class="req">·</span></label><div class="control"><input id="p-src" name="source" value="{{ d.param.source if d.param else 'USER_PROVIDED' }}"></div></div>
+          <div class="field"><label for="p-eff">生效起始日期<span class="req">·</span></label><div class="control"><input id="p-eff" name="effective_from" value="2026-10-31" placeholder="2026-10-31"></div></div>
+          <div class="field"><label for="p-reason">修改原因</label><div class="control"><input id="p-reason" name="change_reason" value=""></div></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn" type="submit">保存为新版本</button>
+        <a class="btn btn--quiet" href="{{ url_for('web.params_preview', device_id=d.device_id, clearance_input_type=d.param.clearance_input_type if d.param else 'VERTICAL', vertical_bottom_clearance_m=d.param.vertical_bottom_clearance_m if d.param and d.param.clearance_input_type=='VERTICAL' else '', axis_slant_m='', downward_tilt_deg=d.param.downward_tilt_deg if d.param and d.param.downward_tilt_deg is not none else '', beam_angle_value_deg=d.param.beam_angle_value_deg if d.param and d.param.beam_angle_value_deg is not none else '', beam_angle_kind=d.param.beam_angle_kind if d.param else 'FULL', analysis_cutoff_slant_m=d.param.analysis_cutoff_slant_m if d.param and d.param.analysis_cutoff_slant_m is not none else '', source='preview', effective_from='2026-10-31') }}">保存前影响预览 (JSON)</a>
+      </div>
+    </form>
+  </div>
 </div>
 
-<div class="card">
-  <h2>GPS 位置（经纬度网页录入，历史不覆盖 — K19/GEO-01）</h2>
-  <form method="post" action="{{ url_for('web.save_position', device_id=d.device_id) }}">
-    <input type="hidden" name="expected_version" value="{{ d.position.version if d.position else 0 }}">
-    <div class="form-row">
-      <label>经度（必填，-180—180）
-        <input name="longitude_deg" value="{{ '%.13f'|format(d.position.longitude_deg) if d.position else '' }}"></label>
-      <label>纬度（必填，-90—90）
-        <input name="latitude_deg" value="{{ '%.13f'|format(d.position.latitude_deg) if d.position else '' }}"></label>
-      <label>坐标系（不填=UNKNOWN，不默认 WGS84）
-        <input name="coordinate_reference_system" value="{{ d.position.coordinate_reference_system if d.position and d.position.coordinate_reference_system else '' }}"></label>
-      <label>定位精度（m，可留空）
-        <input name="position_accuracy_m" value="{{ d.position.position_accuracy_m if d.position and d.position.position_accuracy_m is not none else '' }}"></label>
-      <label>方位角（°，可留空；后天补录）
-        <input name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"></label>
-      <label>方位角基准
-        <input name="heading_reference" value="{{ d.position.heading_reference if d.position and d.position.heading_reference else '' }}"></label>
-      <label>位置来源（必填）
-        <input name="position_source" value="{{ d.position.position_source if d.position else 'USER_PROVIDED' }}"></label>
-      <label>生效起始日期（必填）
-        <input name="effective_from" value="2026-10-31"></label>
-      <label>备注
-        <input name="notes" value=""></label>
-    </div>
-    <p><button class="btn" type="submit">保存为新位置版本</button></p>
-  </form>
-  <table>
-    <tr><th>版本</th><th>经度</th><th>纬度</th><th>坐标系</th><th>精度</th><th>方位角</th><th>生效</th><th>来源</th></tr>
-    {% for p in position_history %}
-    <tr><td>v{{ p.version }}</td><td>{{ p.longitude_deg }}</td><td>{{ p.latitude_deg }}</td>
-        <td>{{ p.coordinate_reference_system or 'UNKNOWN' }}</td>
-        <td>{{ p.position_accuracy_m or 'UNKNOWN' }}</td>
-        <td>{{ p.heading_deg if p.heading_deg is not none else 'UNKNOWN' }}</td>
-        <td>{{ p.effective_from }} — {{ p.effective_to or '至今' }}</td><td>{{ p.position_source }}</td></tr>
-    {% endfor %}
-  </table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">GPS 位置</h2><span class="section__meta">历史不覆盖</span></div>
+  <div class="card">
+    <form method="post" action="{{ url_for('web.save_position', device_id=d.device_id) }}">
+      <input type="hidden" name="expected_version" value="{{ d.position.version if d.position else 0 }}">
+      <div class="form-grid">
+        <div class="field"><label for="g-lon">经度<span class="req">·</span></label><div class="control"><input id="g-lon" name="longitude_deg" value="{{ '%.13f'|format(d.position.longitude_deg) if d.position else '' }}"><span class="unit">°</span></div></div>
+        <div class="field"><label for="g-lat">纬度<span class="req">·</span></label><div class="control"><input id="g-lat" name="latitude_deg" value="{{ '%.13f'|format(d.position.latitude_deg) if d.position else '' }}"><span class="unit">°</span></div></div>
+        <div class="field"><label for="g-crs">坐标系</label><div class="control"><input id="g-crs" name="coordinate_reference_system" value="{{ d.position.coordinate_reference_system if d.position and d.position.coordinate_reference_system else '' }}" placeholder="留空 = UNKNOWN"></div></div>
+        <div class="field"><label for="g-acc">定位精度</label><div class="control"><input id="g-acc" name="position_accuracy_m" value="{{ d.position.position_accuracy_m if d.position and d.position.position_accuracy_m is not none else '' }}"><span class="unit">m</span></div></div>
+        <div class="field"><label for="g-head">方位角</label><div class="control"><input id="g-head" name="heading_deg" value="{{ d.position.heading_deg if d.position and d.position.heading_deg is not none else '' }}"><span class="unit">°</span></div></div>
+        <div class="field"><label for="g-href">方位角基准</label><div class="control"><input id="g-href" name="heading_reference" value="{{ d.position.heading_reference if d.position and d.position.heading_reference else '' }}"></div></div>
+        <div class="field"><label for="g-src">位置来源<span class="req">·</span></label><div class="control"><input id="g-src" name="position_source" value="{{ d.position.position_source if d.position else 'USER_PROVIDED' }}"></div></div>
+        <div class="field"><label for="g-eff">生效起始日期<span class="req">·</span></label><div class="control"><input id="g-eff" name="effective_from" value="2026-10-31"></div></div>
+        <div class="field" style="grid-column:1/-1"><label for="g-notes">备注</label><div class="control"><input id="g-notes" name="notes" value=""></div></div>
+      </div>
+      <div class="form-actions"><button class="btn" type="submit">保存为新位置版本</button></div>
+    </form>
+  </div>
+  <div class="table-wrap" style="margin-top:20px">
+    <table>
+      <thead><tr><th>版本</th><th class="num">经度 <span class="u">°</span></th><th class="num">纬度 <span class="u">°</span></th><th>坐标系</th><th class="num">精度 <span class="u">m</span></th><th class="num">方位角 <span class="u">°</span></th><th>生效</th><th>来源</th></tr></thead>
+      <tbody>
+      {% for p in position_history %}
+      <tr><td class="mono">v{{ p.version }}</td><td class="num">{{ p.longitude_deg }}</td><td class="num">{{ p.latitude_deg }}</td>
+          <td>{{ p.coordinate_reference_system or '—' }}</td><td class="num">{{ p.position_accuracy_m or '—' }}</td>
+          <td class="num">{{ p.heading_deg if p.heading_deg is not none else '—' }}</td>
+          <td class="mono">{{ p.effective_from }} — {{ p.effective_to or '至今' }}</td><td>{{ p.position_source }}</td></tr>
+      {% else %}<tr><td colspan="8"><div class="empty">尚无位置记录</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div class="card">
-  <h2>每日观测天气（按日期 + 设备记录，可更正、留审计）</h2>
-  <p class="muted">天气为人工观测的环境描述，随站位与日期变化，不随声学 CSV 导入。同一天重复保存视为更正当天值（不进参数版本链，历史更正写入审计日志）。</p>
-  <form method="post" action="{{ url_for('web.save_weather', device_id=d.device_id) }}">
-    <div class="form-row">
-      <label>观测日期（必填，YYYY-MM-DD）
-        <input name="observation_date" type="date" required></label>
-      <label>天气（必选）
-        <select name="weather_code" required>
-          <option value="" disabled selected>请选择天气</option>
-          {% for code, label in weather_codes.items() %}
-          <option value="{{ code }}">{{ label }}</option>
-          {% endfor %}
-        </select></label>
-      <label>来源（必填，可追溯）
-        <input name="source" value="USER_FIELD_OBSERVATION"></label>
-      <label>备注（可留空）
-        <input name="notes" value=""></label>
-    </div>
-    <p><button class="btn" type="submit">保存当天天气</button></p>
-  </form>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">每日观测天气</h2><span class="section__meta">按日期 + 设备，可更正、留审计</span></div>
+  <div class="card">
+    <form method="post" action="{{ url_for('web.save_weather', device_id=d.device_id) }}">
+      <div class="form-grid">
+        <div class="field"><label for="w-date">观测日期<span class="req">·</span></label><div class="control"><input id="w-date" name="observation_date" type="date" required></div></div>
+        <div class="field"><label for="w-code">天气<span class="req">·</span></label><div class="control"><select id="w-code" name="weather_code" required>
+          <option value="" disabled selected>请选择</option>
+          {% for code, label in weather_codes.items() %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+        </select></div></div>
+        <div class="field"><label for="w-src">来源<span class="req">·</span></label><div class="control"><input id="w-src" name="source" value="USER_FIELD_OBSERVATION"></div></div>
+        <div class="field"><label for="w-notes">备注</label><div class="control"><input id="w-notes" name="notes" value=""></div></div>
+      </div>
+      <div class="form-actions"><button class="btn" type="submit">保存当天天气</button></div>
+    </form>
+  </div>
   {% if weather_history %}
-  <table>
-    <tr><th>观测日期</th><th>天气</th><th>来源</th><th>备注</th><th>录入人</th><th>最后更新(UTC)</th></tr>
-    {% for w in weather_history %}
-    <tr><td>{{ w.observation_date }}</td>
-        <td><span class="badge ok">{{ weather_codes.get(w.weather_code, w.weather_code) }}</span></td>
-        <td>{{ w.source }}</td><td>{{ w.notes or '—' }}</td>
-        <td>{{ w.created_by }}</td><td>{{ w.updated_at }}</td></tr>
-    {% endfor %}
-  </table>
+  <div class="table-wrap" style="margin-top:20px">
+    <table>
+      <thead><tr><th>观测日期</th><th>天气</th><th>来源</th><th>备注</th><th>录入人</th><th>最后更新 <span class="u">UTC</span></th></tr></thead>
+      <tbody>
+      {% for w in weather_history %}
+      <tr><td class="mono">{{ w.observation_date }}</td><td><span class="badge ok">{{ weather_codes.get(w.weather_code, w.weather_code) }}</span></td>
+          <td>{{ w.source }}</td><td>{{ w.notes or '—' }}</td><td>{{ w.created_by }}</td><td class="mono muted">{{ w.updated_at }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
-  <p class="muted">尚无天气记录；用上方表单按日期录入。</p>
+  <div class="empty" style="margin-top:20px">尚无天气记录</div>
   {% endif %}
 </div>
 
-<div class="card">
-  <h2>参数历史版本（任务四：旧版本不可覆盖，新参数不改变历史结果）</h2>
-  <table>
-    <tr><th>版本</th><th>截断</th><th>离底输入</th><th>垂直</th><th>轴斜距</th><th>派生垂直</th><th>派生轴距</th><th>倾角</th><th>波束角</th><th>方位角</th><th>生效区间</th><th>来源</th></tr>
-    {% for v in param_history %}
-    <tr><td>v{{ v.version }}</td><td>{{ v.analysis_cutoff_slant_m }} m</td>
-        <td>{{ v.clearance_input_type }}</td><td>{{ v.vertical_bottom_clearance_m or '—' }}</td>
-        <td>{{ v.axis_slant_m or '—' }}</td>
-        <td>{{ v.derived_vertical_clearance_m or '—' }}</td><td>{{ v.derived_axis_slant_m or '—' }}</td>
-        <td>{{ v.downward_tilt_deg or '—' }}</td>
-        <td>{{ v.beam_angle_value_deg }}° {{ v.beam_angle_kind }}</td>
-        <td>{{ v.heading_deg if v.heading_deg is not none else 'UNKNOWN' }}</td>
-        <td>{{ v.effective_from }} — {{ v.effective_to or '至今' }}</td><td>{{ v.source }}</td></tr>
-    {% endfor %}
-  </table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">参数历史版本</h2><span class="section__meta">旧版本不可覆盖</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>版本</th><th class="num">截断 <span class="u">m</span></th><th>离底输入</th><th class="num">垂直 <span class="u">m</span></th><th class="num">轴斜距 <span class="u">m</span></th><th class="num">派生垂直</th><th class="num">派生轴距</th><th class="num">倾角 <span class="u">°</span></th><th>波束角</th><th class="num">方位角 <span class="u">°</span></th><th>生效区间</th><th>来源</th></tr></thead>
+      <tbody>
+      {% for v in param_history %}
+      <tr><td class="mono">v{{ v.version }}</td><td class="num">{{ v.analysis_cutoff_slant_m }}</td>
+          <td>{{ v.clearance_input_type }}</td><td class="num">{{ v.vertical_bottom_clearance_m or '—' }}</td>
+          <td class="num">{{ v.axis_slant_m or '—' }}</td><td class="num">{{ v.derived_vertical_clearance_m or '—' }}</td>
+          <td class="num">{{ v.derived_axis_slant_m or '—' }}</td><td class="num">{{ v.downward_tilt_deg or '—' }}</td>
+          <td>{{ v.beam_angle_value_deg }}° {{ v.beam_angle_kind }}</td>
+          <td class="num">{{ v.heading_deg if v.heading_deg is not none else '—' }}</td>
+          <td class="mono">{{ v.effective_from }} — {{ v.effective_to or '至今' }}</td><td>{{ v.source }}</td></tr>
+      {% else %}<tr><td colspan="12"><div class="empty">暂无历史版本</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% if bottom_refs %}
-<div class="card">
-  <h2>水底参考面（任务五）</h2>
-  <table>
-    <tr><th>类型</th><th>垂直高度</th><th>声学探底状态</th><th>生效</th><th>来源</th><th>备注</th></tr>
-    {% for b in bottom_refs %}
-    <tr><td>{{ b.reference_type }}</td><td>{{ b.vertical_height_m }} m</td><td>{{ b.acoustic_bottom_status }}</td>
-        <td>{{ b.effective_from }} — {{ b.effective_to or '至今' }}</td><td>{{ b.source }}</td><td>{{ b.notes }}</td></tr>
-    {% endfor %}
-  </table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">水底参考面</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th class="num">垂直高度 <span class="u">m</span></th><th>声学探底状态</th><th>生效</th><th>来源</th><th>备注</th></tr></thead>
+      <tbody>
+      {% for b in bottom_refs %}
+      <tr><td>{{ b.reference_type }}</td><td class="num">{{ b.vertical_height_m }}</td><td>{{ b.acoustic_bottom_status }}</td>
+          <td class="mono">{{ b.effective_from }} — {{ b.effective_to or '至今' }}</td><td>{{ b.source }}</td><td>{{ b.notes }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endif %}
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>UNKNOWN 不自动填默认值；站位未提供时保持未分配，禁止伪造站位名称或坐标。</p>
+    <p>人工截断为硬上限，永不覆盖；派生值按倾角换算并标记 is_derived，仅参考，不写回、不影响人工截断。倾角相对水平面向下为正；方位角真北 0°、顺时针。</p>
+    <p>每次保存生成新版本，旧版本不可覆盖，新参数不改变历史结果；并发提交若预期版本过期返回 409。GPS 与参数历史同样不覆盖。</p>
+    <p>天气为人工观测的环境描述，随站位与日期变化，同一天重复保存视为更正（不进参数版本链，历史更正写入审计日志）。</p>
+  </div>
+</details>
 {% endblock %}

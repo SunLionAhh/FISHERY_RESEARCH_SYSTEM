@@ -1,0 +1,379 @@
+{
+  "kind": "SYNTHETIC_CONTRACT_FIXTURES_NOT_RESEARCH_DATA",
+  "version": "V4.1",
+  "device_ids": [
+    "2000",
+    "2001",
+    "2002",
+    "2003",
+    "2005"
+  ],
+  "grouping": [
+    {
+      "span_days": 1,
+      "step_days": 1,
+      "groups": [
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "span_days": 7,
+      "step_days": 1,
+      "groups": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          7
+        ]
+      ]
+    },
+    {
+      "span_days": 8,
+      "step_days": 7,
+      "groups": [
+        [
+          1,
+          7
+        ],
+        [
+          8,
+          8
+        ]
+      ]
+    },
+    {
+      "span_days": 20,
+      "step_days": 7,
+      "groups": [
+        [
+          1,
+          7
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          15,
+          20
+        ]
+      ]
+    },
+    {
+      "span_days": 30,
+      "step_days": 7,
+      "groups": [
+        [
+          1,
+          7
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          15,
+          21
+        ],
+        [
+          22,
+          28
+        ],
+        [
+          29,
+          30
+        ]
+      ]
+    },
+    {
+      "span_days": 31,
+      "step_days": 7,
+      "groups": [
+        [
+          1,
+          7
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          15,
+          21
+        ],
+        [
+          22,
+          28
+        ],
+        [
+          29,
+          31
+        ]
+      ]
+    },
+    {
+      "span_days": 32,
+      "step_days": 10,
+      "groups": [
+        [
+          1,
+          10
+        ],
+        [
+          11,
+          20
+        ],
+        [
+          21,
+          30
+        ],
+        [
+          31,
+          32
+        ]
+      ]
+    },
+    {
+      "span_days": 60,
+      "step_days": 10,
+      "groups": [
+        [
+          1,
+          10
+        ],
+        [
+          11,
+          20
+        ],
+        [
+          21,
+          30
+        ],
+        [
+          31,
+          40
+        ],
+        [
+          41,
+          50
+        ],
+        [
+          51,
+          60
+        ]
+      ]
+    },
+    {
+      "span_days": 90,
+      "step_days": 10,
+      "groups": [
+        [
+          1,
+          10
+        ],
+        [
+          11,
+          20
+        ],
+        [
+          21,
+          30
+        ],
+        [
+          31,
+          40
+        ],
+        [
+          41,
+          50
+        ],
+        [
+          51,
+          60
+        ],
+        [
+          61,
+          70
+        ],
+        [
+          71,
+          80
+        ],
+        [
+          81,
+          90
+        ]
+      ]
+    },
+    {
+      "span_days": 91,
+      "step_days": 14,
+      "groups": [
+        [
+          1,
+          14
+        ],
+        [
+          15,
+          28
+        ],
+        [
+          29,
+          42
+        ],
+        [
+          43,
+          56
+        ],
+        [
+          57,
+          70
+        ],
+        [
+          71,
+          84
+        ],
+        [
+          85,
+          91
+        ]
+      ]
+    },
+    {
+      "span_days": 365,
+      "step_days": 60,
+      "groups": [
+        [
+          1,
+          60
+        ],
+        [
+          61,
+          120
+        ],
+        [
+          121,
+          180
+        ],
+        [
+          181,
+          240
+        ],
+        [
+          241,
+          300
+        ],
+        [
+          301,
+          360
+        ],
+        [
+          361,
+          365
+        ]
+      ]
+    },
+    {
+      "span_days": 4000,
+      "step_days": 730,
+      "groups": [
+        [
+          1,
+          730
+        ],
+        [
+          731,
+          1460
+        ],
+        [
+          1461,
+          2190
+        ],
+        [
+          2191,
+          2920
+        ],
+        [
+          2921,
+          3650
+        ],
+        [
+          3651,
+          4000
+        ]
+      ]
+    }
+  ],
+  "aggregation": {
+    "days": [
+      {
+        "numerator": 1,
+        "denominator": 2
+      },
+      {
+        "numerator": 9,
+        "denominator": 10
+      }
+    ],
+    "expected_pooled_percent": 83.33333333333333,
+    "expected_equal_day_mean_percent": 70.0,
+    "expected_sum_percent_is_invalid": 140.0
+  },
+  "evidence": {
+    "total_units": 60,
+    "support": 35,
+    "counter": 8,
+    "inconclusive": 5,
+    "unevaluable": 12,
+    "error": 0,
+    "expected_eligible": 48,
+    "expected_support_rate": 0.7291666666666666,
+    "not_a_confidence_probability": true
+  },
+  "difference": {
+    "baseline_percent": 40,
+    "current_percent": 70,
+    "expected_percentage_points": 30,
+    "expected_relative_change_percent": 75
+  },
+  "zero_and_missing": [
+    {
+      "numerator": 0,
+      "denominator": 10,
+      "expected_percent": 0,
+      "status": "VALID_ZERO"
+    },
+    {
+      "numerator": null,
+      "denominator": 0,
+      "expected_percent": null,
+      "status": "UNEVALUABLE"
+    }
+  ]
+}

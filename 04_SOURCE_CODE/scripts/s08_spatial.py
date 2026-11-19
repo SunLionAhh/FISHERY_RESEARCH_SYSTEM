@@ -42,6 +42,7 @@ def main() -> None:
 
     map_cmd = sub.add_parser("map")
     map_cmd.add_argument("--date", default="2026-10-31")
+    map_cmd.add_argument("--devices", default=",".join(spatial.DEVICE_IDS))
 
     analyze = sub.add_parser("analyze")
     analyze.add_argument("--devices", default=",".join(spatial.DEVICE_IDS))
@@ -79,23 +80,19 @@ def main() -> None:
         elif args.command == "distances":
             result = spatial.compute_distances(conn, args.date, actor="cli")
         elif args.command == "map":
-            result = spatial.map_payload(conn, args.date)
+            result = spatial.map_payload(conn, args.date, spatial.parse_devices(args.devices))
         else:
-            devices = tuple(d.strip() for d in args.devices.split(",") if d.strip())
-            result = {
-                "map": spatial.map_payload(conn, args.date),
-                "activity": spatial.daily_activity(conn, devices, args.start, args.end),
-                "statistics": spatial.spatial_statistics(conn, devices, args.start, args.end),
-                "heatmaps": spatial.heatmaps(conn, devices, args.start, args.end),
-                "environment": spatial.environment_joint(conn, devices, args.start, args.end),
-                "dynamics": spatial.dynamic_frames(conn, devices, args.start, args.end,
-                                                   step_hours=args.step_hours),
-            }
-            if args.command == "frames":
-                result = result["dynamics"]
-            if args.command == "analyze" and args.out:
-                args.out.parent.mkdir(parents=True, exist_ok=True)
-                result["archived_files"] = spatial.write_outputs(result, args.out)
+            devices = spatial.parse_devices(args.devices)
+            if args.command == "analyze":
+                result = spatial.analyze_combination(
+                    conn, devices, args.start, args.end, args.date,
+                    step_hours=args.step_hours, actor="cli")
+                if args.out:
+                    args.out.parent.mkdir(parents=True, exist_ok=True)
+                    result["archived_files"] = spatial.write_outputs(result, args.out)
+            else:
+                result = spatial.dynamic_frames(
+                    conn, devices, args.start, args.end, step_hours=args.step_hours)
         print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     finally:
         conn.close()

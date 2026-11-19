@@ -1,80 +1,135 @@
 {% extends "base.html" %}
+{% block title %}水层与规律 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}水层与规律{% endblock %}
 {% block content %}
-<h2>S07 深度、人工底界、三水层与长期规律</h2>
-<p class="hint">人工截断 5.2 m 始终生效；理论中心轴底距仅参考，不覆盖截断。近底候选只标记待审，不在未确认逐角底界前额外排除。天文/几何均为条件估算。</p>
-{% if message %}<div class="error-box">{{ message }}</div>{% endif %}
 
-<h3>条件几何与按日期参数</h3>
-<form class="compare-form" method="post">
-  <input type="hidden" name="action" value="geometry">
-  <label>设备 <input name="device_id" value="2000"></label>
-  <label>观测日期 <input name="observed_date" value="2026-10-31"></label>
-  <button>计算条件几何</button>
-</form>
-{% if geometry %}
-<table><thead><tr><th>项</th><th>值</th><th>说明</th></tr></thead><tbody>
-<tr><td>用户截断</td><td>{{ geometry.cutoff_locked_m }} m</td><td>不可被理论值覆盖</td></tr>
-<tr><td>中心轴理论底距</td><td>{{ geometry.center_axis_bottom_m | round(6) }} m</td><td>仅参考</td></tr>
-<tr><td>R 处轴点垂直距离</td><td>{{ geometry.axis_vertical_distance_at_R_m | round(6) }} m</td><td>与 3.68 m 的差来自舍入</td></tr>
-<tr><td>较陡/较平边缘到底</td><td>{{ geometry.steeper_edge_bottom_m | round(6) }} / {{ geometry.flatter_edge_bottom_m | round(6) }} m</td><td>{{ geometry.bottom_hit_status }}</td></tr>
-<tr><td>未截断椭圆面积</td><td>{{ geometry.uncut_ellipse.area_m2 | round(6) }} m²</td><td>非最终足迹</td></tr>
-<tr><td>最终保留足迹面积</td><td>{{ geometry.retained_footprint.area_m2 | round(6) }} m²</td><td>椭圆∩截断圆盘</td></tr>
-<tr><td>水体体积</td><td>{{ geometry.water_volume_m3 | round(6) }} m³</td><td>数值积分，收敛差 {{ geometry.numeric.volume_relative_change | round(8) }}</td></tr>
-</tbody></table>
-{% endif %}
+{% if message %}<div class="flash">{{ message }}</div>{% endif %}
 
-<h3>近底 QC 与三水层</h3>
-<form class="compare-form" method="post">
-  <input type="hidden" name="action" value="depth">
-  <label>设备 <input name="device_id" value="2000"></label>
-  <label>观测日期 <input name="observed_date" value="2026-10-31"></label>
-  <button>分层统计</button>
-</form>
-{% if depth_result %}
-<p>参数版本 {{ depth_result.parameter_version }}｜截断 {{ depth_result.cutoff_m }} m｜近底候选 {{ depth_result.qc.near_bottom_candidates }}｜额外排除 {{ depth_result.qc.excluded_samples }}（{{ depth_result.qc.status }}）</p>
-<table><thead><tr><th>水层</th><th>区内样本</th><th>候选事件</th><th>均值</th><th>中位</th><th>距底高度范围(m)</th></tr></thead><tbody>
-{% for row in depth_result.layers %}<tr><td>{{ row.layer }}</td><td>{{ row.kept_samples }}</td><td>{{ row.candidate_events }}</td><td>{{ row.signal_mean | round(3) }}</td><td>{{ row.signal_median }}</td><td>{{ row.min_height_above_bottom_m | round(3) }}—{{ row.max_height_above_bottom_m | round(3) }}</td></tr>{% endfor %}
-</tbody></table>
-{% endif %}
+<div class="section">
+  <div class="section__head"><h2 class="section__title">条件几何</h2><span class="section__meta">按日期参数</span></div>
+  <div class="card">
+    <form method="post" class="form-grid" style="align-items:end">
+      <input type="hidden" name="action" value="geometry">
+      <div class="field"><label for="g7-dev">设备</label><div class="control"><input id="g7-dev" name="device_id" value="2000"></div></div>
+      <div class="field"><label for="g7-date">观测日期</label><div class="control"><input id="g7-date" name="observed_date" value="2026-10-31"></div></div>
+      <div class="field" style="max-width:160px"><label>&nbsp;</label><button class="btn btn--ghost" type="submit">计算几何</button></div>
+    </form>
+  </div>
+  {% if geometry %}
+  <div class="kv" style="margin-top:18px">
+    <div class="kv__item"><div class="kv__k">用户截断 · 硬上限</div><div class="kv__v">{{ geometry.cutoff_locked_m }}<span class="u">m</span></div></div>
+    <div class="kv__item"><div class="kv__k">中心轴理论底距</div><div class="kv__v">{{ geometry.center_axis_bottom_m | round(6) }}<span class="u">m</span></div></div>
+    <div class="kv__item"><div class="kv__k">R 处轴点垂直距离</div><div class="kv__v">{{ geometry.axis_vertical_distance_at_R_m | round(6) }}<span class="u">m</span></div></div>
+    <div class="kv__item"><div class="kv__k">较陡 / 较平边缘到底</div><div class="kv__v sm">{{ geometry.steeper_edge_bottom_m | round(6) }} / {{ geometry.flatter_edge_bottom_m | round(6) }}<span class="u">m</span></div><div class="kv__note">{{ geometry.bottom_hit_status }}</div></div>
+    <div class="kv__item"><div class="kv__k">未截断椭圆面积</div><div class="kv__v">{{ geometry.uncut_ellipse.area_m2 | round(6) }}<span class="u">m²</span></div></div>
+    <div class="kv__item"><div class="kv__k">最终保留足迹面积</div><div class="kv__v">{{ geometry.retained_footprint.area_m2 | round(6) }}<span class="u">m²</span></div></div>
+    <div class="kv__item"><div class="kv__k">水体体积</div><div class="kv__v">{{ geometry.water_volume_m3 | round(6) }}<span class="u">m³</span></div><div class="kv__note">收敛差 {{ geometry.numeric.volume_relative_change | round(8) }}</div></div>
+  </div>
+  {% endif %}
+</div>
 
-<h3>长期规律与证据等级</h3>
-<form class="compare-form" method="post">
-  <input type="hidden" name="action" value="pattern">
-  <label>设备 <input name="devices" value="2000,2001"></label>
-  <label>开始 <input name="start_date" value="2026-10-31"></label>
-  <label>结束 <input name="end_date" value="2026-11-03"></label>
-  <label>数据集 <input name="dataset_id" value="DATASET_01_DUAL_STATION"></label>
-  <label><input type="checkbox" name="save" value="1"> 另存新版本</label>
-  <button>分析规律</button>
-</form>
-{% if patterns_result %}
-<p>等级 <strong>{{ patterns_result.evidence_level }}</strong>｜有效日 {{ patterns_result.window.n_effective_days }}｜支持：{{ patterns_result.supporting | join('；') }}｜反对：{{ patterns_result.contradicting | join('；') }}</p>
-<pre>{{ patterns_result.level_reasons | join('；') }}</pre>
-{% endif %}
-<table><thead><tr><th>规律键</th><th>版本</th><th>等级</th><th>创建时间</th></tr></thead><tbody>
-{% for p in pattern_versions %}<tr><td>{{ p.pattern_key }}</td><td>{{ p.version }}</td><td>{{ p.evidence_level }}</td><td>{{ p.created_at }}</td></tr>{% else %}<tr><td colspan="4">暂无</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">近底 QC 与三水层</h2></div>
+  <div class="card">
+    <form method="post" class="form-grid" style="align-items:end">
+      <input type="hidden" name="action" value="depth">
+      <div class="field"><label for="d7-dev">设备</label><div class="control"><input id="d7-dev" name="device_id" value="2000"></div></div>
+      <div class="field"><label for="d7-date">观测日期</label><div class="control"><input id="d7-date" name="observed_date" value="2026-10-31"></div></div>
+      <div class="field" style="max-width:150px"><label>&nbsp;</label><button class="btn btn--ghost" type="submit">分层统计</button></div>
+    </form>
+  </div>
+  {% if depth_result %}
+  <div class="kpis" style="margin-top:18px">
+    <div class="kpi"><div class="kpi__v sm">{{ depth_result.parameter_version }}</div><div class="kpi__k">参数版本</div></div>
+    <div class="kpi"><div class="kpi__v">{{ depth_result.cutoff_m }}<span class="u" style="font-size:12px">m</span></div><div class="kpi__k">截断</div></div>
+    <div class="kpi"><div class="kpi__v">{{ depth_result.qc.near_bottom_candidates }}</div><div class="kpi__k">近底候选</div></div>
+    <div class="kpi"><div class="kpi__v">{{ depth_result.qc.excluded_samples }}</div><div class="kpi__k">额外排除 · {{ depth_result.qc.status }}</div></div>
+  </div>
+  <div class="table-wrap" style="margin-top:16px"><table>
+    <thead><tr><th>水层</th><th class="num">区内样本</th><th class="num">候选事件</th><th class="num">均值</th><th class="num">中位</th><th>距底高度范围 <span class="u">m</span></th></tr></thead>
+    <tbody>{% for row in depth_result.layers %}<tr><td class="lead">{{ row.layer }}</td><td class="num">{{ row.kept_samples }}</td><td class="num">{{ row.candidate_events }}</td>
+      <td class="num">{{ row.signal_mean | round(3) }}</td><td class="num">{{ row.signal_median }}</td>
+      <td class="mono">{{ row.min_height_above_bottom_m | round(3) }}—{{ row.max_height_above_bottom_m | round(3) }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+</div>
 
-<h3>阶段数据集边界与冻结</h3>
-{% for d in datasets %}
-<form class="compare-form" method="post">
-  <input type="hidden" name="dataset_id" value="{{ d.dataset.dataset_id }}">
-  <label>数据集 {{ d.dataset.dataset_id }}（阶段 {{ d.dataset.phase }}，状态 {{ d.dataset.status }}，版本 {{ d.dataset.dataset_version }}）</label>
-  <label>开始 <input name="start_time" value="{{ d.dataset.start_time or '' }}"></label>
-  <label>截止 <input name="end_time" value="{{ d.dataset.end_time or '' }}"></label>
-  <label>正式同步 <input name="formal_sync_time" value="{{ d.dataset.formal_sync_time or '' }}"></label>
-  <label>安装状态 <input name="installation_status" value="{{ d.dataset.installation_status or '' }}"></label>
-  <label>原因 <input name="reason" value="S07 阶段边界"></label>
-  <button name="action" value="boundaries">保存边界</button>
-  <button name="action" value="freeze">冻结</button>
-  <button name="action" value="reopen">解冻</button>
-</form>
-<p>成员：{% for m in d.members %}{{ m.device_id }}（{{ m.station_id or 'NA' }}）{% if not loop.last %}、{% endif %}{% endfor %}
-  ｜已导入文件 {{ d.snapshot.files | length }}｜run {{ d.snapshot.runs | length }}｜版本 {{ d.versions | length }}</p>
-{% endfor %}
+<div class="section">
+  <div class="section__head"><h2 class="section__title">长期规律与证据等级</h2></div>
+  <div class="card">
+    <form method="post" class="form-grid" style="align-items:end">
+      <input type="hidden" name="action" value="pattern">
+      <div class="field"><label for="p7-dev">设备</label><div class="control"><input id="p7-dev" name="devices" value="2000,2001"></div></div>
+      <div class="field"><label for="p7-s">开始</label><div class="control"><input id="p7-s" name="start_date" value="2026-10-31"></div></div>
+      <div class="field"><label for="p7-e">结束</label><div class="control"><input id="p7-e" name="end_date" value="2026-11-03"></div></div>
+      <div class="field"><label for="p7-ds">数据集</label><div class="control"><input id="p7-ds" name="dataset_id" value="DATASET_01_DUAL_STATION"></div></div>
+      <div class="field" style="display:flex;align-items:center;padding-top:22px"><label class="check"><input type="checkbox" name="save" value="1"> 另存新版本</label></div>
+      <div class="field" style="max-width:140px"><label>&nbsp;</label><button class="btn btn--ghost" type="submit">分析规律</button></div>
+    </form>
+  </div>
+  {% if patterns_result %}
+  <div class="kv" style="margin-top:18px">
+    <div class="kv__item"><div class="kv__k">证据等级</div><div class="kv__v sm">{{ patterns_result.evidence_level }}</div></div>
+    <div class="kv__item"><div class="kv__k">有效日</div><div class="kv__v">{{ patterns_result.window.n_effective_days }}</div></div>
+    <div class="kv__item" style="grid-column:span 2"><div class="kv__k">支持 / 反对</div><div class="kv__v sm">{{ patterns_result.supporting | join('；') }}<div class="kv__note">反对：{{ patterns_result.contradicting | join('；') }}</div></div></div>
+  </div>
+  <pre style="margin-top:14px">{{ patterns_result.level_reasons | join('；') }}</pre>
+  {% endif %}
+  <div class="table-wrap" style="margin-top:20px"><table>
+    <thead><tr><th>规律键</th><th>版本</th><th>等级</th><th>创建时间</th></tr></thead>
+    <tbody>{% for p in pattern_versions %}<tr><td class="mono">{{ p.pattern_key }}</td><td class="num">{{ p.version }}</td><td>{{ p.evidence_level }}</td><td class="mono muted">{{ p.created_at }}</td></tr>
+      {% else %}<tr><td colspan="4"><div class="empty">暂无规律版本</div></td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
 
-<h3>近底 QC 留痕</h3>
-<table><thead><tr><th>设备/日期</th><th>状态</th><th>近底候选</th><th>额外排除</th><th>时间</th></tr></thead><tbody>
-{% for q in qc_rows %}<tr><td>{{ q.device_id }}/{{ q.observed_date }}</td><td>{{ q.status }}</td><td>{{ q.near_bottom_candidate_samples }}</td><td>{{ q.excluded_samples }}</td><td>{{ q.created_at }}</td></tr>{% else %}<tr><td colspan="5">暂无</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">阶段数据集边界与冻结</h2></div>
+  {% for d in datasets %}
+  <div class="card" style="margin-bottom:14px">
+    <div class="section__head" style="margin-bottom:14px">
+      <h3 class="section__title mono" style="font-size:14px">{{ d.dataset.dataset_id }}</h3>
+      <span class="section__meta">{{ d.dataset.phase }} · {{ d.dataset.status }} · v{{ d.dataset.dataset_version }}</span>
+    </div>
+    <form method="post" class="form-grid" style="align-items:end">
+      <input type="hidden" name="dataset_id" value="{{ d.dataset.dataset_id }}">
+      <div class="field"><label>开始</label><div class="control"><input name="start_time" value="{{ d.dataset.start_time or '' }}"></div></div>
+      <div class="field"><label>截止</label><div class="control"><input name="end_time" value="{{ d.dataset.end_time or '' }}"></div></div>
+      <div class="field"><label>正式同步</label><div class="control"><input name="formal_sync_time" value="{{ d.dataset.formal_sync_time or '' }}"></div></div>
+      <div class="field"><label>安装状态</label><div class="control"><input name="installation_status" value="{{ d.dataset.installation_status or '' }}"></div></div>
+      <div class="field"><label>原因</label><div class="control"><input name="reason" value="S07 阶段边界"></div></div>
+      <div class="field" style="grid-column:1/-1"><div class="btn-row">
+        <button class="btn btn--ghost btn--sm" name="action" value="boundaries" type="submit">保存边界</button>
+        <button class="btn btn--ghost btn--sm" name="action" value="freeze" type="submit">冻结</button>
+        <button class="btn btn--ghost btn--sm" name="action" value="reopen" type="submit">解冻</button>
+      </div></div>
+    </form>
+    <div class="kv" style="margin-top:16px">
+      <div class="kv__item"><div class="kv__k">成员</div><div class="kv__v sm">{% for m in d.members %}{{ m.device_id }}（{{ m.station_id or 'NA' }}）{% if not loop.last %}、{% endif %}{% endfor %}</div></div>
+      <div class="kv__item"><div class="kv__k">已导入文件</div><div class="kv__v">{{ d.snapshot.files | length }}</div></div>
+      <div class="kv__item"><div class="kv__k">run</div><div class="kv__v">{{ d.snapshot.runs | length }}</div></div>
+      <div class="kv__item"><div class="kv__k">版本</div><div class="kv__v">{{ d.versions | length }}</div></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">近底 QC 留痕</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>设备 / 日期</th><th>状态</th><th class="num">近底候选</th><th class="num">额外排除</th><th>时间</th></tr></thead>
+    <tbody>{% for q in qc_rows %}<tr><td class="mono">{{ q.device_id }}/{{ q.observed_date }}</td><td>{{ q.status }}</td>
+      <td class="num">{{ q.near_bottom_candidate_samples }}</td><td class="num">{{ q.excluded_samples }}</td><td class="mono muted">{{ q.created_at }}</td></tr>
+      {% else %}<tr><td colspan="5"><div class="empty">暂无留痕</div></td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>人工截断 5.2 m 始终生效；理论中心轴底距仅参考，不覆盖截断。近底候选只标记待审，不在未确认逐角底界前额外排除。天文 / 几何均为条件估算。</p>
+  </div>
+</details>
 {% endblock %}

@@ -1,36 +1,76 @@
 {% extends "base.html" %}
+{% block title %}日内分析结果 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}日内分析结果{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="/intraday">返回日内分析</a>{% endblock %}
 {% block content %}
-<h2>S06 分析结果 {{ result.analysis_id }}</h2>
-<p>设备 {{ result.scope.devices | join(',') }}｜日期 {{ result.scope.dates[0] }} ~ {{ result.scope.dates[-1] }}｜时区 {{ result.scope.timezone }}｜15 分钟格 {{ result.scope.n_grid_cells }}</p>
-{% for note in result.notes %}<p class="hint">- {{ note }}</p>{% endfor %}
-{% if result.scope.blocked_inputs %}<p class="error-box">阻断输入：{% for b in result.scope.blocked_inputs %}{{ b.device_id }}/{{ b.observed_date }}（{{ b.reason }}）{% endfor %}</p>{% endif %}
 
-<h3>每日峰谷与形态（K25）</h3>
-<table><thead><tr><th>设备</th><th>日期</th><th>状态/形态</th><th>峰时格</th><th>谷时格</th><th>覆盖</th></tr></thead><tbody>
-{% for p in result.peaks.results %}<tr><td>{{ p.device_id }}</td><td>{{ p.observed_date }}</td><td>{{ p.get('pattern', p.status) }}</td><td>{{ p.get('peak_slot') | default('NA') }}</td><td>{{ p.get('trough_slot') | default('NA') }}</td><td>{{ p.get('coverage_ratio') | default('NA') }}</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="kv">
+    <div class="kv__item"><div class="kv__k">分析 ID</div><div class="kv__v sm mono" style="word-break:break-all">{{ result.analysis_id }}</div></div>
+    <div class="kv__item"><div class="kv__k">设备</div><div class="kv__v sm mono">{{ result.scope.devices | join(',') }}</div></div>
+    <div class="kv__item"><div class="kv__k">日期</div><div class="kv__v sm mono">{{ result.scope.dates[0] }} ~ {{ result.scope.dates[-1] }}</div></div>
+    <div class="kv__item"><div class="kv__k">时区</div><div class="kv__v sm mono">{{ result.scope.timezone }}</div></div>
+    <div class="kv__item"><div class="kv__k">15 分钟格</div><div class="kv__v">{{ result.scope.n_grid_cells }}</div></div>
+  </div>
+  {% if result.scope.blocked_inputs %}<div class="error-box" style="margin-top:14px">阻断输入：{% for b in result.scope.blocked_inputs %}{{ b.device_id }}/{{ b.observed_date }}（{{ b.reason }}）{% endfor %}</div>{% endif %}
+</div>
 
-<h3>昼夜与晨昏（夜间按夜开始日期锚定）</h3>
-<table><thead><tr><th>设备</th><th>日期</th><th>状态</th><th>日出</th><th>日落</th><th>夜率/h</th><th>日率/h</th></tr></thead><tbody>
-{% for d in result.day_night.results %}<tr><td>{{ d.device_id }}</td><td>{{ d.observed_date }}</td><td>{{ d.status }}</td>
-<td>{{ d.get('solar', {}).get('sunrise', 'NA') }}</td><td>{{ d.get('solar', {}).get('sunset', 'NA') }}</td>
-<td>{{ d.get('pair', {}).get('night_rate_per_hour') | default('NA', true) }}</td><td>{{ d.get('pair', {}).get('day_rate_per_hour') | default('NA', true) }}</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">每日峰谷与形态</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>设备</th><th>日期</th><th>状态 / 形态</th><th>峰时格</th><th>谷时格</th><th class="num">覆盖</th></tr></thead>
+    <tbody>{% for p in result.peaks.results %}<tr><td class="mono">{{ p.device_id }}</td><td class="mono">{{ p.observed_date }}</td><td>{{ p.get('pattern', p.status) }}</td>
+      <td class="mono">{{ p.get('peak_slot') | default('NA') }}</td><td class="mono">{{ p.get('trough_slot') | default('NA') }}</td><td class="num">{{ p.get('coverage_ratio') | default('NA') }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
 
-<h3>2 小时分组（低覆盖标 NA）</h3>
-<table><thead><tr><th>设备</th><th>日期</th><th>时段</th><th>事件</th><th>率/h</th><th>低覆盖</th></tr></thead><tbody>
-{% for g in result.two_hour_groups %}<tr><td>{{ g.device_id }}</td><td>{{ g.observed_date }}</td><td>{{ g.start_hour }}—{{ g.end_hour }}</td><td>{{ g.candidate_events }}</td><td>{{ g.rate_per_hour | default('NA', true) }}</td><td>{{ g.low_coverage }}</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">昼夜与晨昏</h2><span class="section__meta">夜间按夜开始日期锚定</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>设备</th><th>日期</th><th>状态</th><th>日出</th><th>日落</th><th class="num">夜率 <span class="u">/h</span></th><th class="num">日率 <span class="u">/h</span></th></tr></thead>
+    <tbody>{% for d in result.day_night.results %}<tr><td class="mono">{{ d.device_id }}</td><td class="mono">{{ d.observed_date }}</td>
+      <td><span class="state {{ 'state--ok' if d.status == 'OK' else 'state--na' }}">{{ d.status }}</span></td>
+      <td class="mono">{{ d.get('solar', {}).get('sunrise', 'NA') }}</td><td class="mono">{{ d.get('solar', {}).get('sunset', 'NA') }}</td>
+      <td class="num">{{ d.get('pair', {}).get('night_rate_per_hour') | default('NA', true) }}</td><td class="num">{{ d.get('pair', {}).get('day_rate_per_hour') | default('NA', true) }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
 
-<h3>典型日（至少 {{ result.typical_day.min_days }} 个有效日）</h3>
-<table><thead><tr><th>设备</th><th>小时</th><th>均值率/h</th><th>有效日数</th><th>状态</th></tr></thead><tbody>
-{% for t in result.typical_day.hours %}{% if t.hour in (6,9,12,18,21) %}<tr><td>{{ t.device_id }}</td><td>{{ t.hour }}</td><td>{{ t.mean_rate_per_hour | default('NA', true) }}</td><td>{{ t.n_effective_days }}</td><td>{{ t.status }}</td></tr>{% endif %}{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">2 小时分组</h2><span class="section__meta">低覆盖标 NA</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>设备</th><th>日期</th><th>时段</th><th class="num">事件</th><th class="num">率 <span class="u">/h</span></th><th>低覆盖</th></tr></thead>
+    <tbody>{% for g in result.two_hour_groups %}<tr><td class="mono">{{ g.device_id }}</td><td class="mono">{{ g.observed_date }}</td><td class="mono">{{ g.start_hour }}—{{ g.end_hour }}</td>
+      <td class="num">{{ g.candidate_events }}</td><td class="num">{{ g.rate_per_hour | default('NA', true) }}</td><td>{{ g.low_coverage }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
 
-<h3>环境与日内活动（探索性）</h3>
-<table><thead><tr><th>变量</th><th>状态</th><th>r</th><th>p_Holm</th><th>说明</th></tr></thead><tbody>
-{% for e in result.environment.results %}<tr><td>{{ e.variable }}</td><td>{{ e.status }}</td><td>{{ e.get('r') | default('NA', true) }}</td><td>{{ e.get('p_holm') | default('NA', true) }}</td><td>{{ e.get('reason', e.get('note', '')) }}</td></tr>{% endfor %}
-</tbody></table>
-<p class="error-box">{{ result.environment.disclaimer }}</p>
-<p><a href="/intraday">返回日内分析入口</a></p>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">典型日</h2><span class="section__meta">至少 {{ result.typical_day.min_days }} 个有效日</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>设备</th><th class="num">小时</th><th class="num">均值率 <span class="u">/h</span></th><th class="num">有效日数</th><th>状态</th></tr></thead>
+    <tbody>{% for t in result.typical_day.hours %}{% if t.hour in (6,9,12,18,21) %}<tr><td class="mono">{{ t.device_id }}</td><td class="num">{{ t.hour }}</td>
+      <td class="num">{{ t.mean_rate_per_hour | default('NA', true) }}</td><td class="num">{{ t.n_effective_days }}</td><td>{{ t.status }}</td></tr>{% endif %}{% endfor %}</tbody>
+  </table></div>
+</div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">环境与日内活动</h2><span class="section__meta">探索性</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>变量</th><th>状态</th><th class="num">r</th><th class="num">p_Holm</th><th>说明</th></tr></thead>
+    <tbody>{% for e in result.environment.results %}<tr><td class="mono">{{ e.variable }}</td><td>{{ e.status }}</td>
+      <td class="num">{{ e.get('r') | default('NA', true) }}</td><td class="num">{{ e.get('p_holm') | default('NA', true) }}</td><td>{{ e.get('reason', e.get('note', '')) }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <div class="error-box" style="margin-top:16px">{{ result.environment.disclaimer }}</div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>分析备注</summary>
+  <div class="notes__body">
+    {% for note in result.notes %}<p>{{ note }}</p>{% endfor %}
+    <p>低覆盖格标 <span class="na">NA</span>，不填 0。</p>
+  </div>
+</details>
 {% endblock %}

@@ -1,70 +1,95 @@
 {% extends "base.html" %}
-{% block title %}任意比较 — S04{% endblock %}
+{% block title %}任意比较 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}任意比较<span class="sr-only"> S04</span>{% endblock %}
 {% block content %}
-<h2>任意时间 / 天数 / 设备比较（S04）</h2>
 
 {% if errors %}
-<div class="error-box">
-  <strong>查询无法执行：</strong>
-  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
-</div>
+<div class="error-box"><strong>查询无法执行</strong><ul class="errors">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% endif %}
 
-<form method="post" action="{{ url_for('web.compare_run') }}" class="compare-form">
-  <fieldset><legend>设备与站位</legend>
-    <label>设备（可多选，不选=全部）
-      <select name="devices" multiple size="5">
-        {% for d in devices %}<option value="{{ d.device_id }}" {% if d.device_id in form.get('devices', []) %}selected{% endif %}>{{ d.device_id }}（站位 {{ d.station_id or '未分配' }}）</option>{% endfor %}
-      </select>
-    </label>
-    <label>站位（可多选）
-      <select name="stations" multiple size="4">
-        {% for s in stations %}<option value="{{ s.station_id }}" {% if s.station_id in form.get('stations', []) %}selected{% endif %}>{{ s.station_id }} {{ s.name }}</option>{% endfor %}
-      </select>
-    </label>
-    {% if not stations %}<p class="hint">stations 表为空：未提供站位资料，不选站位即按全部设备比较；禁止伪造站位。</p>{% endif %}
-  </fieldset>
+<div class="section">
+  <div class="card">
+    <form method="post" action="{{ url_for('web.compare_run') }}">
 
-  <fieldset><legend>时间范围</legend>
-    <label>起始日期 <input type="date" name="start_date" value="{{ form.get('start_date') or '' }}"></label>
-    <label>结束日期 <input type="date" name="end_date" value="{{ form.get('end_date') or '' }}"></label>
-    <label>日期集合（逗号分隔，优先于区间） <input type="text" name="dates" value="{{ form.get('dates') or '' }}" placeholder="2026-10-31,2026-11-01"></label>
-    <label>小时起点 <input type="number" name="hour_start" min="0" max="23" value="{{ form.get('hour_start') or '' }}"></label>
-    <label>小时终点（左闭右开） <input type="number" name="hour_end" min="1" max="24" value="{{ form.get('hour_end') or '' }}"></label>
-    <label>最近天数 <input type="number" name="day_count" min="1" value="{{ form.get('day_count') or '' }}"></label>
-    <label>天数模式 <select name="day_count_mode">
-      <option value="calendar" {% if form.get('day_count_mode') == 'calendar' %}selected{% endif %}>日历日</option>
-      <option value="valid" {% if form.get('day_count_mode') == 'valid' %}selected{% endif %}>有效观测日</option>
-    </select></label>
-    <label>声明时区 <input type="text" name="timezone" value="{{ form.get('timezone') or 'Asia/Shanghai' }}"></label>
-    <label><input type="checkbox" name="include_invalid" {% if form.get('include_invalid') %}checked{% endif %}> 包含缺测/无效日（仅查看状态，指标仍为 NA）</label>
-  </fieldset>
+      <div class="form-section" style="border-top:0;margin-top:0;padding-top:0">
+        <div class="form-section__title">设备与站位</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="c-devices">设备 · 可多选</label>
+            <div class="control"><select id="c-devices" name="devices" multiple size="5">
+              {% for d in devices %}<option value="{{ d.device_id }}" {% if d.device_id in form.get('devices', []) %}selected{% endif %}>{{ d.device_id }}{{ ' · ' ~ d.station_id if d.station_id else ' · 未分配' }}</option>{% endfor %}
+            </select></div>
+          </div>
+          <div class="field">
+            <label for="c-stations">站位 · 可多选</label>
+            <div class="control"><select id="c-stations" name="stations" multiple size="4">
+              {% for s in stations %}<option value="{{ s.station_id }}" {% if s.station_id in form.get('stations', []) %}selected{% endif %}>{{ s.station_id }} {{ s.name }}</option>{% endfor %}
+            </select></div>
+          </div>
+        </div>
+        {% if not stations %}<p class="muted" style="margin-top:12px">stations 表为空；不选站位即按全部设备比较</p>{% endif %}
+      </div>
 
-  <fieldset><legend>历史基线（可选）</legend>
-    <label>基线模式 <select name="baseline_mode">
-      <option value="">不计算</option>
-      <option value="valid">前 N 个有效观测日</option>
-      <option value="calendar">前 N 个日历日</option>
-      <option value="all">全部历史</option>
-      <option value="range">任意区间</option>
-    </select></label>
-    <label>参考日期 <input type="date" name="baseline_reference_date" value="{{ form.get('baseline_reference_date') or '' }}"></label>
-    <label>N <input type="number" name="baseline_n" min="1" value="{{ form.get('baseline_n') or 7 }}"></label>
-    <label>区间起 <input type="date" name="baseline_start" value="{{ form.get('baseline_start') or '' }}"></label>
-    <label>区间止 <input type="date" name="baseline_end" value="{{ form.get('baseline_end') or '' }}"></label>
-  </fieldset>
+      <div class="form-section">
+        <div class="form-section__title">时间范围</div>
+        <div class="form-grid">
+          <div class="field"><label for="c-start">起始日期</label><div class="control"><input id="c-start" type="date" name="start_date" value="{{ form.get('start_date') or '' }}"></div></div>
+          <div class="field"><label for="c-end">结束日期</label><div class="control"><input id="c-end" type="date" name="end_date" value="{{ form.get('end_date') or '' }}"></div></div>
+          <div class="field"><label for="c-dates">日期集合</label><div class="control"><input id="c-dates" name="dates" value="{{ form.get('dates') or '' }}" placeholder="2026-10-31,2026-11-01"></div></div>
+          <div class="field"><label for="c-hs">小时起点</label><div class="control"><input id="c-hs" type="number" name="hour_start" min="0" max="23" value="{{ form.get('hour_start') or '' }}"></div></div>
+          <div class="field"><label for="c-he">小时终点</label><div class="control"><input id="c-he" type="number" name="hour_end" min="1" max="24" value="{{ form.get('hour_end') or '' }}"></div></div>
+          <div class="field"><label for="c-dc">最近天数</label><div class="control"><input id="c-dc" type="number" name="day_count" min="1" value="{{ form.get('day_count') or '' }}"></div></div>
+          <div class="field"><label for="c-dcm">天数模式</label><div class="control"><select id="c-dcm" name="day_count_mode">
+            <option value="calendar" {% if form.get('day_count_mode') == 'calendar' %}selected{% endif %}>日历日</option>
+            <option value="valid" {% if form.get('day_count_mode') == 'valid' %}selected{% endif %}>有效观测日</option>
+          </select></div></div>
+          <div class="field"><label for="c-tz">时区</label><div class="control"><input id="c-tz" name="timezone" value="{{ form.get('timezone') or 'Asia/Shanghai' }}"></div></div>
+        </div>
+        <div style="margin-top:16px"><label class="check"><input type="checkbox" name="include_invalid" {% if form.get('include_invalid') %}checked{% endif %}> 包含缺测 / 无效日</label></div>
+      </div>
 
-  <label>比较名称 <input type="text" name="name" value="{{ form.get('name') or '' }}"></label>
-  <button type="submit">执行比较</button>
-</form>
+      <div class="form-section">
+        <div class="form-section__title">历史基线 · 可选</div>
+        <div class="form-grid">
+          <div class="field"><label for="c-bm">基线模式</label><div class="control"><select id="c-bm" name="baseline_mode">
+            <option value="">不计算</option><option value="valid">前 N 个有效观测日</option>
+            <option value="calendar">前 N 个日历日</option><option value="all">全部历史</option><option value="range">任意区间</option>
+          </select></div></div>
+          <div class="field"><label for="c-brd">参考日期</label><div class="control"><input id="c-brd" type="date" name="baseline_reference_date" value="{{ form.get('baseline_reference_date') or '' }}"></div></div>
+          <div class="field"><label for="c-bn">N</label><div class="control"><input id="c-bn" type="number" name="baseline_n" min="1" value="{{ form.get('baseline_n') or 7 }}"></div></div>
+          <div class="field"><label for="c-bs">区间起</label><div class="control"><input id="c-bs" type="date" name="baseline_start" value="{{ form.get('baseline_start') or '' }}"></div></div>
+          <div class="field"><label for="c-be">区间止</label><div class="control"><input id="c-be" type="date" name="baseline_end" value="{{ form.get('baseline_end') or '' }}"></div></div>
+          <div class="field"><label for="c-name">比较名称</label><div class="control"><input id="c-name" name="name" value="{{ form.get('name') or '' }}"></div></div>
+        </div>
+      </div>
 
-<h3>端点与口径</h3>
-<p class="hint">{{ endpoint_rule }}</p>
-<p class="hint">{{ timezone_note }}</p>
+      <div class="form-actions"><button class="btn" type="submit">执行比较</button></div>
+    </form>
+  </div>
+</div>
 
-<h3>历史比较记录</h3>
-<table><thead><tr><th>ID</th><th>名称</th><th>操作者</th><th>时间</th></tr></thead><tbody>
-{% for r in runs %}<tr><td>{{ r.comparison_id }}</td><td>{{ r.name }}</td><td>{{ r.created_by }}</td><td>{{ r.created_at }}</td></tr>{% else %}
-<tr><td colspan="4">尚无比较记录</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">历史比较记录</h2><span class="section__meta">{{ runs | length }} 条</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>名称</th><th>操作者</th><th>时间</th></tr></thead>
+      <tbody>
+      {% for r in runs %}<tr><td class="mono muted">{{ r.comparison_id }}</td><td class="lead">{{ r.name }}</td><td>{{ r.created_by }}</td><td class="mono">{{ r.created_at }}</td></tr>
+      {% else %}<tr><td colspan="4"><div class="empty">尚无比较记录</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>端点与口径</summary>
+  <div class="notes__body">
+    <p>{{ endpoint_rule }}</p>
+    <p>{{ timezone_note }}</p>
+    <p>日期集合优先于起始 / 结束区间；小时终点左闭右开。包含缺测 / 无效日仅查看状态，指标仍为 <span class="na">NA</span>。stations 表为空时禁止伪造站位。</p>
+  </div>
+</details>
 {% endblock %}

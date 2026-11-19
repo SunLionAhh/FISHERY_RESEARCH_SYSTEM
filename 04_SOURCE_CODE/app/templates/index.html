@@ -1,43 +1,92 @@
 {% extends "base.html" %}
-{% block title %}设备清单 · 渔业声学监测科研工作台{% endblock %}
+{% block title %}设备清单 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}设备清单{% endblock %}
+{% block page_actions %}
+  <a class="btn btn--ghost" href="{{ url_for('web.workbench_home') }}">科研工作台</a>
+{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>五台设备状态与未知参数队列（K01）</h2>
-  <table>
-    <tr>
-      <th>设备</th><th>状态</th><th>分析截断</th><th>离底参考</th><th>倾角</th>
-      <th>波束角</th><th>方位角</th><th>坐标</th><th>缺失项</th><th></th>
-    </tr>
-    {% for d in devices %}
-    <tr>
-      <td><b>{{ d.device_id }}</b></td>
-      <td>{{ d.status }}</td>
-      <td>{% if d.param and d.param.analysis_cutoff_slant_m is not none %}{{ d.param.analysis_cutoff_slant_m }} m{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
-      <td>{% if d.param and d.param.clearance_input_type != 'UNKNOWN' %}{{ d.param.vertical_bottom_clearance_m or d.param.axis_slant_m }} m（{{ d.param.clearance_input_type }}）{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
-      <td>{% if d.param and d.param.downward_tilt_deg is not none %}{{ d.param.downward_tilt_deg }}°{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
-      <td>{% if d.param and d.param.beam_angle_kind != 'UNKNOWN' %}{{ d.param.beam_angle_value_deg }}° {{ d.param.beam_angle_kind }}{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
-      <td>{% if d.position and d.position.heading_deg is not none %}{{ d.position.heading_deg }}°{% else %}<span class="badge miss">待用户后天提供</span>{% endif %}</td>
-      <td>{% if d.position %}{{ "%.6f"|format(d.position.longitude_deg) }}, {{ "%.6f"|format(d.position.latitude_deg) }}{% else %}<span class="badge unknown">UNKNOWN</span>{% endif %}</td>
-      <td>
-        {% if d.complete %}<span class="badge ok">齐备</span>
-        {% else %}{% for m in d.missing %}<span class="badge miss">{{ m }}</span> {% endfor %}{% endif %}
-      </td>
-      <td><a href="{{ url_for('web.device_detail', device_id=d.device_id) }}">填写 / 历史</a></td>
-    </tr>
-    {% endfor %}
-  </table>
-  <p class="muted">UNKNOWN 项不自动填默认值；缺失项阻断依赖它们的正式分析，不影响其他功能。数据库文件：03_DATABASE/fishery.db；已登记原始文件 {{ n_files }} 个（SHA-256）。</p>
+
+{% set cnt = namespace(ok=0, miss=0) %}
+{% for d in devices %}{% if d.complete %}{% set cnt.ok = cnt.ok + 1 %}{% else %}{% set cnt.miss = cnt.miss + 1 %}{% endif %}{% endfor %}
+
+<div class="section">
+  <div class="kpis">
+    <div class="kpi"><div class="kpi__v">{{ devices | length }}</div><div class="kpi__k">在册设备</div></div>
+    <div class="kpi"><div class="kpi__v is-accent">{{ cnt.ok }}</div><div class="kpi__k">参数齐备</div></div>
+    <div class="kpi"><div class="kpi__v {{ 'is-miss' if cnt.miss else '' }}">{{ cnt.miss }}</div><div class="kpi__k">待补参数</div></div>
+    <div class="kpi"><div class="kpi__v">{{ n_files }}</div><div class="kpi__k">已登记原始文件 · SHA-256</div></div>
+    <div class="kpi"><div class="kpi__v">{{ datasets | length }}</div><div class="kpi__k">研究数据集</div></div>
+  </div>
 </div>
 
-<div class="card">
-  <h2>研究数据集（任务六）</h2>
-  <table>
-    <tr><th>数据集</th><th>阶段</th><th>状态</th><th>起止</th><th>说明</th></tr>
-    {% for ds in datasets %}
-    <tr><td><b>{{ ds.dataset_id }}</b></td><td>{{ ds.phase }}</td><td>{{ ds.status }}</td>
-        <td>{{ ds.start_time or '待确认' }} — {{ ds.end_time or '待确认' }}</td><td>{{ ds.notes }}</td></tr>
-    {% endfor %}
-  </table>
-  <p class="muted">数据集引用原始数据（file_registry 登记路径），不复制大型 CSV。</p>
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title">五台设备</h2>
+    <span class="section__meta">点设备编号进入参数与历史</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>设备</th><th>站位</th><th>状态</th>
+        <th class="num">分析截断 <span class="u">m</span></th>
+        <th class="num">离底参考 <span class="u">m</span></th>
+        <th class="num">倾角 <span class="u">°</span></th>
+        <th>波束角</th>
+        <th class="num">方位角 <span class="u">°</span></th>
+        <th>坐标</th>
+      </tr></thead>
+      <tbody>
+      {% for d in devices %}
+      <tr>
+        <td class="lead"><a href="{{ url_for('web.device_detail', device_id=d.device_id) }}">{{ d.device_id }}</a></td>
+        <td>{{ d.station_id or '—' }}</td>
+        <td>
+          {% if d.complete %}<span class="state state--ok">齐备</span>
+          {% else %}<span class="state state--miss">{{ d.missing | length }} 项待补</span>
+            <span class="sub">{{ d.missing | join(' · ') }}</span>{% endif %}
+        </td>
+        <td class="num">{% if d.param and d.param.analysis_cutoff_slant_m is not none %}{{ d.param.analysis_cutoff_slant_m }}{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td class="num">{% if d.param and d.param.clearance_input_type != 'UNKNOWN' %}{{ d.param.vertical_bottom_clearance_m or d.param.axis_slant_m }}<span class="sub">{{ d.param.clearance_input_type }}</span>{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td class="num">{% if d.param and d.param.downward_tilt_deg is not none %}{{ d.param.downward_tilt_deg }}{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td>{% if d.param and d.param.beam_angle_kind != 'UNKNOWN' %}{{ d.param.beam_angle_value_deg }}° <span class="sub">{{ d.param.beam_angle_kind }}</span>{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td class="num">{% if d.position and d.position.heading_deg is not none %}{{ d.position.heading_deg }}{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td class="mono">{% if d.position %}{{ "%.6f"|format(d.position.longitude_deg) }}, {{ "%.6f"|format(d.position.latitude_deg) }}{% else %}<span class="na">NA</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">研究数据集</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>数据集</th><th>阶段</th><th>状态</th><th>起止</th><th>备注</th></tr></thead>
+      <tbody>
+      {% for ds in datasets %}
+      <tr>
+        <td class="lead mono">{{ ds.dataset_id }}</td>
+        <td>{{ ds.phase }}</td>
+        <td><span class="state {{ 'state--ok' if ds.status in ('READY','FROZEN','COMPLETE') else 'state--warn' }}">{{ ds.status }}</span></td>
+        <td class="mono">{{ ds.start_time or '—' }} — {{ ds.end_time or '—' }}</td>
+        <td>{{ ds.notes }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>UNKNOWN 项不自动填默认值；缺测显示 <span class="na">NA</span>，不填 0、不以零值色代替。缺失项阻断依赖它们的正式分析，不影响其他功能。</p>
+    <p>数据库 <code>03_DATABASE/fishery.db</code>；已登记原始文件 {{ n_files }} 个（逐文件 SHA-256）。数据集引用原始数据登记路径，不复制大型 CSV。</p>
+    <p>五台设备为 2000 / 2001 / 2002 / 2003 / 2005（无 2004）；站位未提供时保持未分配。</p>
+  </div>
+</details>
 {% endblock %}

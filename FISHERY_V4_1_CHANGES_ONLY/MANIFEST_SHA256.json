@@ -1,0 +1,254 @@
+{
+  "package": "FISHERY_V4_TO_V4_1_CHANGES_ONLY_20261116",
+  "type": "change_excerpts_and_new_files_not_full_spec",
+  "extracted_clause_count": 24,
+  "clauses": [
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第九章 每日统计和任意日期比较",
+      "heading": "9.5 V4.1 指标聚合与比较口径"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十章 每周、每月和长期规律",
+      "heading": "10.3 V4.1 任意长期范围的默认展示"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十二章 日内、昼夜和晨昏",
+      "heading": "12.1 V4.1 日内事件与重复模式"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十四章 五站 GPS 空间分析",
+      "heading": "14.2 V4.1 长期空间热力比较"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十五章 动态时间、空间和环境同步播放",
+      "heading": "15.5 V4.1 联动与全范围导出"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十六章 规律发现、总结、验证和修正",
+      "heading": "16.1 V4.1 五台规律卡与页面位置"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十六章 规律发现、总结、验证和修正",
+      "heading": "16.2 V4.1 证据状态与分母"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十六章 规律发现、总结、验证和修正",
+      "heading": "16.3 V4.1 规则冻结、等级和修订"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十六章 规律发现、总结、验证和修正",
+      "heading": "16.4 V4.1 完整证据下钻"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第十九章 16 类科研组合图",
+      "heading": "19.1 V4.1 16图的证据职责和同源交付"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第二十章 Flask 科研工作台",
+      "heading": "20.1 V4.1 主工作流布局与空态"
+    },
+    {
+      "file": "01_MASTER_SPEC_FINAL.md",
+      "parent": "第二十一章 自动报告",
+      "heading": "21.1 V4.1 规律证据报告"
+    },
+    {
+      "file": "02_CODEX_EXECUTION_GUIDE_FINAL.md",
+      "parent": "第八章 每个阶段的固定工作流程",
+      "heading": "V4.1 本次细化的执行要求"
+    },
+    {
+      "file": "02_CODEX_EXECUTION_GUIDE_FINAL.md",
+      "parent": "第九章 强制测试",
+      "heading": "9.15 V4.1 新增32项验收"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第三章 S00：项目检查、目录建立和备",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第六章 S03：每日统计、增量上传和缺",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第七章 S04：任意时间、任意天数和任",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第八章 S05：环境数据接入和联合分析",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第九章 S06：日内、昼夜和晨昏分析",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第十章 S07：深度、人工底界、三水层",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第十一章 S08：五站 GPS 空间和动态",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第十二章 S09：OriginPro、16 类科",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第十三章 S10：Flask 完整科研工作台",
+      "heading": "V4.1 本阶段新增明确任务"
+    },
+    {
+      "file": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "parent": "第十四章 S11：最终系统和预答辩验收",
+      "heading": "V4.1 本阶段新增明确任务"
+    }
+  ],
+  "changed_text_files": [
+    {
+      "old": "00_README.txt",
+      "new": "00_README.txt",
+      "old_sha256": "eddf155d231e1344341599949c3a732312c304eb1898a0f5283442c15d04559a",
+      "new_sha256": "917cbedf6de2c2892d089e02db300ecbe8928fb95f3e1c51ad51d05a8e7e0a65"
+    },
+    {
+      "old": "01_MASTER_SPEC_FINAL.md",
+      "new": "01_MASTER_SPEC_FINAL.md",
+      "old_sha256": "cf53dd9807d8bfc227c1129d9c69ce271667d38e7053902e75afbc6683f1a2a3",
+      "new_sha256": "007e7693e616596cd6f71d967963655f139b1f80cf88557979d4ed6f6df52749"
+    },
+    {
+      "old": "02_CODEX_EXECUTION_GUIDE_FINAL.md",
+      "new": "02_CODEX_EXECUTION_GUIDE_FINAL.md",
+      "old_sha256": "3a71a8a2fd62c77fe1e73b7c2b9dbb75ef10486236ebc3b71c348cc32bde379a",
+      "new_sha256": "da69fd6b5d2cf67a344db59f1fc3a265fec4f1ea88677998d265e9cd2157f87e"
+    },
+    {
+      "old": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "new": "03_CODEX_STAGE_TASKS_FINAL.md",
+      "old_sha256": "b53e8773cdaa84e8fc2e58b4fbf23466837e2a0162dc57eb5b46f3d62efa0f9e",
+      "new_sha256": "5df1a9c73366449dc491bdd82bc17dda03b282fdbb7b80cbd625d250a20fdbc4"
+    },
+    {
+      "old": "04_FULL_PLAN_V4.html",
+      "new": "04_FULL_PLAN_V4_1.html",
+      "old_sha256": "35f56d2e78b638e4a066a5351076a628a4c61f9ab316dcef1a5438220f98b23d",
+      "new_sha256": "53bf72f924937675db8bdadd1050497122bb576b8e656c06080380a46f8a5631"
+    },
+    {
+      "old": "04_FULL_PLAN_V4.txt",
+      "new": "04_FULL_PLAN_V4_1.txt",
+      "old_sha256": "713f04a3d99533527bcbafea55f851b066c35fb43116bdb760a9fe78d1b7fe92",
+      "new_sha256": "c17593c4449fa3f3519363334c1b2cbd0e0a0229c2f2267284bce354297c4e27"
+    },
+    {
+      "old": "05_PATTERNS_EXPLAINED.html",
+      "new": "05_PATTERNS_EXPLAINED.html",
+      "old_sha256": "2d2228eea297a46492d36396cd494a443f74a7c520d7f552f2070d764fe3d11e",
+      "new_sha256": "82e202fff24324d241ceb2a9853bc9ec3ebef95d05495321af55862870af4917"
+    },
+    {
+      "old": "06_CODEX_START.txt",
+      "new": "06_CODEX_START.txt",
+      "old_sha256": "991a9d3750c06762c1f866556a4373f2e6ce3d0cf952836cca1904812497f516",
+      "new_sha256": "ddae99e4ec01a87144bd9800ed8878a53ef55ff7758986786a74f1dd8d2f22f4"
+    },
+    {
+      "old": "07_SOURCE_REFERENCES.txt",
+      "new": "07_SOURCE_REFERENCES.txt",
+      "old_sha256": "70948e6c72413dda35bad7d174bb6fce223189bc8616dbe0ca9efd3c5ef6113f",
+      "new_sha256": "4a21cf6614220599b59cb6ca87c215eded72238f4ec37e9ab1f2475257220cf1"
+    },
+    {
+      "old": "08_USER_REQUIREMENTS_V4.md",
+      "new": "08_USER_REQUIREMENTS_V4.md",
+      "old_sha256": "b4d405a5a44c51699e0f39ca3a3e048b95f675b48ea44931ad088631c8409e4b",
+      "new_sha256": "aa1859f524fae336879c2a11a1865122c50d2689bb38cc98bd701d567aa1258a"
+    },
+    {
+      "old": "09_DEVELOPER_ACCEPTANCE.md",
+      "new": "09_DEVELOPER_ACCEPTANCE.md",
+      "old_sha256": "e91dbc811033b19db370283632f2321a8334d4ac51182b211c354b9f37b212bf",
+      "new_sha256": "636a885e340f4edd147ac441aac631890ea5987b31dd49f451d5c4f8d1a743ef"
+    },
+    {
+      "old": "13_REVISION_AND_VERIFICATION.txt",
+      "new": "13_REVISION_AND_VERIFICATION.txt",
+      "old_sha256": "8eb132457b0465675dfc58a7f9a4ea442ada6ed14b8001a8c91f44dc28aa87e2",
+      "new_sha256": "e3c340deede30936a1e17fe02c53eba0aa1d06cdc8f3d39da23992d329ea603f"
+    }
+  ],
+  "unchanged_files": [
+    "10_DEVICE_CONFIG_EXAMPLE.json",
+    "11_GPS_BEAM_GEOMETRY.md",
+    "12_GEOMETRY_EXAMPLE.png",
+    "12_GEOMETRY_EXAMPLE.svg"
+  ],
+  "files": [
+    {
+      "name": "00_README.txt",
+      "size_bytes": 1049,
+      "sha256": "e76d4d2b6f55ba8f61b77ae7739d01a82b3a711f7d8fabca478fb5a0b516f47d"
+    },
+    {
+      "name": "01_CHANGED_CLAUSES_ONLY.md",
+      "size_bytes": 13297,
+      "sha256": "df613fc3d302f2fb21b2c840aa3f06b83e0625b4912f77b8fab9fe9d221f04b3"
+    },
+    {
+      "name": "02_CHANGE_MAP.md",
+      "size_bytes": 2811,
+      "sha256": "86cbc4dc352a6ecb878ecde3978abbfad19de9f5869c29d0b3119203138bd50f"
+    },
+    {
+      "name": "03_V4_TO_V4_1_TEXT_DIFF.diff",
+      "size_bytes": 292244,
+      "sha256": "7415061c2c1e86ff7dd228965f8a2e9956f52042e7ad8b291fc647effc374e88"
+    },
+    {
+      "name": "14_PATTERN_UI_CONTRACT_V4_1.md",
+      "size_bytes": 26589,
+      "sha256": "6c3d112cd7a13b99f1ff9166ad5a9c37028b62dda89af594c2b63fc30e30e86f"
+    },
+    {
+      "name": "15_V4_1_ACCEPTANCE.md",
+      "size_bytes": 8578,
+      "sha256": "9ef8b49803bf6588311e48efff37610369f7782f2c4b46449292a4baa4cba62b"
+    },
+    {
+      "name": "16_PATTERN_DASHBOARD_PREVIEW.png",
+      "size_bytes": 534661,
+      "sha256": "03d2eb7daf66591f026fe3ca8eedce8735021fa06a0f0ef405b9774464768dd4"
+    },
+    {
+      "name": "17_60DAY_OVERVIEW_PREVIEW.png",
+      "size_bytes": 564272,
+      "sha256": "a9d37d1ee83cfbdb96350343ad8b0bb77d17e29a3d13c34d47e5f862c4595af8"
+    },
+    {
+      "name": "18_V4_1_CONTRACT_FIXTURES.json",
+      "size_bytes": 5168,
+      "sha256": "e72905198300122615cedb8a77d138a6abebd5116bb25e4839a1bd1f39d100ea"
+    }
+  ]
+}

@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% block title %}{{ title }} · 渔业声学监测科研工作台{% endblock %}
+{% block title %}{{ title }} · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="{{ url_for('web.index') }}">返回设备清单</a>{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>{{ title }}</h2>
-  <ul class="errors">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
-  <p><a href="{{ url_for('web.index') }}">← 返回设备清单</a></p>
+
+<div class="section">
+  <div class="error-box">
+    <ul class="errors">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
 </div>
+
 {% endblock %}

@@ -93,4 +93,38 @@
 4. 环境值为共享来源且缺水温独立观测、潮汐数值与风向列；站间环境响应比较为 BLOCKED。
 5. 动态播放为离散小时帧；单步/倍速只改变播放节奏，不产生新的空间位置、鱼群轨迹或密度估计。
 
-**结论：S08 的 7 项任务均有代码、真实数据、网页/CLI 与测试证据；停在 S08 等验收，未开始 S09。**
+## 10. 任意设备组合空间动态分析增强（2026-11-19，待验收）
+
+按用户新增 12 条要求，S08 已扩展为任意设备组合分析，原 7 项任务的真实数据与数据诚实性口径保持不变：
+
+| # | 用户要求 | 实现与证据 |
+| --- | --- | --- |
+| 1—2 | 任选 1—5 台，支持单站/双站/三站/四站/五站 | `/s08` 五台设备多选框；`parse_devices()`/`validate_devices()` 后端统一校验；CLI `map/analyze/frames --devices` 同源支持 |
+| 3 | 选择后各视图同步更新 | `analyze_combination()` 统一生成 `map`、`activity`、`time_curves`、`heatmaps`、`statistics`、`pairwise`、`dynamics`，全部按当前设备选择计算 |
+| 4 | 双站任意两台 | 全部 10 个设备对均可分析；不再固定 2000/2001 |
+| 5—6 | 两种多站比较模式，共同有效时段按当前选择重算 | `modes.independent` 与 `modes.common_valid`；`common_valid_periods()` 按当前设备逐日率与逐小时覆盖交集重算；页面单选切换显示 |
+| 7 | 缺测显示 NA 与覆盖，不填 0 | 日矩阵、小时曲线、设备对活动差异均保留 `status` 与 `coverage_ratio`；缺帧为 NA |
+| 8 | 独立底部硬截断与参数版本 | `parameter_snapshot()` 每台按观测日取自身 `effective_params()`；run 元数据逐台保存版本、生效日与截断斜距 |
+| 9 | 双站距离/理论覆盖/条件重叠/活动差异 | `pairwise_analysis()`：当前坐标重算站距；`directional_footprint()` 生成条件扇形；`_conditional_overlap()` 用局部切平面凸扇形交集给条件面积；逐日差异保留 NA |
+| 10 | 日期、滑动、暂停/播放/单步、GIF/MP4 | 任意组合动态帧均带滑块、播放、暂停、上一步/下一步；`export_dynamic_frames()` 按 run_id 写同源 CSV，并分目录导出 GIF/MP4（无 ffmpeg 时留 BLOCKED） |
+| 11 | run 留痕 | 新增 `spatial_combination_runs` 表；`run_id`、设备列表、日期范围、参数版本 JSON、数据集、比较模式、方法版本均落库并归档 CSV |
+| 12 | 组合切换与重算验收 | `test_arbitrary_combinations_switch_and_recompute` 枚举全部 10 个双站、10 个三站、5 个四站和 1 个五站组合，逐组核对地图/活动/曲线/热图/统计/共同时段/设备对/run 记录 |
+
+新增迁移 `04_SOURCE_CODE/app/migrations/0013_s08_combinations.sql`；导出证据写入 `10_TEST_REPORTS/s08_verification/combinations/<run_id>/` 与 `07_FIGURES/s09/animation/combinations/<run_id>/`。真实资料限制不变：2002/2003/2005 无坐标、2001 无当日参数时，覆盖与条件重叠保持 UNKNOWN，不以组合分析之名补造数据。全库回归 **255 passed**。
+
+## 11. V4.1 增量对 S08 的追加要求与符合性（2026-11-19，待验收）
+
+用户指向 `FISHERY_V4_1_CHANGES_ONLY/`（包名 `FISHERY_V4_TO_V4_1_CHANGES_ONLY_20261116`）。按 `00_README.txt`，该包只摘录增量条款，不覆盖 V4 完整规范；五设备、2000 的 5.2 m/3.68 m、GPS 网页录入与几何约束、原动态播放全部保留。V4.1 的 S08 新任务是「同一 QueryContext 下长期热力/趋势/阶段空间/证据联动，默认空间图≤9张、共用色标、缺 GPS 可用边界；验 P-03—P-05、P-09—P-13、P-24—P-27，原动态播放不减」。
+
+| V4.1 验收 | 本轮实现 | 证据与状态 |
+| --- | --- | --- |
+| P-01—P-05 分组与总览 | `spatial_grouping.py` 确定性分组；20/30/60=3/5/6 组，默认≤9；自然周/月、自定义分页、非连续日期与未选择日保留；设备×日期总览保留全部日期，60 日点第 37 天可回查 | 合成夹具 12 组全匹配；60 日测试 60 格/6 组；PASS |
+| P-06—P-08 指标与 0/NA | `v41_contracts.aggregate_observations()` 合并有效观测 vs 典型日等权分离；夹具 10/12≈83.33% 与 70% PASS；四态分类支持有效零/NA/低覆盖/未选择 | 事件率口径 PASS；出现比例因当前源缺帧级候选标记 BLOCKED，未伪造 |
+| P-09—P-10 比较 | 独立描述、共同有效时段、相对基线变化三种模式；基线成员、冻结截止、未来泄漏检查；比例差值用百分点、相对变化单列，0/NA 基线为 NA | S08 PASS |
+| P-11—P-12 色标 | `build_color_scale()`：比例固定 0—100%，无界指标用冻结参考，差值以 0 居中的 `[-M,+M]`，越界显式标记；同组共用 `color_scale_id` | S08 服务/页面 PASS；S09 图与 Origin 复用仍需增补 |
+| P-13 截断/位置版本 | 每台按观测日参数快照与硬截断；run 保存 `parameter_versions_json`、`mask_version`；位置版本变化仍由 `station_location` 留痕 | PASS；真实 2001 无参数保持 UNKNOWN |
+| P-24—P-27 环境与联动 | 环境接口保留来源/时差；`/s08` 顶部六区总览与点选日详情；7 类 `/s08/api/*` 从同一 `run_id` 与查询指纹取数，`result_json` 防新旧 run 混显 | S08 PASS；异步取消/完整待重算状态未实现，记 PARTIAL |
+
+新增 `query_context.py`、`spatial_grouping.py`、`v41_contracts.py`、迁移 `0014_s08_v41_contract.sql`；run 快照新增 QueryContext、查询指纹、分组成员、聚合、基线、色标、分析计划/掩码版本与同源结果。`test_s08_v41_contract.py` 5 项用包内合成夹具验证分组、聚合、证据分母、差值、色标、四态与查询隔离；全库回归 **260 passed**。非 S08 的 P-14—P-23、P-28—P-32 仍按实际状态保留 GAP/PARTIAL，未把静态示意图或夹具当成真实规律通过。
+
+**结论：S08 原有 7 项任务、用户 12 条任意组合要求与 V4.1 的 S08 相关硬要求已有代码、网页/接口、留痕与测试证据；增强待用户验收。**

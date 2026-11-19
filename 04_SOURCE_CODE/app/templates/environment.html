@@ -1,75 +1,143 @@
 {% extends "base.html" %}
+{% block title %}环境数据 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}环境数据{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="/environment/analysis">环境联合分析</a>{% endblock %}
 {% block content %}
-<h2>S05 环境数据接入</h2>
-<p class="hint">来源/单位/时区/质量状态必须完整。预报与模型历史数据不等于现场实测；自动数据不得覆盖手动导入数据。当前潮汐只有 PNG 截图、无数值表，未做图像估读；风向列在现有风速文件中不存在。</p>
 
-<h3>已登记来源</h3>
-<table><thead><tr><th>来源 ID</th><th>名称</th><th>类型</th><th>提供方</th><th>属性</th><th>质量说明</th></tr></thead><tbody>
-{% for s in sources %}<tr><td>{{ s.source_id }}</td><td>{{ s.name }}</td><td>{{ s.kind }}</td><td>{{ s.provider }}</td><td>{{ s.observed_or_forecast }}</td><td>{{ s.quality_note or '—' }}</td></tr>
-{% else %}<tr><td colspan="6">暂无来源</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">已登记来源</h2><span class="section__meta">{{ sources | length }} 个</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>来源 ID</th><th>名称</th><th>类型</th><th>提供方</th><th>属性</th><th>质量说明</th></tr></thead>
+      <tbody>
+      {% for s in sources %}<tr><td class="mono muted">{{ s.source_id }}</td><td class="lead">{{ s.name }}</td><td>{{ s.kind }}</td><td>{{ s.provider }}</td>
+        <td><span class="state {{ 'state--ok' if s.observed_or_forecast == 'OBSERVED' else 'state--warn' }}">{{ s.observed_or_forecast }}</span></td>
+        <td>{{ s.quality_note or '—' }}</td></tr>
+      {% else %}<tr><td colspan="6"><div class="empty">暂无来源</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<h3>已导入观测（按变量/质量）</h3>
-<table><thead><tr><th>变量</th><th>质量标记</th><th>条数</th></tr></thead><tbody>
-{% for c in counts %}<tr><td>{{ c.variable }}</td><td>{{ c.quality_flag }}</td><td>{{ c.n }}</td></tr>
-{% else %}<tr><td colspan="3">暂无观测</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">已导入观测</h2><span class="section__meta">按变量 / 质量</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>变量</th><th>质量标记</th><th class="num">条数</th></tr></thead>
+      <tbody>
+      {% for c in counts %}<tr><td class="mono">{{ c.variable }}</td><td><span class="state {{ 'state--ok' if c.quality_flag in ('OBSERVED','MANUAL') else 'state--warn' }}">{{ c.quality_flag }}</span></td><td class="num">{{ c.n }}</td></tr>
+      {% else %}<tr><td colspan="3"><div class="empty">暂无观测</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<h3>手动导入（CSV / XLSX）</h3>
-<form class="compare-form" method="post" action="/environment/import">
-  <fieldset>
-    <label>文件路径 <input name="file_path" size="60" placeholder="01_ORIGINAL_DATA/ENVIRONMENT/WIND/....xlsx"></label>
-    <label>来源 ID <input name="source_id" value="{{ (form.get('source_id') if form else '') or 'ENV-WIND-OPENMETEO' }}"></label>
-    <label>变量 <select name="variable">{% for v in variables %}<option value="{{ v }}" {% if form and form.get('variable') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
-    <label>时区 <input name="timezone" value="{{ (form.get('timezone') if form else '') or 'Asia/Shanghai' }}"></label>
-    <label><input type="checkbox" name="suggest" value="1" checked> 自动识别字段</label>
-    <label>日期列 <input name="date_col" value="{{ form.get('date_col') if form else '' }}"></label>
-    <label>时间列 <input name="time_col" value="{{ form.get('time_col') if form else '' }}"></label>
-    <label>数值列 <input name="value_col" value="{{ form.get('value_col') if form else '' }}"></label>
-    <label>单位列 <input name="unit_col" value="{{ form.get('unit_col') if form else '' }}"></label>
-    <label>单位（无单位列时） <input name="unit" value="{{ form.get('unit') if form else '' }}"></label>
-    <label>质量列 <input name="quality_col" value="{{ form.get('quality_col') if form else '' }}"></label>
-    <label>位置键 <input name="location_key" value="{{ form.get('location_key') if form else '' }}"></label>
-    <label>工作表 <input name="sheet" value="{{ form.get('sheet') if form else '' }}"></label>
-    <label>表头行（0 起） <input name="header_row" value="{{ form.get('header_row') if form else '' }}"></label>
-  </fieldset>
-  <button name="action" value="preview">预览</button>
-  <button name="action" value="import">确认导入</button>
-</form>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">手动导入</h2><span class="section__meta">CSV / XLSX</span></div>
+  <div class="card">
+    <form method="post" action="/environment/import">
+      <div class="form-grid">
+        <div class="field" style="grid-column:1/-1"><label for="e-path">文件路径<span class="req">·</span></label>
+          <div class="control"><input id="e-path" name="file_path" placeholder="01_ORIGINAL_DATA/ENVIRONMENT/WIND/....xlsx"></div></div>
+        <div class="field"><label for="e-src">来源 ID</label><div class="control"><input id="e-src" name="source_id" value="{{ (form.get('source_id') if form else '') or 'ENV-WIND-OPENMETEO' }}"></div></div>
+        <div class="field"><label for="e-var">变量</label><div class="control"><select id="e-var" name="variable">{% for v in variables %}<option value="{{ v }}" {% if form and form.get('variable') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+        <div class="field"><label for="e-tz">时区</label><div class="control"><input id="e-tz" name="timezone" value="{{ (form.get('timezone') if form else '') or 'Asia/Shanghai' }}"></div></div>
+        <div class="field" style="grid-column:1/-1;display:flex;align-items:center;padding-top:14px">
+          <label class="check"><input type="checkbox" name="suggest" value="1" checked> 自动识别字段</label>
+        </div>
+        <div class="field"><label for="e-dc">日期列</label><div class="control"><input id="e-dc" name="date_col" value="{{ form.get('date_col') if form else '' }}"></div></div>
+        <div class="field"><label for="e-tc">时间列</label><div class="control"><input id="e-tc" name="time_col" value="{{ form.get('time_col') if form else '' }}"></div></div>
+        <div class="field"><label for="e-vc">数值列</label><div class="control"><input id="e-vc" name="value_col" value="{{ form.get('value_col') if form else '' }}"></div></div>
+        <div class="field"><label for="e-uc">单位列</label><div class="control"><input id="e-uc" name="unit_col" value="{{ form.get('unit_col') if form else '' }}"></div></div>
+        <div class="field"><label for="e-unit">单位</label><div class="control"><input id="e-unit" name="unit" value="{{ form.get('unit') if form else '' }}"></div></div>
+        <div class="field"><label for="e-qc">质量列</label><div class="control"><input id="e-qc" name="quality_col" value="{{ form.get('quality_col') if form else '' }}"></div></div>
+        <div class="field"><label for="e-lk">位置键</label><div class="control"><input id="e-lk" name="location_key" value="{{ form.get('location_key') if form else '' }}"></div></div>
+        <div class="field"><label for="e-sheet">工作表</label><div class="control"><input id="e-sheet" name="sheet" value="{{ form.get('sheet') if form else '' }}"></div></div>
+        <div class="field"><label for="e-hr">表头行</label><div class="control"><input id="e-hr" name="header_row" value="{{ form.get('header_row') if form else '' }}" placeholder="0 起"></div></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn--ghost" name="action" value="preview" type="submit">预览</button>
+        <button class="btn" name="action" value="import" type="submit">确认导入</button>
+      </div>
+    </form>
+  </div>
 
-{% if preview %}
-<h3>导入预览（未写库）</h3>
-<p>文件：{{ preview.path }}｜行数 {{ preview.row_count }}｜可导入 {{ preview.accepted_count }}｜拒绝 {{ preview.rejected_count }}</p>
-<pre>{{ preview.mapping | tojson(indent=2) }}</pre>
-{% if preview.issue_summary %}<ul>{% for i in preview.issue_summary %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
-<table><thead><tr>{% for h in preview.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>
-{% for row in preview.samples %}<tr>{% for h in preview.headers %}<td>{{ row.get(h) }}</td>{% endfor %}</tr>{% endfor %}
-</tbody></table>
-{% endif %}
+  {% if preview %}
+  <div class="section" style="margin-top:26px">
+    <div class="section__head"><h2 class="section__title">导入预览</h2><span class="section__meta">{{ preview.path }}</span></div>
+    <div class="kpis" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi__v">{{ preview.row_count }}</div><div class="kpi__k">总行数</div></div>
+      <div class="kpi"><div class="kpi__v is-accent">{{ preview.accepted_count }}</div><div class="kpi__k">可导入</div></div>
+      <div class="kpi"><div class="kpi__v is-miss">{{ preview.rejected_count }}</div><div class="kpi__k">拒绝</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>{% for h in preview.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in preview.samples %}<tr>{% for h in preview.headers %}<td>{{ row.get(h) }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% if preview.issue_summary %}<ul class="errors" style="color:var(--danger);margin-top:12px">{% for i in preview.issue_summary %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endif %}
 
-{% if outcome %}
-<h3>导入结果</h3>
-<pre>{{ outcome | tojson(indent=2) }}</pre>
-{% endif %}
+  {% if outcome %}
+  <div class="section" style="margin-top:26px"><div class="section__head"><h2 class="section__title">导入结果</h2></div><pre>{{ outcome | tojson(indent=2) }}</pre></div>
+  {% endif %}
+</div>
 
-<h3>导入批次</h3>
-<table><thead><tr><th>批次</th><th>来源</th><th>文件</th><th>行数</th><th>新增/拒绝</th><th>状态</th><th>归档</th></tr></thead><tbody>
-{% for b in batches %}<tr><td>{{ b.batch_id }}</td><td>{{ b.source_name }}</td><td>{{ b.file_name }}</td><td>{{ b.row_count }}</td><td>{{ b.accepted_count }}/{{ b.rejected_count }}</td><td>{{ b.status }}</td><td>{{ b.archive_path }}</td></tr>
-{% else %}<tr><td colspan="7">暂无批次</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">导入批次</h2><span class="section__meta">{{ batches | length }} 条</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>批次</th><th>来源</th><th>文件</th><th class="num">行数</th><th class="num">新增 / 拒绝</th><th>状态</th><th>归档</th></tr></thead>
+      <tbody>
+      {% for b in batches %}<tr><td class="mono muted">{{ b.batch_id }}</td><td>{{ b.source_name }}</td><td class="mono">{{ b.file_name }}</td>
+        <td class="num">{{ b.row_count }}</td><td class="num">{{ b.accepted_count }}/{{ b.rejected_count }}</td>
+        <td><span class="state {{ 'state--ok' if b.status in ('OK','COMMITTED','DONE') else 'state--warn' }}">{{ b.status }}</span></td><td class="mono muted">{{ b.archive_path }}</td></tr>
+      {% else %}<tr><td colspan="7"><div class="empty">暂无批次</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<h3>自动获取评估与留痕</h3>
-<p class="hint">{{ evaluation.policy }}</p>
-<table><thead><tr><th>适配器</th><th>提供方</th><th>空间/时间/单位核实</th><th>状态</th><th>原因</th></tr></thead><tbody>
-{% for c in evaluation.candidates %}<tr><td>{{ c.adapter }}</td><td>{{ c.provider }}</td><td>{{ c.spatial_coverage }} / {{ c.time_resolution }} / {{ c.observed_or_forecast }}</td><td>{{ c.status }}</td><td>{{ c.reason }}</td></tr>{% endfor %}
-</tbody></table>
-<form method="post" action="/environment/fetch-attempt">
-  <label>适配器 <input name="adapter" value="OPEN_METEO_MARINE"></label>
-  <button>尝试获取（仅写失败/阻断日志）</button>
-</form>
-<table><thead><tr><th>时间</th><th>适配器</th><th>状态</th><th>错误/原因</th></tr></thead><tbody>
-{% for f in fetch_log %}<tr><td>{{ f.requested_at }}</td><td>{{ f.adapter }}</td><td>{{ f.status }}</td><td>{{ f.error_message or '—' }}</td></tr>
-{% else %}<tr><td colspan="4">暂无尝试</td></tr>{% endfor %}
-</tbody></table>
-<p><a href="/environment/analysis">进入环境联合分析 →</a></p>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">自动获取评估</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>适配器</th><th>提供方</th><th>空间 / 时间 / 属性</th><th>状态</th><th>原因</th></tr></thead>
+      <tbody>
+      {% for c in evaluation.candidates %}<tr><td class="mono">{{ c.adapter }}</td><td>{{ c.provider }}</td>
+        <td>{{ c.spatial_coverage }} / {{ c.time_resolution }} / {{ c.observed_or_forecast }}</td>
+        <td><span class="state {{ 'state--ok' if c.status == 'AVAILABLE' else 'state--miss' }}">{{ c.status }}</span></td><td>{{ c.reason }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <form method="post" action="/environment/fetch-attempt" class="form-grid" style="margin-top:18px;align-items:end">
+    <div class="field"><label for="f-ad">适配器</label><div class="control"><input id="f-ad" name="adapter" value="OPEN_METEO_MARINE"></div></div>
+    <div class="field" style="max-width:230px"><label>&nbsp;</label><button class="btn btn--ghost" type="submit">尝试获取</button></div>
+  </form>
+  <div class="table-wrap" style="margin-top:20px">
+    <table>
+      <thead><tr><th>时间</th><th>适配器</th><th>状态</th><th>错误 / 原因</th></tr></thead>
+      <tbody>
+      {% for f in fetch_log %}<tr><td class="mono muted">{{ f.requested_at }}</td><td class="mono">{{ f.adapter }}</td>
+        <td><span class="state {{ 'state--ok' if f.status == 'OK' else 'state--miss' }}">{{ f.status }}</span></td><td>{{ f.error_message or '—' }}</td></tr>
+      {% else %}<tr><td colspan="4"><div class="empty">暂无尝试</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>来源 / 单位 / 时区 / 质量状态必须完整。预报与模型历史数据不等于现场实测；自动数据不得覆盖手动导入数据。</p>
+    <p>当前潮汐只有 PNG 截图、无数值表，未做图像估读；风向列在现有风速文件中不存在。尝试获取仅写失败 / 阻断日志。</p>
+    <p>{{ evaluation.policy }}</p>
+  </div>
+</details>
 {% endblock %}

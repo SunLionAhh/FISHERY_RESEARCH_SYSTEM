@@ -1,18 +1,41 @@
 {% extends "base.html" %}
+{% block title %}日内昼夜 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}日内昼夜{% endblock %}
 {% block content %}
-<h2>S06 日内、昼夜与晨昏分析</h2>
-<p class="hint">15 分钟基础格来自 S03 原始文件哈希与统一硬掩码；低覆盖格标 NA，不填 0。夜段以夜开始日期锚定。坐标系未声明的天文结果为 PROVISIONAL，不冒充最终结论。</p>
-<form class="compare-form" method="post" action="/intraday">
-  <label>设备（逗号分隔） <input name="devices" value="2000"></label>
-  <label>开始日期 <input name="start_date" value="2026-10-31"></label>
-  <label>结束日期 <input name="end_date" value="2026-11-03"></label>
-  <label>时区 <input name="timezone" value="Asia/Shanghai"></label>
-  <label>名称 <input name="name" value="S06 日内分析"></label>
-  <button>生成日内分析</button>
-</form>
-<h3>历史分析</h3>
-<table><thead><tr><th>分析 ID</th><th>名称</th><th>算法版本</th><th>生成时间</th></tr></thead><tbody>
-{% for r in runs %}<tr><td><a href="/intraday/{{ r.run_id }}">{{ r.run_id }}</a></td><td>{{ r.name }}</td><td>{{ r.method_version }}</td><td>{{ r.created_at }}</td></tr>
-{% else %}<tr><td colspan="4">暂无分析</td></tr>{% endfor %}
-</tbody></table>
+
+<div class="section">
+  <div class="card">
+    <form method="post" action="/intraday" class="form-grid" style="align-items:end">
+      <div class="field"><label for="i-dev">设备</label><div class="control"><input id="i-dev" name="devices" value="2000" placeholder="2000,2001"></div></div>
+      <div class="field"><label for="i-s">开始日期</label><div class="control"><input id="i-s" name="start_date" value="2026-10-31"></div></div>
+      <div class="field"><label for="i-e">结束日期</label><div class="control"><input id="i-e" name="end_date" value="2026-11-03"></div></div>
+      <div class="field"><label for="i-tz">时区</label><div class="control"><input id="i-tz" name="timezone" value="Asia/Shanghai"></div></div>
+      <div class="field"><label for="i-name">名称</label><div class="control"><input id="i-name" name="name" value="S06 日内分析"></div></div>
+      <div class="field" style="max-width:140px"><label>&nbsp;</label><button class="btn" type="submit">生成分析</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">历史分析</h2><span class="section__meta">{{ runs | length }} 条</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>分析 ID</th><th>名称</th><th>算法版本</th><th>生成时间</th></tr></thead>
+      <tbody>
+      {% for r in runs %}<tr><td class="lead"><a href="/intraday/{{ r.run_id }}">{{ r.run_id }}</a></td><td>{{ r.name }}</td><td class="mono">{{ r.method_version }}</td><td class="mono muted">{{ r.created_at }}</td></tr>
+      {% else %}<tr><td colspan="4"><div class="empty">暂无分析</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>15 分钟基础格来自 S03 原始文件哈希与统一硬掩码；低覆盖格标 <span class="na">NA</span>，不填 0。夜段以夜开始日期锚定。坐标系未声明的天文结果为 PROVISIONAL，不冒充最终结论。</p>
+  </div>
+</details>
 {% endblock %}

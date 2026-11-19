@@ -1,69 +1,111 @@
 {% extends "base.html" %}
-{% block title %}比较结果 — S04{% endblock %}
+{% block title %}比较结果 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}比较结果{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="{{ url_for('web.compare_index') }}">返回比较入口</a>{% endblock %}
 {% block content %}
-<h2>比较结果 {{ result.comparison_id }}</h2>
-<p>{{ result.name }}　生成于 {{ result.generated_at }}</p>
-{% if result.baseline_error %}<div class="error-box">基线未生成：{{ result.baseline_error }}</div>{% endif %}
 
-<h3>选择明细</h3>
-<p>设备：{{ result.selection.resolved_devices | join(', ') }}　窗口数：{{ result.selection.window_count }}</p>
-<p class="hint">{{ result.selection.endpoint_rule }}</p>
-<p class="hint">{{ result.selection.timezone_note }}</p>
-<p class="hint">{{ result.selection.day_night_note }}</p>
+<div class="section">
+  <div class="kv">
+    <div class="kv__item"><div class="kv__k">比较 ID</div><div class="kv__v sm mono" style="word-break:break-all">{{ result.comparison_id }}</div></div>
+    <div class="kv__item"><div class="kv__k">名称</div><div class="kv__v sm">{{ result.name }}</div></div>
+    <div class="kv__item"><div class="kv__k">生成时间</div><div class="kv__v sm mono">{{ result.generated_at }}</div></div>
+    <div class="kv__item"><div class="kv__k">设备</div><div class="kv__v sm mono">{{ result.selection.resolved_devices | join(', ') }}</div></div>
+    <div class="kv__item"><div class="kv__k">窗口数</div><div class="kv__v">{{ result.selection.window_count }}</div></div>
+  </div>
+  {% if result.baseline_error %}<div class="error-box" style="margin-top:14px">基线未生成：{{ result.baseline_error }}</div>{% endif %}
+</div>
 
-<h3>日期比较矩阵</h3>
-<table><thead><tr>
-  <th>设备</th><th>用例</th><th>比较日</th><th>参考日</th><th>候选事件率（比较/参考）</th><th>差值</th><th>变化%</th><th>结论</th>
-</tr></thead><tbody>
-{% for c in result.date_comparison_matrix.cases %}
-  {% if c.status == 'OK' %}
-  <tr><td>{{ c.device_id }}</td><td>{{ c.label }}</td><td>{{ c.subject_date }}</td><td>{{ c.reference_dates | join(', ') }}</td>
-    <td>{{ c.primary.subject | round(4) if c.primary.subject is not none else 'NA' }} / {{ c.primary.reference | round(4) if c.primary.reference is not none else 'NA' }}</td>
-    <td>{{ c.primary.difference | round(4) if c.primary.difference is not none else 'NA' }}</td>
-    <td>{{ c.primary.change_percent | round(2) if c.primary.change_percent is not none else 'NA' }}{% if c.primary.pct_note %}（{{ c.primary.pct_note }}）{% endif %}</td>
-    <td>{{ c.primary.result }}</td></tr>
-  {% else %}
-  <tr><td>{{ c.device_id }}</td><td>{{ c.case }}</td><td colspan="5">{{ c.detail }}</td><td>{{ c.status }}</td></tr>
-  {% endif %}
-{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">日期比较矩阵</h2><span class="section__meta">候选事件率 · 比较 / 参考</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>设备</th><th>用例</th><th>比较日</th><th>参考日</th><th class="num">比较 / 参考</th><th class="num">差值</th><th class="num">变化 <span class="u">%</span></th><th>结论</th></tr></thead>
+      <tbody>
+      {% for c in result.date_comparison_matrix.cases %}
+        {% if c.status == 'OK' %}
+        <tr><td class="lead mono">{{ c.device_id }}</td><td>{{ c.label }}</td><td class="mono">{{ c.subject_date }}</td><td class="mono">{{ c.reference_dates | join(', ') }}</td>
+          <td class="num">{{ c.primary.subject | round(4) if c.primary.subject is not none else 'NA' }} / {{ c.primary.reference | round(4) if c.primary.reference is not none else 'NA' }}</td>
+          <td class="num">{{ c.primary.difference | round(4) if c.primary.difference is not none else 'NA' }}</td>
+          <td class="num">{{ c.primary.change_percent | round(2) if c.primary.change_percent is not none else 'NA' }}{% if c.primary.pct_note %}<span class="sub">{{ c.primary.pct_note }}</span>{% endif %}</td>
+          <td>{{ c.primary.result }}</td></tr>
+        {% else %}
+        <tr><td class="lead mono">{{ c.device_id }}</td><td>{{ c.case }}</td><td colspan="5">{{ c.detail }}</td><td><span class="state state--na">{{ c.status }}</span></td></tr>
+        {% endif %}
+      {% else %}<tr><td colspan="8"><div class="empty">无日期比较用例</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<h3>设备间比较（参考设备 {{ result.device_comparison_matrix.reference_device or 'NA' }}）</h3>
-<table><thead><tr><th>设备</th><th>日期</th><th>候选事件率（设备/参考）</th><th>差值</th><th>变化%</th><th>结论</th></tr></thead><tbody>
-{% for c in result.device_comparison_matrix.cases %}
-  {% if c.status == 'OK' %}
-  <tr><td>{{ c.device_id }}</td><td>{{ c.observed_date }}</td>
-    <td>{{ c.primary.subject | round(4) if c.primary.subject is not none else 'NA' }} / {{ c.primary.reference | round(4) if c.primary.reference is not none else 'NA' }}</td>
-    <td>{{ c.primary.difference | round(4) if c.primary.difference is not none else 'NA' }}</td>
-    <td>{{ c.primary.change_percent | round(2) if c.primary.change_percent is not none else 'NA' }}</td>
-    <td>{{ c.primary.result }}</td></tr>
-  {% else %}
-  <tr><td>{{ c.device_id }}</td><td>{{ c.observed_date }}</td><td colspan="3">{{ c.detail }}</td><td>{{ c.status }}</td></tr>
-  {% endif %}
-{% else %}<tr><td colspan="6">无多设备同日窗口</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">设备间比较</h2><span class="section__meta">参考设备 {{ result.device_comparison_matrix.reference_device or 'NA' }}</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>设备</th><th>日期</th><th class="num">设备 / 参考</th><th class="num">差值</th><th class="num">变化 <span class="u">%</span></th><th>结论</th></tr></thead>
+      <tbody>
+      {% for c in result.device_comparison_matrix.cases %}
+        {% if c.status == 'OK' %}
+        <tr><td class="lead mono">{{ c.device_id }}</td><td class="mono">{{ c.observed_date }}</td>
+          <td class="num">{{ c.primary.subject | round(4) if c.primary.subject is not none else 'NA' }} / {{ c.primary.reference | round(4) if c.primary.reference is not none else 'NA' }}</td>
+          <td class="num">{{ c.primary.difference | round(4) if c.primary.difference is not none else 'NA' }}</td>
+          <td class="num">{{ c.primary.change_percent | round(2) if c.primary.change_percent is not none else 'NA' }}</td>
+          <td>{{ c.primary.result }}</td></tr>
+        {% else %}
+        <tr><td class="lead mono">{{ c.device_id }}</td><td class="mono">{{ c.observed_date }}</td><td colspan="3">{{ c.detail }}</td><td><span class="state state--na">{{ c.status }}</span></td></tr>
+        {% endif %}
+      {% else %}<tr><td colspan="6"><div class="empty">无多设备同日窗口</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
 {% if result.baseline %}
-<h3>历史基线</h3>
-<p>模式 {{ result.baseline.mode }}，参考日 {{ result.baseline.reference_date }}</p>
-<table><thead><tr><th>设备</th><th>有效日数</th><th>Σ区内样本</th><th>Σ有效时长(s)</th><th>合并事件率</th><th>日均事件率</th><th>缺额</th></tr></thead><tbody>
-{% for device_id, g in result.baseline.devices.items() %}
-<tr><td>{{ device_id }}</td><td>{{ g.n_members }}</td><td>{{ g.sum_kept_samples }}</td><td>{{ g.sum_valid_duration_s | round(1) }}</td>
-  <td>{{ g.aggregate_rate_per_hour | round(4) if g.aggregate_rate_per_hour is not none else 'NA' }}</td>
-  <td>{{ g.mean_daily_rate_per_hour | round(4) if g.mean_daily_rate_per_hour is not none else 'NA' }}</td>
-  <td>{{ g.shortfall }}</td></tr>
-{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">历史基线</h2><span class="section__meta">{{ result.baseline.mode }} · {{ result.baseline.reference_date }}</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>设备</th><th class="num">有效日数</th><th class="num">Σ区内样本</th><th class="num">Σ有效时长 <span class="u">s</span></th><th class="num">合并事件率</th><th class="num">日均事件率</th><th class="num">缺额</th></tr></thead>
+      <tbody>
+      {% for device_id, g in result.baseline.devices.items() %}
+      <tr><td class="lead mono">{{ device_id }}</td><td class="num">{{ g.n_members }}</td><td class="num">{{ g.sum_kept_samples }}</td><td class="num">{{ g.sum_valid_duration_s | round(1) }}</td>
+        <td class="num">{{ g.aggregate_rate_per_hour | round(4) if g.aggregate_rate_per_hour is not none else 'NA' }}</td>
+        <td class="num">{{ g.mean_daily_rate_per_hour | round(4) if g.mean_daily_rate_per_hour is not none else 'NA' }}</td>
+        <td class="num">{{ g.shortfall }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endif %}
 
 {% if result.selection.excluded %}
-<h3>未参与比较的设备-日</h3>
-<table><thead><tr><th>设备</th><th>日期</th><th>原因</th><th>说明</th></tr></thead><tbody>
-{% for e in result.selection.excluded %}<tr><td>{{ e.device_id }}</td><td>{{ e.observed_date }}</td><td>{{ e.reason }}</td><td>{{ e.detail }}</td></tr>{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">未参与比较的设备-日</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>设备</th><th>日期</th><th>原因</th><th>说明</th></tr></thead>
+      <tbody>
+      {% for e in result.selection.excluded %}<tr><td class="mono">{{ e.device_id }}</td><td class="mono">{{ e.observed_date }}</td><td>{{ e.reason }}</td><td>{{ e.detail }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endif %}
 
-<h3>自动总结</h3>
-<pre>{{ result.summary.markdown }}</pre>
-<p><a href="{{ url_for('web.compare_index') }}">返回比较入口</a></p>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">自动总结</h2></div>
+  <pre>{{ result.summary.markdown }}</pre>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>端点与口径</summary>
+  <div class="notes__body">
+    <p>{{ result.selection.endpoint_rule }}</p>
+    <p>{{ result.selection.timezone_note }}</p>
+    <p>{{ result.selection.day_night_note }}</p>
+  </div>
+</details>
 {% endblock %}

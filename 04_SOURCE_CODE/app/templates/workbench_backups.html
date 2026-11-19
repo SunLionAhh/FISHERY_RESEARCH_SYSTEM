@@ -1,10 +1,41 @@
 {% extends "base.html" %}
+{% block title %}备份与恢复 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}备份与恢复{% endblock %}
+{% block page_actions %}<a class="btn btn--ghost btn--sm" href="{{ url_for('web.workbench_home') }}">返回工作台</a>{% endblock %}
 {% block content %}
-<h2>S10 备份与恢复</h2>
-<p class="hint">每阶段运行前建立正式库备份；恢复须在停止 Flask、核对 SHA-256 后复制回原库，并在恢复后复跑哈希与测试。当前库路径：{{ db_path }}</p>
-<table><thead><tr><th>备份目录</th><th>fishery.db 大小(bytes)</th><th>SHA-256</th></tr></thead><tbody>
-{% for b in backups %}<tr><td>{{ b.name }}</td><td>{{ b.bytes }}</td><td>{{ b.sha256 }}</td></tr>
-{% else %}<tr><td colspan="3">无备份</td></tr>{% endfor %}
-</tbody></table>
-<p><a href="/workbench">返回工作台</a></p>
+
+<div class="section">
+  <div class="kv" style="grid-template-columns:1fr">
+    <div class="kv__item">
+      <div class="kv__k">当前数据库</div>
+      <div class="kv__v sm mono" style="word-break:break-all">{{ db_path }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">正式库备份</h2><span class="section__meta">{{ backups | length }} 份</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>备份目录</th><th class="num">fishery.db <span class="u">bytes</span></th><th>SHA-256</th></tr></thead>
+      <tbody>
+      {% for b in backups %}
+      <tr><td class="lead mono">{{ b.name }}</td><td class="num">{{ b.bytes }}</td><td class="mono" style="word-break:break-all">{{ b.sha256 }}</td></tr>
+      {% else %}
+      <tr><td colspan="3"><div class="empty">无备份</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>恢复流程</summary>
+  <div class="notes__body">
+    <p>每阶段运行前建立正式库备份。恢复须先停止 Flask，核对 SHA-256 后复制回原库，并在恢复后复跑哈希与测试。</p>
+  </div>
+</details>
 {% endblock %}

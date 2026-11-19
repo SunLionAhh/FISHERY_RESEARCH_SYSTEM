@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -23,6 +24,10 @@ FFMPEG_CANDIDATES = [
     Path(r"C:\Program Files\EVCapture\ffmpeg.exe"),
     Path(r"C:\Program Files\MiniMax Hub\resources\ffmpeg\ffmpeg.exe"),
 ]
+
+
+def _safe_name(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", str(value or "")).strip("._-") or "default"
 
 
 def _palette():
@@ -91,7 +96,9 @@ def _sha(path: Path) -> str:
 
 
 def export(conn: sqlite3.Connection, project_root: Path, *, source_csv: Path | None = None,
-           formats=("PNG_SEQUENCE", "GIF", "MP4", "PDF"), actor: str = "S09") -> dict:
+           formats=("PNG_SEQUENCE", "GIF", "MP4", "PDF"), actor: str = "S09",
+           output_subdir: str | None = None, export_id_prefix: str | None = None,
+           run_id: str | None = None, devices=None) -> dict:
     root = Path(project_root)
     source = source_csv or root / "10_TEST_REPORTS/s08_verification/real_data/dynamic_frames.csv"
     if not source.exists():
@@ -100,6 +107,8 @@ def export(conn: sqlite3.Connection, project_root: Path, *, source_csv: Path | N
     if not frames:
         raise ValueError("离散帧为空，不能导出动画")
     out_dir = root / "07_FIGURES" / "s09" / "animation"
+    if output_subdir:
+        out_dir = out_dir / output_subdir
     out_dir.mkdir(parents=True, exist_ok=True)
     fp = _palette()
     stamps = sorted(frames)
@@ -114,15 +123,22 @@ def export(conn: sqlite3.Connection, project_root: Path, *, source_csv: Path | N
         na_cells += sum(1 for v in frames[stamp].values() if v["events"] is None)
     exports = []
     now = datetime.now().isoformat(timespec="seconds")
+    prefix = _safe_name(export_id_prefix or run_id or "ANIM")
+    source_note = str(source)
+    if run_id:
+        source_note += f"|run_id={run_id}"
+    if devices:
+        source_note += "|devices=" + ",".join(str(device) for device in devices)
 
     def record(fmt: str, target: Path) -> None:
+        digest = _sha(target)
         conn.execute(
             "INSERT OR REPLACE INTO animation_exports (export_id,source_frames,export_format,"
             "file_path,sha256,bytes,frame_count,consistency_check,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
-            (f"ANIM-{fmt}-{target.stem}", str(source), fmt, str(target), _sha(target),
+            (f"{prefix}-{fmt}-{target.stem}", source_note, fmt, str(target), digest,
              target.stat().st_size, len(frames),
              f"PASS frames={len(frames)} NA={na_cells} no_interpolation", now))
-        exports.append({"format": fmt, "path": str(target), "sha256": _sha(target)})
+        exports.append({"format": fmt, "path": str(target), "sha256": digest})
 
     if "PNG_SEQUENCE" in formats:
         record("PNG_SEQUENCE", pngs[0])
@@ -148,14 +164,14 @@ def export(conn: sqlite3.Connection, project_root: Path, *, source_csv: Path | N
                 conn.execute("INSERT OR REPLACE INTO animation_exports (export_id,source_frames,"
                              "export_format,file_path,sha256,bytes,frame_count,consistency_check,created_at)"
                              " VALUES (?,?,?,?,?,?,?,?,?)",
-                             (f"ANIM-MP4-FAIL-{now}", str(source), "MP4", "", "", 0, len(frames),
-                              "BLOCKED ffmpeg_exit=" + str(result.returncode), now))
+                             (f"{prefix}-MP4-FAIL-{_safe_name(now)}", source_note, "MP4", "", "", 0,
+                              len(frames), "BLOCKED ffmpeg_exit=" + str(result.returncode), now))
         else:
             conn.execute("INSERT OR REPLACE INTO animation_exports (export_id,source_frames,"
                          "export_format,file_path,sha256,bytes,frame_count,consistency_check,created_at)"
                          " VALUES (?,?,?,?,?,?,?,?,?)",
-                         (f"ANIM-MP4-FAIL-{now}", str(source), "MP4", "", "", 0, len(frames),
-                          "BLOCKED no_ffmpeg", now))
+                         (f"{prefix}-MP4-FAIL-{_safe_name(now)}", source_note, "MP4", "", "", 0,
+                          len(frames), "BLOCKED no_ffmpeg", now))
     if "PDF" in formats:
         pdf = out_dir / "dynamic_frames.pdf"
         with PdfPages(pdf) as pages:
@@ -169,5 +185,61 @@ def export(conn: sqlite3.Connection, project_root: Path, *, source_csv: Path | N
         record("PDF", pdf)
     conn.commit()
     return {"source": str(source), "frames": len(frames), "na_cells": na_cells,
-            "exports": exports, "ffmpeg": ffmpeg_path(),
+            "exports": exports, "ffmpeg": ffmpeg_path(), "run_id": run_id,
+            "devices": list(devices) if devices else [], "output_dir": str(out_dir),
             "note": "离散帧同源导出；无轨迹、无连续密度插值；NA 不补 0"}
+
+
+def write_frames_csv(dynamics: dict, path: Path) -> Path:
+    """把任意组合的动态帧写成同源 CSV，动画不再依赖固定五站文件。"""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frames = dynamics.get("frames") or []
+    variables = dynamics.get("variables") or [
+        "WATER_TEMP", "TIDE_HEIGHT", "WIND_SPEED", "WIND_DIRECTION"]
+    fieldnames = (["timestamp_local", "timezone", "device_id", "activity_status",
+                   "candidate_events"]
+                  + [f"{variable}_value" for variable in variables]
+                  + [f"{variable}_quality" for variable in variables])
+    rows = []
+    for frame in frames:
+        for value in frame.get("values", []):
+            row = {"timestamp_local": frame["timestamp_local"],
+                   "timezone": frame.get("timezone", ""),
+                   "device_id": value["device_id"],
+                   "activity_status": value.get("status", "NA"),
+                   "candidate_events": value.get("candidate_events")}
+            for variable in variables:
+                env = (value.get("environment") or {}).get(variable) or {}
+                row[f"{variable}_value"] = env.get("value")
+                row[f"{variable}_quality"] = env.get("quality_flag")
+            rows.append(row)
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: ("" if row.get(key) is None else row.get(key))
+                             for key in fieldnames})
+    return path
+
+
+def export_dynamic_frames(conn: sqlite3.Connection, project_root: Path, dynamics: dict, *,
+                          run_id: str, formats=("GIF", "MP4"), devices=None) -> dict:
+    """按当前组合 run_id 落盘动态帧 CSV，并导出 GIF/MP4（缺 ffmpeg 时留 BLOCKED）。"""
+    if not run_id:
+        raise ValueError("组合动画导出必须提供 run_id")
+    frames = dynamics.get("frames") or []
+    if not frames:
+        raise ValueError("动态帧为空，不能导出组合动画")
+    root = Path(project_root)
+    safe_run = _safe_name(run_id)
+    selected = list(devices or dynamics.get("selected_devices") or dynamics.get("devices") or [])
+    source = write_frames_csv(
+        dynamics,
+        root / "10_TEST_REPORTS" / "s08_verification" / "combinations" / safe_run /
+        "dynamic_frames.csv")
+    result = export(conn, root, source_csv=source, formats=tuple(formats),
+                    output_subdir=f"combinations/{safe_run}", export_id_prefix=run_id,
+                    run_id=run_id, devices=selected)
+    result["devices"] = selected
+    return result

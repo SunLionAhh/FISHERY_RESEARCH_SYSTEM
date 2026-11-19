@@ -21,6 +21,7 @@ from ..services import spatial as spatial_svc
 from ..services import s09_animation as animation_svc
 from ..services import s09_figures as figure_svc
 from ..services import origin_bridge as origin_svc
+from ..services import query_context as query_ctx
 from ..services import workbench as workbench_svc
 from ..services import beam_geometry as geometry_svc
 from ..services import intraday as intraday_svc
@@ -609,23 +610,75 @@ def _optional_float(form, key):
     return float(raw)
 
 
+def _v41_options(source) -> dict:
+    """从表单/查询串读取 V4.1 QueryContext 选项；空值回落到契约默认值。"""
+    def integer(key, default):
+        try:
+            return int(str(source.get(key) or default))
+        except (TypeError, ValueError):
+            return default
+
+    dates = str(source.get("date_set") or source.get("dates") or "")
+    date_set = [part.strip() for part in dates.split(",") if part.strip()]
+    windows = []
+    for raw in str(source.get("daily_windows") or "").split(","):
+        if "-" not in raw:
+            continue
+        start_time, end_time = raw.split("-", 1)
+        windows.append({"start": start_time.strip(), "end": end_time.strip()})
+    return {
+        "comparison_mode": source.get("comparison_mode") or "independent",
+        "metric_id": source.get("metric_id") or query_ctx.DEFAULT_METRIC_ID,
+        "grouping_mode": source.get("grouping_mode") or "default",
+        "aggregation_mode": source.get("aggregation_mode") or "pooled",
+        "baseline_id": source.get("baseline_id") or "FIRST_VALID_DAY",
+        "color_scale_id": source.get("color_scale_id") or None,
+        "custom_step_days": integer("custom_step_days", 7),
+        "page": integer("page", 1),
+        "date_set": date_set,
+        "daily_windows": windows,
+        "depth_mode": source.get("depth_mode") or "ALL",
+        "layer": source.get("layer") or None,
+        "analysis_plan_version": source.get("analysis_plan_version")
+                                 or query_ctx.DEFAULT_ANALYSIS_PLAN_VERSION,
+        "mask_version": source.get("mask_version") or query_ctx.DEFAULT_MASK_VERSION,
+    }
+
+
 @bp.route("/s08", methods=["GET", "POST"])
 def s08_home():
-    """S08：站位 GPS、离线坐标示意、空间比较与离散动态帧；缺站缺测一律 NA。"""
+    """S08：任意组合 + V4.1 同查询契约的空间、比较、动态帧与同源动画导出。"""
     conn = get_conn()
     message = None
     analysis = None
     dynamics = None
+    animation_export = None
+    selected_devices = list(spatial_svc.DEVICE_IDS)
+    start = "2026-10-31"
+    end = "2026-11-03"
+    observed_date = start
+    step_hours = 1
+    comparison_mode = "independent"
+    dataset_id = spatial_svc.DEFAULT_DATASET_ID
+    v41_options = _v41_options({})
+    curve_rows = []
+    parameter_rows = []
     try:
-        devices = tuple(d.strip() for d in (request.form.get("devices") or
-                                            ",".join(spatial_svc.DEVICE_IDS)).split(",")
-                        if d.strip())
-        start = request.form.get("start_date") or "2026-10-31"
-        end = request.form.get("end_date") or "2026-11-03"
-        observed_date = request.form.get("observed_date") or start
         if request.method == "POST":
-            try:
+            start = request.form.get("start_date") or start
+            end = request.form.get("end_date") or end
+            observed_date = request.form.get("observed_date") or start
+            comparison_mode = request.form.get("comparison_mode") or comparison_mode
+            dataset_id = request.form.get("dataset_id") or dataset_id
+            step_hours = int(request.form.get("step_hours") or 1)
+            v41_options = _v41_options(request.form)
+        try:
+            if request.method == "POST":
+                raw_devices = request.form.getlist("devices")
+                if raw_devices:
+                    selected_devices = spatial_svc.parse_devices(raw_devices)
                 action = request.form.get("action")
+                root = Path(current_app.config["PROJECT_ROOT"])
                 if action == "sync":
                     count = spatial_svc.sync_from_positions(conn, actor="web")
                     spatial_svc.compute_distances(conn, observed_date, actor="web")
@@ -651,55 +704,227 @@ def s08_home():
                     result = spatial_svc.compute_distances(conn, observed_date, actor="web")
                     message = (f"站距重算完成：{len(result['distances'])} 对"
                                f"，拒绝混算 {len(result['excluded'])} 对")
-                elif action == "analyze":
-                    analysis = {
-                        "map": spatial_svc.map_payload(conn, observed_date),
-                        "activity": spatial_svc.daily_activity(conn, devices, start, end),
-                        "statistics": spatial_svc.spatial_statistics(conn, devices, start, end),
-                        "heatmaps": spatial_svc.heatmaps(conn, devices, start, end),
-                        "environment": spatial_svc.environment_joint(conn, devices, start, end),
-                    }
-                    dynamics = spatial_svc.dynamic_frames(
-                        conn, devices, start, end,
-                        step_hours=int(request.form.get("step_hours") or 1))
-                    analysis["dynamics"] = dynamics
+                elif action in ("analyze", "export_animation"):
+                    analysis = spatial_svc.analyze_combination(
+                        conn, selected_devices, start, end, observed_date,
+                        step_hours=step_hours, dataset_id=dataset_id, actor="web",
+                        metric_id=v41_options["metric_id"],
+                        grouping_mode=v41_options["grouping_mode"],
+                        aggregation_mode=v41_options["aggregation_mode"],
+                        baseline_id=v41_options["baseline_id"],
+                        color_scale_id=v41_options["color_scale_id"],
+                        custom_step_days=v41_options["custom_step_days"],
+                        page=v41_options["page"], date_set=v41_options["date_set"],
+                        daily_windows=v41_options["daily_windows"],
+                        depth_mode=v41_options["depth_mode"], layer=v41_options["layer"],
+                        comparison_mode=v41_options["comparison_mode"],
+                        analysis_plan_version=v41_options["analysis_plan_version"],
+                        mask_version=v41_options["mask_version"])
+                    dynamics = analysis["dynamics"]
                     if request.form.get("save"):
                         written = spatial_svc.write_outputs(
-                            analysis, Path(current_app.config["PROJECT_ROOT"]) /
-                            "10_TEST_REPORTS" / "s08_web")
+                            analysis, root / "10_TEST_REPORTS" / "s08_web")
                         message = "分析完成并归档：" + "、".join(written)
                     else:
-                        message = f"分析完成：{len(devices)} 站，{len(dynamics['frames'])} 个离散帧"
+                        message = (f"组合分析完成：{analysis['run_id']}，{len(selected_devices)} 站，"
+                                   f"{len(dynamics['frames'])} 个离散帧")
+                    if action == "export_animation":
+                        formats = tuple(x.upper() for x in request.form.getlist("formats")
+                                        if x.upper() in ("GIF", "MP4"))
+                        animation_export = animation_svc.export_dynamic_frames(
+                            conn, root, dynamics, run_id=analysis["run_id"],
+                            formats=formats or ("GIF", "MP4"), devices=selected_devices)
+                        archived = spatial_svc.write_outputs(
+                            analysis, root / "10_TEST_REPORTS" / "s08_verification" /
+                            "combinations" / analysis["run_id"])
+                        exported = [x["format"] for x in animation_export["exports"]]
+                        message = (f"{analysis['run_id']} 动画导出：{'、'.join(exported) or '无可用格式'}；"
+                                   f"归档 {len(archived)} 个证据文件")
                 elif action == "frames":
                     dynamics = spatial_svc.dynamic_frames(
-                        conn, devices, start, end,
-                        step_hours=int(request.form.get("step_hours") or 1))
-                    message = f"动态帧重建：{len(dynamics['frames'])} 帧（无轨迹、无插值）"
+                        conn, selected_devices, start, end, step_hours=step_hours)
+                    message = f"动态帧重建：{len(dynamics['frames'])} 帧（{len(selected_devices)} 站，无轨迹、无插值）"
                 else:
                     message = f"未知操作：{action}"
-            except (spatial_svc.SpatialValidationError, ValueError, KeyError) as exc:
-                message = str(exc)
-        map_data = spatial_svc.map_payload(conn, observed_date)
+        except (spatial_svc.SpatialValidationError, ValueError, KeyError, OSError) as exc:
+            message = str(exc)
+
+        map_data = spatial_svc.map_payload(conn, observed_date, selected_devices)
         bounds = map_data.get("bounds")
+        known = [s for s in map_data["stations"]
+                 if s["longitude_deg"] is not None and s["latitude_deg"] is not None]
         map_points = []
         for station in map_data["stations"]:
             x = y = None
-            if bounds and station["longitude_deg"] is not None and station["latitude_deg"] is not None:
+            if station in known and bounds:
                 width = bounds["max_lon"] - bounds["min_lon"]
                 height = bounds["max_lat"] - bounds["min_lat"]
-                if width > 0 or height > 0:
-                    x = 10 + 80 * (station["longitude_deg"] - bounds["min_lon"]) / width if width > 0 else 50
-                    y = 85 - 80 * (station["latitude_deg"] - bounds["min_lat"]) / height if height > 0 else 50
+                x = (10 + 80 * (station["longitude_deg"] - bounds["min_lon"]) / width
+                     if width > 0 else 50)
+                y = (85 - 80 * (station["latitude_deg"] - bounds["min_lat"]) / height
+                     if height > 0 else 50)
             map_points.append({"station": station, "x": x, "y": y})
         station_rows = [dict(row) for row in conn.execute(
             "SELECT * FROM station_location ORDER BY device_id,effective_from DESC LIMIT 30")]
+        if analysis:
+            curves = analysis.get("time_curves", {})
+            stamps = sorted({point["timestamp_local"] for points in curves.values()
+                             for point in points})
+            curve_rows = [{"timestamp": stamp,
+                           "values": {device: next((point for point in curves.get(device, [])
+                                                    if point["timestamp_local"] == stamp), None)
+                                      for device in selected_devices}}
+                          for stamp in stamps]
+            snapshots = (analysis.get("run") or {}).get("parameter_versions", {})
+        else:
+            snapshots = {device: spatial_svc.parameter_snapshot(conn, device, observed_date)
+                         for device in selected_devices}
+        parameter_rows = [{"device_id": device, **snapshots.get(device, {})}
+                          for device in selected_devices]
     finally:
         conn.close()
-    return render_template("s08.html", message=message, map_data=map_data,
-                           map_points=map_points, station_rows=station_rows,
-                           analysis=analysis, dynamics=dynamics,
-                           devices=",".join(devices), start=start, end=end,
-                           observed_date=observed_date)
+    return render_template(
+        "s08.html", message=message, map_data=map_data, map_points=map_points,
+        station_rows=station_rows, analysis=analysis, dynamics=dynamics,
+        animation_export=animation_export, all_devices=spatial_svc.DEVICE_IDS,
+        selected_devices=selected_devices, devices=",".join(selected_devices),
+        start=start, end=end, observed_date=observed_date, step_hours=step_hours,
+        comparison_mode=comparison_mode, dataset_id=dataset_id,
+        curve_rows=curve_rows, parameter_rows=parameter_rows,
+        v41_options=v41_options)
+
+
+def _load_s08_run(conn):
+    """V4.1 I2：按 run_id 或查询指纹读取同一快照，禁止新旧 run 混显。"""
+    run_id = request.args.get("run_id")
+    if run_id:
+        row = conn.execute(
+            "SELECT * FROM spatial_combination_runs WHERE run_id=?", (run_id,)).fetchone()
+    else:
+        options = _v41_options(request.args)
+        devices = spatial_svc.parse_devices(
+            request.args.get("devices") or ",".join(spatial_svc.DEVICE_IDS))
+        start = request.args.get("start_date") or "2026-10-31"
+        end = request.args.get("end_date") or "2026-11-03"
+        observed = request.args.get("observed_date") or start
+        snapshots = {device: spatial_svc.parameter_snapshot(conn, device, observed)
+                     for device in devices}
+        context = query_ctx.build_query_context(
+            selected_devices=devices, start_date=start, end_date=end,
+            date_set=options["date_set"], comparison_mode=options["comparison_mode"],
+            baseline_id=options["baseline_id"], aggregation_mode=options["aggregation_mode"],
+            grouping_mode=options["grouping_mode"], metric_id=options["metric_id"],
+            dataset_id=request.args.get("dataset_id") or spatial_svc.DEFAULT_DATASET_ID,
+            analysis_plan_version=options["analysis_plan_version"],
+            mask_version=options["mask_version"], color_scale_id=options["color_scale_id"],
+            parameter_versions=snapshots,
+            daily_windows=options["daily_windows"], depth_mode=options["depth_mode"],
+            layer=options["layer"])
+        row = conn.execute(
+            "SELECT * FROM spatial_combination_runs WHERE query_fingerprint=? "
+            "ORDER BY created_at DESC LIMIT 1", (context.query_fingerprint(),)).fetchone()
+    if row is None:
+        return None, {"status": "NO_RUN", "reason": "没有匹配的组合分析 run；请先运行分析"}
+    result = None
+    if row["result_json"]:
+        try:
+            result = json.loads(row["result_json"])
+        except (TypeError, ValueError):
+            result = None
+    meta = {"run_id": row["run_id"], "query_fingerprint": row["query_fingerprint"],
+            "status": "READY" if result else "STALE",
+            "created_at": row["created_at"]}
+    if result is None:
+        meta["reason"] = "run 存在但结果快照未生成，禁止显示旧结果冒充本次查询"
+    return result, meta
+
+
+def _s08_api_response(section: str):
+    conn = get_conn()
+    try:
+        result, meta = _load_s08_run(conn)
+    finally:
+        conn.close()
+    payload = {"status": meta["status"], "run_meta": meta,
+               "query_context": (result or {}).get("query_context")}
+    if result:
+        payload[section] = (result.get("v41") or {}).get(section)
+    return payload
+
+
+@bp.get("/s08/api/overview")
+def s08_api_overview():
+    return _s08_api_response("overview")
+
+
+@bp.get("/s08/api/spatial-groups")
+def s08_api_spatial_groups():
+    return _s08_api_response("spatial_groups")
+
+
+@bp.get("/s08/api/patterns")
+def s08_api_patterns():
+    return _s08_api_response("patterns")
+
+
+@bp.get("/s08/api/pattern-evidence")
+def s08_api_pattern_evidence():
+    return _s08_api_response("pattern_evidence")
+
+
+@bp.get("/s08/api/day-detail")
+def s08_api_day_detail():
+    conn = get_conn()
+    try:
+        result, meta = _load_s08_run(conn)
+    finally:
+        conn.close()
+    device = request.args.get("device_id")
+    day = request.args.get("observed_date")
+    detail = {"status": meta["status"], "run_meta": meta,
+              "device_id": device, "observed_date": day}
+    if result:
+        detail["cell"] = next((cell for cell in result["v41"]["overview"]["cells"]
+                               if cell["device_id"] == device
+                               and cell["observed_date"] == day), None)
+        detail["time_curve"] = [point for point in result.get("time_curves", {}).get(device, [])
+                                if point.get("observed_date") == day]
+        detail["frames"] = [frame for frame in result.get("dynamics", {}).get("frames", [])
+                            if frame.get("timestamp_local", "").startswith(day)]
+        detail["source"] = {"dataset_id": result.get("dataset_id"),
+                            "run_id": result["run_id"],
+                            "note": "只返回本查询快照内的日值/时段；原始回波按权限另行定位，不自动下载"}
+    return detail
+
+
+@bp.get("/s08/api/compare")
+def s08_api_compare():
+    return _s08_api_response("compare")
+
+
+@bp.get("/s08/api/figure-export")
+def s08_api_figure_export():
+    conn = get_conn()
+    try:
+        result, meta = _load_s08_run(conn)
+    finally:
+        conn.close()
+    payload = {"status": meta["status"], "run_meta": meta,
+               "query_context": (result or {}).get("query_context"),
+               "export_contract": {
+                   "default_scope": "当前查询快照",
+                   "full_scope": "全部选中日期；用户主动选择后后台生成",
+                   "routes": {"page": "/s08", "animation": "POST /s08 action=export_animation"},
+               }}
+    if result:
+        payload["export_contract"].update({
+            "dataset_id": result.get("dataset_id"),
+            "n_dates": len(result["v41"]["overview"]["trend"]),
+            "default_groups": result["v41"]["spatial_groups"]["n_groups"],
+            "color_scale_id": result["v41"]["color_scale"]["color_scale_id"],
+            "dynamics_frames": len(result.get("dynamics", {}).get("frames", [])),
+        })
+    return payload
 
 
 def _origin_worker_thread(task_id: str, db_file: str, project_root: Path) -> None:

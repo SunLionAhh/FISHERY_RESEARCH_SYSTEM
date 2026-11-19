@@ -8,14 +8,14 @@
 | 项 | 值 |
 | --- | --- |
 | 项目名称 | FISHERY_RESEARCH_SYSTEM |
-| 规范版本 | **V4.0 — `FISHERY_FULL_PLAN_V4/` 整个包**（用户 19:13 确认「这是全部要求」、19:17 裁定「以 V4 为准」） |
+| 规范版本 | **V4.0 全包 `FISHERY_FULL_PLAN_V4/` + V4.1 增量包 `FISHERY_V4_1_CHANGES_ONLY/`**（2026-11-19 用户指向；V4.1 为增量条款，不覆盖 V4 完整规范） |
 | 历史基线 | `00_PROJECT_SPEC/` 三份 FINAL 1.5 同名 `.md` + `_source/` docx，**降级为只读对照，不作开发依据** |
-| 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
+| 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / V4.1 增量契约（`FISHERY_V4_1_CHANGES_ONLY/14`、`15`、`18`）→ 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
-| 当前阶段 | S11（**最终系统回归与预答辩验收完成**：13/13 验收章节 PASS；论文第三/四/五章数据包+方法/质量/预答辩索引齐全；PRE_DEFENSE 数据集 FROZEN；隔离恢复与离线测试 PASS；238 测试全过**，见 `STAGE_S11.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S11_ACCEPTED_FINAL + REMEDIATION_DONE_PENDING_REVERIFICATION**（用户已最终验收并建 tag `s11-accepted`；按独立再验收报告完成 D1/P2 整改，等待整改复验；不再新开阶段） |
+| 当前阶段 | S11 已签收；其后完成 **S08 任意组合增强** 与 **V4.1 增量 S08 相关硬要求**（共享 QueryContext、确定性分组≤9、统一色标、第三比较模式、五台规律卡空态、7 类接口），260 passed，见 `STAGE_S08.md` §10—§11 与 `CHANGELOG.md` 顶部 |
+| 当前状态 | **S11_ACCEPTED_FINAL + S08_V41_ENHANCEMENT_DONE_PENDING_ACCEPTANCE**（S11 及 D1/P2 整改已签收；S08 组合+V4.1 增量完成并全量回归，等待用户验收；P-01—P-32 非 S08 项保留 GAP） |
 | 预答辩目标 | 2027-01-20 |
-| 更新时间 | 2026-11-17（S11 完成：13/13 验收/论文包/PRE_DEFENSE 冻结/恢复离线） |
+| 更新时间 | 2026-11-19（V4.1 增量到位并按 S08 相关条款落地，260 passed） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
 
 ## 规范与文档
@@ -135,9 +135,9 @@
 | origin_job_id | 无（S09） |
 | dataset_id | `DATASET_01_DUAL_STATION` **FROZEN v5**（实际边界 2026-10-31—11-03，正式同步时间 NULL，5 个文件哈希/7 个 run 关联）；`DATASET_02_FIVE_STATION` PLANNED |
 | 最新 Git 提交 | S11 最终提交（见 `git log`；S10 为 `7ec58f6`）；tag **`s00-accepted`—`s11-accepted`** 全部建立 |
-| 最新测试结果 | pytest **251 passed**（250 + 方位角导入 1）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS；D1 5/5、P2 8/8 复验通过 |
+| 最新测试结果 | pytest **260 passed**（255 + V4.1 契约 5）；合成夹具 12 组分组、83.33% vs 70%、35/48≈72.9167%、+30pp/+75%、0/NA 四态、查询指纹隔离均 PASS；10 个双站+10 个三站+5 个四站+1 个五站组合切换重算 PASS；D1 5/5、P2 8/8 复验通过 |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/ACCEPTANCE_REMEDIATION_S03_S11.md`（D1/P2 整改复验）｜`ACCEPTANCE_S03_S11.md`（独立再验收）｜`STAGE_S11.md`（已签收） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S08.md` §10（任意组合增强）§11（V4.1 S08 增量待验收）｜`ACCEPTANCE_REMEDIATION_S03_S11.md`（D1/P2 整改复验）｜`ACCEPTANCE_S03_S11.md`（独立再验收）｜`STAGE_S11.md`（已签收） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置
@@ -158,7 +158,14 @@
 
 ## 下一步
 
-**2026-11-17 S11 已最终验收签收（tag `s11-accepted`）；S00—S11 全部完成，开发停止。** 详见 `STAGE_S11.md`：
+**2026-11-19 更新：S11 已最终验收签收（tag `s11-accepted`）；按用户新增要求已完成 S08 任意设备组合增强，当前等待该增强验收。** 详见 `STAGE_S08.md` §10：
+
+1. **组合选择**：`/s08` 与 CLI 支持 1—5 台任意组合，地图/热力图/时间曲线/动态时间轴/统计/动画导出联动更新。
+2. **比较与缺测**：两种多站模式、共同有效时段按当前组合重算；缺测保留 NA 与覆盖，逐台使用自身参数版本和硬截断。
+3. **双站几何**：站距、理论扇形覆盖、条件重叠面积、活动差异全部按当前设备对重算；缺坐标/朝向/参数保持 UNKNOWN。
+4. **留痕与验收**：`spatial_combination_runs` 保存 run 元数据；10+10+5+1 组合全枚举，全库 255 passed。
+
+**以下为 2026-11-17 S11 最终签收摘要（归档）**，详见 `STAGE_S11.md`：
 
 1. **验收**：14 章要求归并 13 组自动回归，13/13 PASS；覆盖真实数据、两阶段数据集、重叠、上传、参数、底界、环境、时空、规律、Origin、备份离线、论文交付。
 2. **冻结与论文**：PRE_DEFENSE 数据集 FROZEN；第三/四/五章数据包、方法、质量与预答辩索引六文件齐全，五站数据不足明确 BLOCKED。

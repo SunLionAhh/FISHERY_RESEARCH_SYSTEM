@@ -1,57 +1,83 @@
 {% extends "base.html" %}
-{% block title %}S03 每日统计与缺测{% endblock %}
+{% block title %}每日统计 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}每日统计{% endblock %}
+{% block page_actions %}<a class="btn" href="{{ url_for('web.daily_upload') }}">逐日上传</a>{% endblock %}
 {% block content %}
-<section class="card">
-  <h2>每日统计（所有指标来自硬掩码源）</h2>
-  <p class="muted">状态枚举：COMPLETE / PARTIAL / MISSING / QC_FAILED / UPLOADED_LATE / REPROCESSED / UNKNOWN / BLOCKED。缺测指标为 NA，不填 0。</p>
-  <table>
-    <thead><tr><th>设备</th><th>观测日</th><th>状态</th><th>原始记录</th><th>有效记录</th><th>区内样本</th><th>覆盖率</th><th>run_id</th></tr></thead>
-    <tbody>
-    {% for r in rows %}
+
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title">每日统计</h2>
+    <span class="section__meta">硬掩码源</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>设备</th><th>观测日</th><th>状态</th>
+        <th class="num">原始记录</th><th class="num">有效记录</th>
+        <th class="num">区内样本</th><th class="num">覆盖率</th><th>run_id</th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
       <tr>
-        <td>{{ r.device_id }}</td>
+        <td class="lead mono">{{ r.device_id }}</td>
         <td><a href="{{ url_for('web.daily_detail', device_id=r.device_id, observed_date=r.observed_date) }}">{{ r.observed_date }}</a></td>
-        <td><span class="badge {{ 'miss' if r.status in ('MISSING','BLOCKED','QC_FAILED') else 'ok' }}">{{ r.status }}</span></td>
-        <td>{{ r.raw_records if r.raw_records is not none else 'NA' }}</td>
-        <td>{{ r.valid_records if r.valid_records is not none else 'NA' }}</td>
-        <td>{{ r.kept_samples if r.kept_samples is not none else 'NA' }}</td>
-        <td>{{ '%.4f'|format(r.coverage_ratio) if r.coverage_ratio is not none else 'NA' }}</td>
-        <td class="muted">{{ r.run_id or 'NA' }}</td>
+        <td><span class="state {{ 'state--miss' if r.status in ('MISSING','BLOCKED','QC_FAILED') else 'state--ok' }}">{{ r.status }}</span></td>
+        <td class="num">{{ r.raw_records if r.raw_records is not none else 'NA' }}</td>
+        <td class="num">{{ r.valid_records if r.valid_records is not none else 'NA' }}</td>
+        <td class="num">{{ r.kept_samples if r.kept_samples is not none else 'NA' }}</td>
+        <td class="num">{{ '%.4f'|format(r.coverage_ratio) if r.coverage_ratio is not none else 'NA' }}</td>
+        <td class="mono muted">{{ r.run_id or 'NA' }}</td>
       </tr>
-    {% else %}
-      <tr><td colspan="8" class="muted">尚未上传任何观测日</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  <p><a class="btn" href="{{ url_for('web.daily_upload') }}">逐日上传</a></p>
-</section>
+      {% else %}
+      <tr><td colspan="8"><div class="empty">尚未上传任何观测日</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<section class="card">
-  <h2>冲突审查（同名异容 / 待导入）</h2>
-  <table>
-    <thead><tr><th>文件</th><th>设备</th><th>观测日</th><th>状态</th><th>备注</th></tr></thead>
-    <tbody>
-    {% for c in conflicts %}
-      <tr><td>{{ c.relative_path }}</td><td>{{ c.device_id }}</td><td>{{ c.observed_date or 'NA' }}</td>
-          <td>{{ c.status }}</td><td>{{ c.conflict_note or '—' }}</td></tr>
-    {% else %}
-      <tr><td colspan="5" class="muted">无待审查冲突</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">冲突审查</h2><span class="section__meta">同名异容 / 待导入</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>文件</th><th>设备</th><th>观测日</th><th>状态</th><th>备注</th></tr></thead>
+      <tbody>
+      {% for c in conflicts %}
+      <tr><td class="mono">{{ c.relative_path }}</td><td class="mono">{{ c.device_id }}</td><td class="mono">{{ c.observed_date or 'NA' }}</td>
+          <td><span class="state state--warn">{{ c.status }}</span></td><td>{{ c.conflict_note or '—' }}</td></tr>
+      {% else %}
+      <tr><td colspan="5"><div class="empty">无待审查冲突</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<section class="card">
-  <h2>最近分析任务（run_id / 配置快照）</h2>
-  <table>
-    <thead><tr><th>run_id</th><th>设备</th><th>状态</th><th>创建时间</th></tr></thead>
-    <tbody>
-    {% for run in runs %}
-      <tr><td class="muted">{{ run.run_id }}</td><td>{{ run.device_id }}</td><td>{{ run.status }}</td><td>{{ run.created_at }}</td></tr>
-    {% else %}
-      <tr><td colspan="4" class="muted">尚无任务</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">最近分析任务</h2><span class="section__meta">run_id / 配置快照</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>run_id</th><th>设备</th><th>状态</th><th>创建时间</th></tr></thead>
+      <tbody>
+      {% for run in runs %}
+      <tr><td class="mono muted">{{ run.run_id }}</td><td class="mono">{{ run.device_id }}</td>
+          <td><span class="state {{ 'state--ok' if run.status in ('OK','COMPLETE','DONE') else 'state--warn' }}">{{ run.status }}</span></td>
+          <td class="mono">{{ run.created_at }}</td></tr>
+      {% else %}
+      <tr><td colspan="4"><div class="empty">尚无任务</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>状态枚举：COMPLETE / PARTIAL / MISSING / QC_FAILED / UPLOADED_LATE / REPROCESSED / UNKNOWN / BLOCKED。所有指标来自硬掩码源，缺测指标为 <span class="na">NA</span>，不填 0。</p>
+  </div>
+</details>
 {% endblock %}

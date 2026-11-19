@@ -1,56 +1,97 @@
 {% extends "base.html" %}
+{% block title %}环境联合分析 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}环境联合分析{% endblock %}
 {% block content %}
-<h2>S05 环境—声学联合分析</h2>
-<p class="hint">候选时滞 0/1/2/3/6/12/24 小时全量输出；环境在前、声学在后。相关不等于因果；预报与派生代理资料不当作独立实测证据。</p>
-<form class="compare-form" method="post" action="/environment/analysis">
-  <label>设备（逗号分隔） <input name="devices" value="2000"></label>
-  <label>开始日期 <input name="start_date" placeholder="2026-10-31"></label>
-  <label>结束日期 <input name="end_date" placeholder="2026-11-03"></label>
-  <label>时区 <input name="timezone" value="Asia/Shanghai"></label>
-  <label>匹配容差（秒） <input name="tolerance" value="1800"></label>
-  <button>运行分析</button>
-</form>
+
+<div class="section">
+  <div class="card">
+    <form method="post" action="/environment/analysis" class="form-grid" style="align-items:end">
+      <div class="field"><label for="ea-dev">设备</label><div class="control"><input id="ea-dev" name="devices" value="2000" placeholder="2000,2001"></div></div>
+      <div class="field"><label for="ea-s">开始日期</label><div class="control"><input id="ea-s" name="start_date" placeholder="2026-10-31"></div></div>
+      <div class="field"><label for="ea-e">结束日期</label><div class="control"><input id="ea-e" name="end_date" placeholder="2026-11-03"></div></div>
+      <div class="field"><label for="ea-tz">时区</label><div class="control"><input id="ea-tz" name="timezone" value="Asia/Shanghai"></div></div>
+      <div class="field"><label for="ea-tol">匹配容差</label><div class="control"><input id="ea-tol" name="tolerance" value="1800"><span class="unit">s</span></div></div>
+      <div class="field" style="max-width:130px"><label>&nbsp;</label><button class="btn" type="submit">运行分析</button></div>
+    </form>
+  </div>
+</div>
+
 {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
 
 {% if result %}
-<h3>范围</h3>
-<p>分析 ID <code>{{ result.analysis_id }}</code>｜设备 {{ result.scope.devices | join(',') }}｜声学小时 {{ result.scope.n_acoustic_hours }}｜容差 {{ result.scope.tolerance_seconds }} s</p>
+<div class="section">
+  <div class="kv">
+    <div class="kv__item"><div class="kv__k">分析 ID</div><div class="kv__v sm mono" style="word-break:break-all">{{ result.analysis_id }}</div></div>
+    <div class="kv__item"><div class="kv__k">设备</div><div class="kv__v sm mono">{{ result.scope.devices | join(',') }}</div></div>
+    <div class="kv__item"><div class="kv__k">声学小时</div><div class="kv__v">{{ result.scope.n_acoustic_hours }}</div></div>
+    <div class="kv__item"><div class="kv__k">容差</div><div class="kv__v">{{ result.scope.tolerance_seconds }}<span class="u">s</span></div></div>
+    <div class="kv__item"><div class="kv__k">配对下钻</div><div class="kv__v">{{ result.environment_match_persisted }}<span class="u">行</span></div></div>
+  </div>
+</div>
 
-<h3>各环境变量可用性</h3>
-<table><thead><tr><th>变量</th><th>状态</th><th>观测数</th><th>有效配对</th><th>质量标记</th><th>说明</th></tr></thead><tbody>
-{% for key, v in result.variables.items() %}
-<tr><td>{{ key }}</td><td>{{ v.status }}</td><td>{{ v.n_observations or 0 }}</td><td>{{ v.n_pairs or 0 }}</td>
-<td>{{ (v.quality_flags or []) | join(',') }}</td>
-<td>{{ v.reason or v.proxy_warning or v.tide_note or v.wind_direction or '—' }}</td></tr>
-{% endfor %}
-</tbody></table>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">各环境变量可用性</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>变量</th><th>状态</th><th class="num">观测数</th><th class="num">有效配对</th><th>质量标记</th><th>说明</th></tr></thead>
+      <tbody>
+      {% for key, v in result.variables.items() %}
+      <tr><td class="lead mono">{{ key }}</td><td><span class="state {{ 'state--ok' if v.status == 'OK' else 'state--na' }}">{{ v.status }}</span></td>
+        <td class="num">{{ v.n_observations or 0 }}</td><td class="num">{{ v.n_pairs or 0 }}</td>
+        <td>{{ (v.quality_flags or []) | join(',') }}</td>
+        <td>{{ v.reason or v.proxy_warning or v.tide_note or v.wind_direction or '—' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<h3>候选时滞（含置信区间与 Holm 校正）</h3>
-{% for key, block in result.lag_analysis.items() %}
-<h4>{{ key }}</h4>
-{% if block.status == 'BLOCKED' %}<p class="error-box">{{ block.reason }}</p>{% else %}
-<table><thead><tr><th>滞后(h)</th><th>配对数</th><th>有效样本</th><th>r</th><th>95% CI</th><th>p</th><th>p_Holm</th><th>状态</th></tr></thead><tbody>
-{% for r in block.results %}<tr><td>{{ r.lag_hours }}</td><td>{{ r.n_pairs }}</td><td>{{ r.n_eff or '—' }}</td><td>{{ r.r if r.r is not none else 'NA' }}</td><td>{{ r.ci95 | join(' ~ ') if r.ci95 and r.ci95[0] is not none else 'NA' }}</td><td>{{ r.p_two_sided if r.p_two_sided is not none else 'NA' }}</td><td>{{ r.p_holm if r.p_holm is not none else 'NA' }}</td><td>{{ r.status }}</td></tr>{% endfor %}
-</tbody></table>
-<p class="hint">{{ block.lag_direction }}｜搜索范围 {{ block.search_range_hours | join(', ') }} 小时｜{{ block.note }}</p>
+<div class="section">
+  <div class="section__head"><h2 class="section__title">候选时滞</h2><span class="section__meta">置信区间与 Holm 校正</span></div>
+  {% for key, block in result.lag_analysis.items() %}
+  <div style="margin-bottom:24px">
+    <div class="form-section__title">{{ key }}</div>
+    {% if block.status == 'BLOCKED' %}<div class="error-box">{{ block.reason }}</div>
+    {% else %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">滞后 <span class="u">h</span></th><th class="num">配对数</th><th class="num">有效样本</th><th class="num">r</th><th>95% CI</th><th class="num">p</th><th class="num">p_Holm</th><th>状态</th></tr></thead>
+        <tbody>
+        {% for r in block.results %}<tr><td class="num">{{ r.lag_hours }}</td><td class="num">{{ r.n_pairs }}</td><td class="num">{{ r.n_eff or '—' }}</td>
+          <td class="num">{{ r.r if r.r is not none else 'NA' }}</td><td class="mono">{{ r.ci95 | join(' ~ ') if r.ci95 and r.ci95[0] is not none else 'NA' }}</td>
+          <td class="num">{{ r.p_two_sided if r.p_two_sided is not none else 'NA' }}</td><td class="num">{{ r.p_holm if r.p_holm is not none else 'NA' }}</td><td>{{ r.status }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section">
+  <div class="section__head"><h2 class="section__title">扩展分析</h2></div>
+  <details class="notes" style="margin-top:0;border-top:0;padding-top:0" open>
+    <summary>风向圆周量 · 潮汐相位 · 风速变化 · 多站关联 · 多因素联合</summary>
+    <div class="notes__body">
+      <div class="form-section__title">风向圆周量 sin / cos</div><pre style="margin-bottom:20px">{{ result.variables.WIND_DIRECTION.circular_statistics | tojson(indent=2) }}</pre>
+      <div class="form-section__title">潮汐相位、高低潮窗口与变化率</div><pre style="margin-bottom:20px">{{ result.tide_analysis | tojson(indent=2) }}</pre>
+      <div class="form-section__title">风速变化前后对照</div><pre style="margin-bottom:20px">{{ result.wind_change_analysis | tojson(indent=2) }}</pre>
+      <div class="form-section__title">多站同期关联</div><pre style="margin-bottom:20px">{{ result.multi_station_association | tojson(indent=2) }}</pre>
+      <div class="form-section__title">多因素联合</div><pre>{{ result.joint_analysis | tojson(indent=2) }}</pre>
+    </div>
+  </details>
+  <div class="error-box" style="margin-top:18px">{{ result.disclaimer }}</div>
+</div>
 {% endif %}
-{% endfor %}
 
-<h3>风向圆周量（sin/cos）</h3>
-<pre>{{ result.variables.WIND_DIRECTION.circular_statistics | tojson(indent=2) }}</pre>
+{% endblock %}
 
-<h3>潮汐相位、高低潮窗口与变化率</h3>
-<pre>{{ result.tide_analysis | tojson(indent=2) }}</pre>
-
-<h3>风速变化前后对照</h3>
-<pre>{{ result.wind_change_analysis | tojson(indent=2) }}</pre>
-
-<h3>多站同期关联</h3>
-<pre>{{ result.multi_station_association | tojson(indent=2) }}</pre>
-
-<h3>多因素联合</h3>
-<pre>{{ result.joint_analysis | tojson(indent=2) }}</pre>
-<p>配对下钻已写入 environment_match：{{ result.environment_match_persisted }} 行（analysis_id={{ result.analysis_id }}）。</p>
-<p class="error-box">{{ result.disclaimer }}</p>
-{% endif %}
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>候选时滞 0 / 1 / 2 / 3 / 6 / 12 / 24 小时全量输出；环境在前、声学在后。相关不等于因果；预报与派生代理资料不当作独立实测证据。</p>
+    <p>配对下钻写入 environment_match，按 analysis_id 归档。</p>
+  </div>
+</details>
 {% endblock %}

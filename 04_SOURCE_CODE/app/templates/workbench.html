@@ -1,43 +1,144 @@
 {% extends "base.html" %}
+{% block title %}科研工作台 · 渔业声学监测科研分析系统{% endblock %}
+{% block page_title %}科研工作台{% endblock %}
+{% block page_actions %}
+  <a class="btn btn--ghost btn--sm" href="/workbench/export.csv{{ '?' + request.query_string.decode() if request.query_string else '' }}">导出 CSV</a>
+  <a class="btn btn--ghost btn--sm" href="/workbench/report.md{{ '?' + request.query_string.decode() if request.query_string else '' }}">报告 MD</a>
+  <a class="btn btn--quiet btn--sm" href="{{ url_for('web.workbench_backups') }}">备份与恢复</a>
+{% endblock %}
 {% block content %}
-<h2>S10 完整科研工作台</h2>
-<p class="hint">中文界面；31 类入口统一导航。全局选择（设备/日期/研究阶段）传入下方联动视图与导出；所有入口均展示人工截断及版本、数据质量、缺测与阻断原因。默认仅绑定 127.0.0.1，不对外暴露。</p>
 
-<form class="compare-form" method="get">
-  <label>设备 <select name="device"><option value="">全部五站</option>{% for d in ctx.devices %}<option value="{{ d.device_id }}" {% if ctx.selected_device == d.device_id %}selected{% endif %}>{{ d.device_id }}{% if not d.registered %}（未登记）{% endif %}</option>{% endfor %}</select></label>
-  <label>开始日期 <select name="start"><option value="">不限</option>{% for d in ctx.dates %}<option value="{{ d }}" {% if ctx.selected_start == d %}selected{% endif %}>{{ d }}</option>{% endfor %}</select></label>
-  <label>结束日期 <select name="end"><option value="">不限</option>{% for d in ctx.dates %}<option value="{{ d }}" {% if ctx.selected_end == d %}selected{% endif %}>{{ d }}</option>{% endfor %}</select></label>
-  <label>研究阶段 <select name="stage"><option value="">全部</option>{% for s in ctx.stages %}<option value="{{ s.dataset_id }}" {% if ctx.selected_stage == s.dataset_id %}selected{% endif %}>{{ s.dataset_id }}（{{ s.status or 'UNKNOWN' }}）</option>{% endfor %}</select></label>
-  <button>应用全局选择</button>
-</form>
-
-<h3>人工截断与版本（所有分析/导出入口统一口径）</h3>
-<table><thead><tr><th>设备</th><th>人工截断斜距(m)</th><th>版本</th><th>生效</th><th>状态</th></tr></thead><tbody>
-{% for c in ctx.cutoffs %}<tr><td>{{ c.device_id }}</td><td>{{ c.cutoff_m if c.cutoff_m is not none else 'UNKNOWN' }}</td><td>{{ c.version or 'UNKNOWN' }}</td><td>{{ c.effective_from or 'UNKNOWN' }}</td><td>{{ c.status }}</td></tr>{% endfor %}
-</tbody></table>
-
-<h3>数据质量与阻断概览</h3>
-<table><thead><tr><th>COMPLETE 日</th><th>MISSING 日</th><th>QC_FAILED 日</th><th>UNKNOWN 日</th><th>BLOCKED 项</th><th>无 GPS 站位</th></tr></thead><tbody>
-<tr><td>{{ ctx.quality.complete_days }}</td><td>{{ ctx.quality.missing_days }}</td><td>{{ ctx.quality.qc_failed_days }}</td><td>{{ ctx.quality.unknown_days }}</td><td>{{ ctx.quality.blocked_items }}</td><td>{{ ctx.quality.stations_without_gps }}</td></tr>
-</tbody></table>
-
-<h3>31 类工作台入口</h3>
-<div class="card entry-grid">
-{% for e in ctx.entries %}
-  <a class="entry" href="{{ e.url_q }}"><strong>{{ e.id }}. {{ e.name }}</strong><br><span class="muted">{{ e.group }}｜{{ e.stage }}</span></a>
-{% endfor %}
+<div class="section">
+  <div class="kpis">
+    <div class="kpi"><div class="kpi__v is-accent">{{ ctx.quality.complete_days }}</div><div class="kpi__k">COMPLETE 日</div></div>
+    <div class="kpi"><div class="kpi__v {{ 'is-miss' if ctx.quality.missing_days else '' }}">{{ ctx.quality.missing_days }}</div><div class="kpi__k">MISSING 日</div></div>
+    <div class="kpi"><div class="kpi__v {{ 'is-miss' if ctx.quality.qc_failed_days else '' }}">{{ ctx.quality.qc_failed_days }}</div><div class="kpi__k">QC_FAILED 日</div></div>
+    <div class="kpi"><div class="kpi__v">{{ ctx.quality.unknown_days }}</div><div class="kpi__k">UNKNOWN 日</div></div>
+    <div class="kpi"><div class="kpi__v {{ 'is-miss' if ctx.quality.blocked_items else '' }}">{{ ctx.quality.blocked_items }}</div><div class="kpi__k">BLOCKED 项</div></div>
+    <div class="kpi"><div class="kpi__v">{{ ctx.quality.stations_without_gps }}</div><div class="kpi__k">无 GPS 站位</div></div>
+  </div>
 </div>
-<style>
-.entry-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; }
-.entry { display:block; padding:8px 10px; border:1px solid #E8E8E8; border-radius:4px; text-decoration:none; color:#2B2B2B; background:#FFFFFF; }
-.entry:hover { border-color:#0271AC; }
-</style>
 
-<h3>跨模块联动视图（图表同源）</h3>
-<p>口径：每日统计状态/覆盖率/活动率 + S05 环境模型历史行数 + S09 正式图数量；缺测显示 NA，不填 0。</p>
-<table><thead><tr><th>设备</th><th>日期</th><th>状态</th><th>覆盖率</th><th>活动率(次/h)</th><th>环境历史行</th><th>正式图</th><th>缺测</th></tr></thead><tbody>
-{% for r in rows %}<tr><td>{{ r.device_id }}</td><td>{{ r.observed_date }}</td><td>{{ r.status }}</td><td>{{ r.coverage_ratio }}</td><td>{{ r.rate_per_hour | round(3) if r.rate_per_hour is not none else 'NA' }}</td><td>{{ r.env_model_historical_rows }}</td><td>{{ r.figures_ok }}</td><td>{{ r.missing or '—' }}</td></tr>
-{% else %}<tr><td colspan="8">所选设备/日期无 daily_statistics 记录</td></tr>{% endfor %}
-</tbody></table>
-<p><a href="/workbench/export.csv{{ '?' + request.query_string.decode() if request.query_string else '' }}">导出联动 CSV</a> ｜ <a href="/workbench/report.md{{ '?' + request.query_string.decode() if request.query_string else '' }}">导出报告 MD</a> ｜ <a href="/workbench/backups">备份与恢复</a></p>
+<div class="section">
+  <form method="get" class="form-grid" style="align-items:end">
+    <div class="field">
+      <label for="wb-device">设备</label>
+      <div class="control"><select id="wb-device" name="device">
+        <option value="">全部五站</option>
+        {% for d in ctx.devices %}<option value="{{ d.device_id }}" {% if ctx.selected_device == d.device_id %}selected{% endif %}>{{ d.device_id }}{{ '（未登记）' if not d.registered else '' }}</option>{% endfor %}
+      </select></div>
+    </div>
+    <div class="field">
+      <label for="wb-start">开始</label>
+      <div class="control"><select id="wb-start" name="start">
+        <option value="">不限</option>
+        {% for d in ctx.dates %}<option value="{{ d }}" {% if ctx.selected_start == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select></div>
+    </div>
+    <div class="field">
+      <label for="wb-end">结束</label>
+      <div class="control"><select id="wb-end" name="end">
+        <option value="">不限</option>
+        {% for d in ctx.dates %}<option value="{{ d }}" {% if ctx.selected_end == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select></div>
+    </div>
+    <div class="field">
+      <label for="wb-stage">研究阶段</label>
+      <div class="control"><select id="wb-stage" name="stage">
+        <option value="">全部</option>
+        {% for s in ctx.stages %}<option value="{{ s.dataset_id }}" {% if ctx.selected_stage == s.dataset_id %}selected{% endif %}>{{ s.dataset_id }}</option>{% endfor %}
+      </select></div>
+    </div>
+    <div class="field" style="max-width:120px"><label>&nbsp;</label><button class="btn" type="submit">应用</button></div>
+  </form>
+</div>
+
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title"><span class="ord">01</span>人工截断与版本</h2>
+    <span class="section__meta">所有分析 / 导出统一口径</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>设备</th><th class="num">人工截断斜距 <span class="u">m</span></th><th>版本</th><th>生效</th><th>状态</th></tr></thead>
+      <tbody>
+      {% for c in ctx.cutoffs %}
+      <tr>
+        <td class="lead mono">{{ c.device_id }}</td>
+        <td class="num">{% if c.cutoff_m is not none %}{{ c.cutoff_m }}{% else %}<span class="na">NA</span>{% endif %}</td>
+        <td class="mono">{{ c.version or '—' }}</td>
+        <td class="mono">{{ c.effective_from or '—' }}</td>
+        <td><span class="state {{ 'state--ok' if c.status == 'OK' else 'state--na' }}">{{ c.status }}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title"><span class="ord">02</span>31 类工作台入口</h2>
+  </div>
+  {% for group, items in ctx.entries | groupby('group') %}
+  <div style="margin-bottom:20px">
+    <div class="form-section__title">{{ group }}</div>
+    <div class="entries">
+      {% for e in items %}
+      <a class="entry" href="{{ e.url_q }}">
+        <span class="entry__id">{{ "%02d"|format(e.id) }}</span>
+        <span class="entry__name">{{ e.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section">
+  <div class="section__head">
+    <h2 class="section__title"><span class="ord">03</span>跨模块联动视图</h2>
+    <span class="section__meta">图表同源</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>设备</th><th>日期</th><th>状态</th>
+        <th class="num">覆盖率</th>
+        <th class="num">活动率 <span class="u">次/h</span></th>
+        <th class="num">环境历史行</th>
+        <th class="num">正式图</th>
+        <th>缺测</th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="lead mono">{{ r.device_id }}</td>
+        <td class="mono">{{ r.observed_date }}</td>
+        <td><span class="state {{ 'state--ok' if r.status == 'COMPLETE' else 'state--miss' }}">{{ r.status }}</span></td>
+        <td class="num">{{ r.coverage_ratio }}</td>
+        <td class="num">{{ r.rate_per_hour | round(3) if r.rate_per_hour is not none else 'NA' }}</td>
+        <td class="num">{{ r.env_model_historical_rows }}</td>
+        <td class="num">{{ r.figures_ok }}</td>
+        <td>{% if r.missing %}<span class="na">NA</span>{% else %}—{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty">所选设备 / 日期无 daily_statistics 记录</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block notes %}
+<details class="notes">
+  <summary>口径与约束</summary>
+  <div class="notes__body">
+    <p>全局选择（设备 / 日期 / 研究阶段）传入联动视图与导出；所有入口均展示人工截断及版本、数据质量、缺测与阻断原因。</p>
+    <p>联动口径：每日统计状态 / 覆盖率 / 活动率 + S05 环境模型历史行数 + S09 正式图数量；缺测显示 <span class="na">NA</span>，不填 0。</p>
+    <p>默认仅绑定 127.0.0.1，不对外暴露。</p>
+  </div>
+</details>
 {% endblock %}
