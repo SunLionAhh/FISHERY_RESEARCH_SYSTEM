@@ -42,7 +42,7 @@ S11 新增 5 项测试：最终验收证据完整性、真实库 13 章节回归
 | 十 规律识别 | PASS | S07 规律版本与 L0—L3 等级留痕，真实结果 L1，无越级 |
 | 十一 Origin | PASS | COM/绘图/OPJU/重开/PNG-PDF-SVG 闭环任务均 OK |
 | 十二 备份和离线 | PASS | 阶段备份 SHA-256 可见；禁用 socket 后 CSV 解析与工作台入口仍可用；恢复到隔离路径 PASS |
-| 十三 论文交付 | PASS | 六个论文交付文件存在；PRE_DEFENSE FROZEN |
+| 十三 论文交付 | PASS | 六个论文交付文件存在；PRE_DEFENSE FROZEN；整改后新增 `13_FROZEN_VERSIONS/PRE_DEFENSE/` 逐文件副本与 SHA-256 清单 |
 
 完整逐项 JSON：`10_TEST_REPORTS/s11_verification/final_acceptance.json`。无失败章节。
 
@@ -110,5 +110,9 @@ S11 新增 5 项测试：最终验收证据完整性、真实库 13 章节回归
 4. 需要重算或分析时分别进入每日统计、任意比较、环境、日内、S07—S09 页面；所有结果都有 run/版本与证据归档。
 5. 备份与恢复：在 `/workbench/backups` 核对 SHA-256；真正覆盖运行库前需停止 Flask、另做当前库备份并取得用户授权。
 6. 最终验收后请确认是否接受 S11；系统停在最终验收状态，不再自动进入后续阶段。
+
+## 11. 再验收整改（P2-7）
+
+独立复核指出 `13_FROZEN_VERSIONS/` 为空、文件级冻结缺失。整改后新增 `s11_acceptance.build_file_freeze_manifest()`：把 13_FROZEN_VERSIONS/PRE_DEFENSE/ 作为冻结副本根目录，按固定 glob 复制正式库、S03 索引、S09 正式图 CSV/PNG/PDF/SVG、动画/Origin 导出、S08 统计表、S10 联动导出、论文六文件与 STAGE_S00—S11，逐文件计算源/副本 SHA-256 并写入 `FROZEN_FILE_MANIFEST.csv` 与 `.json`；`verify_sections()` 第十三章新增“文件级冻结清单存在且副本一致”检查。
 
 **结论：S11 的 14 项最终验收要求均有代码、真实数据、报告或明确 BLOCKED 说明；13/13 自动章节 PASS、238 测试 PASS、PRE_DEFENSE FROZEN。用户已最终验收并签收（tag `s11-accepted`），开发到此停止。**

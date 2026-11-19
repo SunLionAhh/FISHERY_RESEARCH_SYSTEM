@@ -36,8 +36,21 @@
 {% endif %}
 {% endfor %}
 
+<h3>风向圆周量（sin/cos）</h3>
+<pre>{{ result.variables.WIND_DIRECTION.circular_statistics | tojson(indent=2) }}</pre>
+
+<h3>潮汐相位、高低潮窗口与变化率</h3>
+<pre>{{ result.tide_analysis | tojson(indent=2) }}</pre>
+
+<h3>风速变化前后对照</h3>
+<pre>{{ result.wind_change_analysis | tojson(indent=2) }}</pre>
+
+<h3>多站同期关联</h3>
+<pre>{{ result.multi_station_association | tojson(indent=2) }}</pre>
+
 <h3>多因素联合</h3>
 <pre>{{ result.joint_analysis | tojson(indent=2) }}</pre>
+<p>配对下钻已写入 environment_match：{{ result.environment_match_persisted }} 行（analysis_id={{ result.analysis_id }}）。</p>
 <p class="error-box">{{ result.disclaimer }}</p>
 {% endif %}
 {% endblock %}

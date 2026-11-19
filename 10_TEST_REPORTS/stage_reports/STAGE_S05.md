@@ -29,7 +29,7 @@
 - 单位换算登记为白名单：风速 m/s、km/h、mph、knot；潮位 m/cm/mm；温度 °C；风向度。未登记单位直接拒绝（如 `m/h`），不静默猜测。
 - 预览不写库；`commit_import` 单事务：批次行先落、观测后落、最后回写计数；原文件按批次归档并记 SHA-256、大小、字段映射、时区、逐行问题。
 - 质量标记：`OK / MODEL_HISTORICAL / FORECAST / DERIVED / SUSPECT`。**预报只登记不参与分析**；重复键不覆盖；同键不同值记来源冲突并保留原值。
-- 五张表全部建立；`environment_match` 记录声学时刻、观测 obs_id、时滞、时间差、容差与方法，供结果下钻。
+- 五张表全部建立；独立复核时 `environment_match` 为死表（0 行、无读写）。整改后由 `environment_analysis.persist_matches()` 在每次 `run()` 写入声学时刻、观测 obs_id、时滞、时间差、容差与方法，供结果下钻；同一 analysis_id 重跑先清旧行。
 
 **真实导入**：`ENV-WIND-OPENMETEO`（Open-Meteo 逐小时风速 XLSX，网格 27.87346°N/121.11486°E，10 m 高度）288 行全部接受，其中 **168 行 `MODEL_HISTORICAL`、120 行 `FORECAST`（已排除）**；批次 `ENV-B373122FA489`，归档 SHA 与原文件一致。
 
@@ -38,12 +38,12 @@
 - 独立水温文件目录为空。为不丢失真实水温信息，从同一批声学 CSV 的 `water_temp_mean` 按日跨设备平均派生 4 行代理（`10_TEST_REPORTS/s05_verification/water_temp_proxy.csv`），来源登记 `kind=DERIVED`、质量标记 `DERIVED`，导入批次 `ENV-D8F7C909B208`。
 - 报告与网页明确写入：**“同源派生代理，不是独立环境观测；仅作同源描述，不能作为独立环境证据”**。
 - 真实 4 个日均水温点只能与小时声学配出 5 对，所有时滞结果标 `UNCERTAIN` 或 `INSUFFICIENT_PAIRS`，未据此下任何水温结论。
-- 10—22/22—23/23—24/>24 °C 分箱、不同站位温度关联的机制与测试已实现；无独立多站温度数据时不出结论。
+- 原分箱为 `(-∞,21)/[21,22)/[22,23)/[23,∞)`，与早期报告所称 `10—22/22—23/23—24/>24` 不符；整改后改为 `(-∞,10)/[10,22)/[22,23)/[23,24)/[24,∞)`，与规范一致。多站同期关联为整改新增 `multi_station_association()`，无独立多站温度数据时返回 `INSUFFICIENT_STATIONS`，不出结论。
 
 ## 3. 任务四、五：潮汐与风速
 
-- 潮汐：`01_ORIGINAL_DATA/ENVIRONMENT/TIDE/潮汐.zip` 只有 11 张 PNG 曲线截图，无数值表、无潮位基准面。按 S00/S02 既有裁定**不做图像估读**，潮汐高度、涨落潮、高低潮附近变化、潮位变化速度全部 `BLOCKED`，并记录“潮位不等于流速”。
-- 风速：真实风速文件没有风向列，风向分析 `BLOCKED`（圆周量处理与 sin/cos 接口已写好，但没有数据不生成方向结论）。风速分级、前后变化与滞后分析基于 168 条模型历史小时值。
+- 潮汐：`01_ORIGINAL_DATA/ENVIRONMENT/TIDE/潮汐.zip` 只有 11 张 PNG 曲线截图，无数值表、无潮位基准面。按 S00/S02 既有裁定**不做图像估读**，真实潮位数值结果仍 BLOCKED；整改新增 `tide_analysis()` 已实现涨落潮相位、高低潮窗口与潮位变化率的**机制**，无数值时返回 BLOCKED，并把“潮位不是流速；不推断水团运动”写入所有产物（不再是不可达分支）。
+- 风速：真实风速文件没有风向列，真实风向结论仍 `BLOCKED`。整改后 `circular_statistics()` 已实现 sin/cos 圆周量处理，联合模型把 `WIND_DIRECTION` 拆成 sin/cos 两列纳入设计矩阵，不再硬编码排除；无数据时只报告 BLOCKED，不生成方向结论。风速分级、变化前后分组与滞后分析基于 168 条模型历史小时值。
 - 真实结果（`ENV-B3E5F0384B42`，设备 2000/2001，2026-10-31—11-03，120 个有效声学小时）：
   - 候选时滞 0/1/2/3/6/12/24 h **全部 7 组均输出**，每组 120 对、有效样本 22—23（已按 lag-1 自相关折减）；
   - r 介于 −0.177 ~ −0.096，Fisher z 95% CI 均跨 0，Holm 校正后 p=1.0；**结论：现有资料无风速—声学关联的证据，不是“无关联证明”**；
@@ -59,8 +59,8 @@
 ## 5. 任务八：自动获取
 
 - 评估三个候选适配器（Open-Meteo Marine、NOAA CO-OPS、本地 CSV 轮询），逐项登记空间覆盖、时间分辨率、单位、实测/预报属性、许可/授权、API 限制及未核实原因，全部 `BLOCKED`；`enabled_adapters=[]`。
-- 可插拔接口契约已给出（`validate` / `fetch` / `to_observation`），未实现网络请求；`fetch-attempt` 只写 `environment_fetch_log`。真实例 `FETCH-FE91F63EA6` 状态 `BLOCKED`，原因含“当前风速文件已来自 Open-Meteo 模型，不能重复当独立实测”。
-- 自动数据即使将来启用，也因 `(source_id, variable, location_key, observed_at_utc)` 唯一键与来源隔离，**不能覆盖手动导入数据**。
+- 整改前只有一段字符串接口契约，无定时/重试/缓存/历史补取代码；整改后通过 `0012_s05_automation.sql` 增加 `environment_adapter_registry`、`environment_fetch_schedule`、`environment_fetch_cache`、`environment_fetch_retry` 四表，并实现 `register_adapter`、`configure_schedule`、`fetch_with_retry`、`run_due_schedules`、`backfill_history`、`cached_fetch`。适配器默认 `BLOCKED`，未取得用户书面授权不会启用或联网。
+- 真实例 `FETCH-FE91F63EA6` 状态 `BLOCKED`，原因含“当前风速文件已来自 Open-Meteo 模型，不能重复当独立实测”。自动数据即使将来启用，也因 `(source_id, variable, location_key, observed_at_utc)` 唯一键与来源隔离，**不能覆盖手动导入数据**。
 
 ## 6. 任务九：测试与证据
 
@@ -88,7 +88,7 @@
 1. 潮汐无数值表、风向无列、独立水温文件缺失：三项 BLOCKED，不能用截图估读或同源代理冒充独立观测。
 2. 风速来自数值气象模型，历史时段也不是现场实测；不能作为“实测风场”结论。
 3. 真实有效日只有 5 个（2000 的四日 + 2001 的一日），联合模型样本量小，R² 极低；任何“无关联”都只表示现有数据不支持。
-4. 自动获取未联网、未配置凭证，只有评估与阻断日志；不得写成已可用的自动数据通道。
+4. 自动获取框架已具备注册/定时/重试/缓存/历史补取能力，但未联网、未配置凭证、无 ENABLED 适配器；不得写成已可用的自动数据通道。
 5. 声学侧只使用 S03 硬掩码后的小时候选事件数，未重新读取原始回波；水层与底界 QC 属 S07，本阶段不输出。
 
 **结论：S05 九项任务均已实现或按数据条件明确 BLOCKED；停在 S05 等验收，未开始 S06。**

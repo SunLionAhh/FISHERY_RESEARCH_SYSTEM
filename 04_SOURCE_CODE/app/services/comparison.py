@@ -331,7 +331,10 @@ def _make_window(row, criteria: Criteria, hours: list[int] | None,
         current_hours = [h for h in hours if h >= criteria.hour_start]
         next_hours = [h for h in hours if h < criteria.hour_start]
         next_row = row_lookup.get((row["device_id"], next_date))
-        partial = next_row is None
+        next_usable = (next_row is not None
+                       and next_row["status"] not in (ds.STATUS_MISSING, ds.STATUS_BLOCKED,
+                                                      ds.STATUS_QC_FAILED, ds.STATUS_UNKNOWN))
+        partial = not next_usable
         if partial:
             hours = current_hours
             next_hours = []
@@ -389,7 +392,8 @@ def _make_window(row, criteria: Criteria, hours: list[int] | None,
     if wraps:
         notes.append(f"跨午夜窗口的 [0,{criteria.hour_end}) 小时取自次日 {next_date} 的统计行，归属起始日，不重复计入次日窗口")
     if partial:
-        notes.append(f"跨午夜窗口次日 {next_date} 无统计行，只计入起始日可得小时（partial=true）")
+        reason = ("无统计行" if next_row is None else f"统计行状态为 {next_row['status']}")
+        notes.append(f"跨午夜窗口次日 {next_date} {reason}，只计入起始日可得小时（partial=true）")
     if not full_day:
         notes.append("子窗口无小时级直方图与水温，信号分布/水温指标为 NA（不伪造）")
     if peak_value is None:

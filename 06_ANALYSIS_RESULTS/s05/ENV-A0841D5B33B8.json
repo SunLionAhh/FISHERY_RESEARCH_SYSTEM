@@ -1,0 +1,497 @@
+{
+  "analysis_id": "ENV-A0841D5B33B8",
+  "generated_at": "2026-11-17T16:09:29+00:00Z",
+  "scope": {
+    "devices": [
+      "2000",
+      "2001"
+    ],
+    "start_date": "2026-10-31",
+    "end_date": "2026-11-03",
+    "timezone": "Asia/Shanghai",
+    "tolerance_seconds": 1800,
+    "n_acoustic_hours": 120,
+    "location_keys": {
+      "WIND_SPEED": "SOURCE_GRID",
+      "WIND_DIRECTION": "SOURCE_GRID",
+      "WATER_TEMP": "DEFAULT",
+      "TIDE_HEIGHT": "DEFAULT"
+    }
+  },
+  "variables": {
+    "WATER_TEMP": {
+      "variable": "WATER_TEMP",
+      "location_key": "DEFAULT",
+      "status": "OK",
+      "n_observations": 4,
+      "quality_flags": [
+        "DERIVED"
+      ],
+      "n_pairs": 5,
+      "bins": [
+        {
+          "bin": "[-inf,10)",
+          "n": 0,
+          "mean_acoustic": null
+        },
+        {
+          "bin": "[10,22)",
+          "n": 2,
+          "mean_acoustic": 825.5
+        },
+        {
+          "bin": "[22,23)",
+          "n": 3,
+          "mean_acoustic": 558.666667
+        },
+        {
+          "bin": "[23,24)",
+          "n": 0,
+          "mean_acoustic": null
+        },
+        {
+          "bin": "[24,+∞)",
+          "n": 0,
+          "mean_acoustic": null
+        }
+      ],
+      "proxy_warning": "数据来源于声学 CSV 派生代理，不是独立环境观测；仅作同源描述，不能作为独立环境证据"
+    },
+    "TIDE_HEIGHT": {
+      "variable": "TIDE_HEIGHT",
+      "status": "BLOCKED",
+      "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值",
+      "n_observations": 0,
+      "tide_note": "潮位不是流速；涨落潮/高低潮/潮位变化率只由潮位数值派生，不推断水团运动或流向"
+    },
+    "WIND_SPEED": {
+      "variable": "WIND_SPEED",
+      "location_key": "SOURCE_GRID",
+      "status": "OK",
+      "n_observations": 168,
+      "quality_flags": [
+        "MODEL_HISTORICAL"
+      ],
+      "n_pairs": 120,
+      "bins": [
+        {
+          "bin": "[0,2)",
+          "n": 1,
+          "mean_acoustic": 249.0
+        },
+        {
+          "bin": "[2,4)",
+          "n": 10,
+          "mean_acoustic": 588.0
+        },
+        {
+          "bin": "[4,6)",
+          "n": 58,
+          "mean_acoustic": 1363.344828
+        },
+        {
+          "bin": "[6,8)",
+          "n": 30,
+          "mean_acoustic": 827.366667
+        },
+        {
+          "bin": "[8,+∞)",
+          "n": 21,
+          "mean_acoustic": 622.285714
+        }
+      ],
+      "proxy_warning": null
+    },
+    "WIND_DIRECTION": {
+      "variable": "WIND_DIRECTION",
+      "status": "BLOCKED",
+      "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值",
+      "n_observations": 0,
+      "circular_statistics": {
+        "status": "NO_DATA",
+        "mean_direction_deg": null,
+        "resultant_length": null
+      }
+    }
+  },
+  "lag_analysis": {
+    "WATER_TEMP": {
+      "variable": "WATER_TEMP",
+      "location_key": "DEFAULT",
+      "timezone": "Asia/Shanghai",
+      "tolerance_seconds": 1800,
+      "lag_direction": "环境在前，声学在后（lag>0）",
+      "search_range_hours": [
+        0,
+        1,
+        2,
+        3,
+        6,
+        12,
+        24
+      ],
+      "results": [
+        {
+          "r": -0.508256,
+          "ci95": [
+            -0.960031,
+            0.678082
+          ],
+          "p_two_sided": 0.4280749470436059,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 0,
+          "n_pairs": 5,
+          "n_eff": 5,
+          "autocorr_lag1": [
+            0.2367,
+            -0.4725
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "UNCERTAIN",
+          "direction": "SYNCHRONOUS",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.080296,
+          "ci95": [
+            -0.898888,
+            0.863122
+          ],
+          "p_two_sided": 0.9093958603524981,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 1,
+          "n_pairs": 5,
+          "n_eff": 5,
+          "autocorr_lag1": [
+            0.2367,
+            -0.5463
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "UNCERTAIN",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": 0.115098,
+          "ci95": [
+            -0.853884,
+            0.905426
+          ],
+          "p_two_sided": 0.8701264127281421,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 2,
+          "n_pairs": 5,
+          "n_eff": 5,
+          "autocorr_lag1": [
+            0.2367,
+            -0.4708
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "UNCERTAIN",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": 0.398976,
+          "ci95": [
+            -0.745833,
+            0.947665
+          ],
+          "p_two_sided": 0.550235352681489,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 3,
+          "n_pairs": 5,
+          "n_eff": 5,
+          "autocorr_lag1": [
+            0.2367,
+            -0.263
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "UNCERTAIN",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": 0.542756,
+          "ci95": [
+            -0.651485,
+            0.9636
+          ],
+          "p_two_sided": 0.3898337163527403,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 6,
+          "n_pairs": 5,
+          "n_eff": 5,
+          "autocorr_lag1": [
+            0.2367,
+            -0.2102
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "UNCERTAIN",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "lag_hours": 12,
+          "n_pairs": 3,
+          "status": "INSUFFICIENT_PAIRS",
+          "r": null,
+          "ci95": [
+            null,
+            null
+          ],
+          "p_two_sided": null,
+          "note": "有效配对不足 5；不据此下结论",
+          "p_holm": null
+        },
+        {
+          "lag_hours": 24,
+          "n_pairs": 3,
+          "status": "INSUFFICIENT_PAIRS",
+          "r": null,
+          "ci95": [
+            null,
+            null
+          ],
+          "p_two_sided": null,
+          "note": "有效配对不足 5；不据此下结论",
+          "p_holm": null
+        }
+      ],
+      "note": "全部候选时滞均已列出；相关不等于因果，未做变显著挑选"
+    },
+    "TIDE_HEIGHT": {
+      "status": "BLOCKED",
+      "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值"
+    },
+    "WIND_SPEED": {
+      "variable": "WIND_SPEED",
+      "location_key": "SOURCE_GRID",
+      "timezone": "Asia/Shanghai",
+      "tolerance_seconds": 1800,
+      "lag_direction": "环境在前，声学在后（lag>0）",
+      "search_range_hours": [
+        0,
+        1,
+        2,
+        3,
+        6,
+        12,
+        24
+      ],
+      "results": [
+        {
+          "r": -0.096049,
+          "ci95": [
+            -0.497517,
+            0.339306
+          ],
+          "p_two_sided": 0.6745119265732235,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 0,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.9286,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "SYNCHRONOUS",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.089774,
+          "ci95": [
+            -0.492739,
+            0.344895
+          ],
+          "p_two_sided": 0.694782508234262,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 1,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.9284,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.08229,
+          "ci95": [
+            -0.487009,
+            0.351521
+          ],
+          "p_two_sided": 0.7192158411861873,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 2,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.929,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.071017,
+          "ci95": [
+            -0.478311,
+            0.36142
+          ],
+          "p_two_sided": 0.7565014207503405,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 3,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.9304,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.031416,
+          "ci95": [
+            -0.447109,
+            0.395437
+          ],
+          "p_two_sided": 0.8910418098427696,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 6,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.9292,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.077257,
+          "ci95": [
+            -0.474359,
+            0.34597
+          ],
+          "p_two_sided": 0.7291973182615443,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 12,
+          "n_pairs": 120,
+          "n_eff": 23,
+          "autocorr_lag1": [
+            0.9149,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        },
+        {
+          "r": -0.176933,
+          "ci95": [
+            -0.556998,
+            0.264406
+          ],
+          "p_two_sided": 0.43572246881954996,
+          "note": "Fisher z；p 为正态近似，小样本不作显著性结论",
+          "lag_hours": 24,
+          "n_pairs": 120,
+          "n_eff": 22,
+          "autocorr_lag1": [
+            0.9256,
+            0.7441
+          ],
+          "mean_delta_seconds": 0.0,
+          "status": "OK",
+          "direction": "ENV_LEADS_ACOUSTIC",
+          "p_holm": 1.0
+        }
+      ],
+      "note": "全部候选时滞均已列出；相关不等于因果，未做变显著挑选"
+    },
+    "WIND_DIRECTION": {
+      "status": "BLOCKED",
+      "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值"
+    }
+  },
+  "joint_analysis": {
+    "status": "OK",
+    "n_common": 120,
+    "variables": [
+      "WIND_SPEED"
+    ],
+    "excluded": [
+      {
+        "variable": "WATER_TEMP",
+        "reason": "仅派生代理，不是独立环境观测"
+      }
+    ],
+    "standardized_beta": {
+      "intercept": -1.0134903240813532e-17,
+      "WIND_SPEED": -0.09604928248282224
+    },
+    "r_squared": 0.009225464665465144,
+    "rank": 2,
+    "diagnostics": [],
+    "note": "多元回归只描述同期关联；无因果解释，预报与派生代理数据不进入解释变量"
+  },
+  "environment_match_persisted": 125,
+  "tide_analysis": {
+    "status": "BLOCKED",
+    "tide_note": "潮位不是流速；涨落潮/高低潮/潮位变化率只由潮位数值派生，不推断水团运动或流向",
+    "reason": "潮位数值观测少于 3 条；PNG 截图不估读",
+    "n_observations": 0
+  },
+  "wind_change_analysis": {
+    "status": "OK",
+    "median_wind_m_s": 5.76,
+    "n_low": 61,
+    "n_high": 59,
+    "mean_acoustic_low": 1232.065574,
+    "mean_acoustic_high": 812.474576,
+    "difference_high_minus_low": -419.590997,
+    "note": "仅为同期分组关联，不代表风速变化导致声学变化"
+  },
+  "multi_station_association": {
+    "WATER_TEMP": {
+      "status": "INSUFFICIENT_STATIONS",
+      "n_stations": 0,
+      "reason": "至少需要两台设备各有 5 个有效环境配对；不足不出多站结论"
+    },
+    "WIND_SPEED": {
+      "status": "OK",
+      "variable": "WIND_SPEED",
+      "n_stations": 2,
+      "pairs": [
+        {
+          "device_a": "2000",
+          "device_b": "2001",
+          "n_common": 24,
+          "pearson_r": -0.19878032523565145,
+          "status": "OK"
+        }
+      ],
+      "note": "多站同期关联只称关联；未校正空间自相关，不推断鱼群移动"
+    },
+    "TIDE_HEIGHT": {
+      "status": "INSUFFICIENT_STATIONS",
+      "n_stations": 0,
+      "reason": "至少需要两台设备各有 5 个有效环境配对；不足不出多站结论"
+    }
+  },
+  "disclaimer": "关联≠因果；预报/模型/代理资料已标注，不能当作独立实测环境证据。潮位不是流速；涨落潮/高低潮/潮位变化率只由潮位数值派生，不推断水团运动或流向"
+}

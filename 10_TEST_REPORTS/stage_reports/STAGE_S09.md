@@ -89,6 +89,7 @@
 | D-05 | 任务 ID 用秒级时间戳，同秒两次提交冲突 | 改微秒级 `ORIGIN-YYYYmmddHHMMSSffffff` |
 | D-06 | 重复导出触发 Origin“文件存在”模态框导致 Worker 超时 | 导出前删除同名目标文件；超时任务标 FAILED 并清理子进程 |
 | D-07 | MATPLOTLIB 默认黑色/灰色出现在 SVG，色板外不为 0 | 从 `figure_palette` 设置 text/axis/tick/legend 颜色，正式 SVG 色板外 0 |
+| D-08（再验收整改 P2-8） | 部分 `caption`/`metric_definition`/`units_json` 写“见阶段报告/源表”，每张图不能自带可读定义 | 为 16 类全部补齐自包含 CAPTIONS/METRICS/UNITS，重建 figure_registry；不再依赖指针式说明 |
 
 ## 8. 已知限制（不伪造）
 

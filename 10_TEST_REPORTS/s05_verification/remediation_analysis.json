@@ -1,0 +1,28 @@
+﻿{
+  "analysis_id": "ENV-A0841D5B33B8",
+  "scope": {
+    "devices": [
+      "2000",
+      "2001"
+    ],
+    "start_date": "2026-10-31",
+    "end_date": "2026-11-03",
+    "timezone": "Asia/Shanghai",
+    "tolerance_seconds": 1800,
+    "n_acoustic_hours": 120,
+    "location_keys": {
+      "WIND_SPEED": "SOURCE_GRID",
+      "WIND_DIRECTION": "SOURCE_GRID",
+      "WATER_TEMP": "DEFAULT",
+      "TIDE_HEIGHT": "DEFAULT"
+    }
+  },
+  "status": {
+    "WATER_TEMP": "OK",
+    "TIDE_HEIGHT": "BLOCKED",
+    "WIND_SPEED": "OK",
+    "WIND_DIRECTION": "BLOCKED"
+  },
+  "joint_status": "OK",
+  "result_path": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\06_ANALYSIS_RESULTS\\s05\\ENV-A0841D5B33B8.json"
+}

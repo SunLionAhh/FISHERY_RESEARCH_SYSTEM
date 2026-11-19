@@ -89,6 +89,6 @@
 3. 日内子窗口的时长/覆盖率为估算；S03 未存小时级去重时间戳，不能冒充精确值。
 4. 时钟“昼夜”按可配置 06:00—18:00 约定，非天文日出日落；S06 引入晨昏后须重新对账。
 5. 水层指标须通过 S07 底界 QC 门禁后才纳入，本阶段为 BLOCKED/不输出。
-6. **S03 遗留测试污染已修**：`/daily/<设备>/<日期>/missing` 原调用缺测登记时未传 `project_root`，pytest 会重写真实 `06_ANALYSIS_RESULTS/s03/analysis_index.json`。S04 中给 `create_app` 增加 `config["PROJECT_ROOT"]`，网页路由显式传入，测试夹具指向 `tmp_path`；被污染的真实索引已恢复为 HEAD 内容，复跑 184 项后 `git status` 无该文件改动。
+6. **S03 遗留测试污染已修并复核**：`/daily/<设备>/<日期>/missing` 与 `/daily/upload` 原调用缺测登记/上传时未传 `project_root`，pytest 会重写真实 `06_ANALYSIS_RESULTS/s03/analysis_index.json`。S04 中给 `create_app` 增加 `config["PROJECT_ROOT"]`，网页路由显式传入 `project_root`/`output_root`，测试夹具指向 `tmp_path`。独立复核发现 HEAD 中索引仍为被污染的虚构日期 `2000/2027-12-01`、`2027-12-02 MISSING`，与阶段报告“已恢复为 HEAD 内容”不符；2026-11-17 已从正式库重跑 `write_analysis_index` 重建为真实 5 个设备-日索引（`RUN-...`、`coverage_ratio`、`report_path` 均指向项目内真实路径），并提交。复跑全量 pytest 后该文件 SHA 不再变化。
 
 **结论：S04 八项任务均有代码、真实数据、测试与留痕证据；停在 S04 等验收，未开始 S05。**

@@ -1,0 +1,13 @@
+{
+  "actor": "S07-FOOTPRINT-FIX-V2",
+  "appended": [
+    {
+      "qc_id": 1,
+      "device_id": "2000",
+      "observed_date": "2026-10-31",
+      "old_area_m2": 2.5252046843428033,
+      "new_area_m2": 0.8545099290939195
+    }
+  ],
+  "note": "旧 QC 行未修改；新行为 V2 留痕"
+}

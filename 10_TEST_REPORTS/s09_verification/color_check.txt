@@ -4,6 +4,6 @@
        04_SOURCE_CODE\app\services\s09_figures.py：0 处色值，0 种唯一色，色板外 0 种 -> PASS
        04_SOURCE_CODE\app\services\s09_animation.py：0 处色值，0 种唯一色，色板外 0 种 -> PASS
        07_FIGURES\s09\F09-01.svg：87 处色值，7 种唯一色，色板外 0 种 -> PASS
-       07_FIGURES\s09\F09-07.svg：193 处色值，7 种唯一色，色板外 0 种 -> PASS
+       07_FIGURES\s09\F09-07.svg：187 处色值，6 种唯一色，色板外 0 种 -> PASS
 
 结论：PASS · 符合 FIGURE_COLOR_SPEC_V1（色板外颜色总数 0，参考图异常 0）

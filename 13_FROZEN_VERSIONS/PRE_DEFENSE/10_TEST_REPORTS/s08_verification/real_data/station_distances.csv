@@ -1,0 +1,2 @@
+﻿station_a,station_b,device_a,device_b,distance_m,method,crs_pair,status,note
+2000,2001,2000,2001,157.80907150692417,HAVERSINE_WGS84_ASSUMED_UNDECLARED,UNDECLARED,PROVISIONAL,双方坐标系均未声明；按经纬度数值以 WGS84 近似，仅作相对位置示意，不作正式站距

@@ -1,24 +1,43 @@
 {
   "stage": "S03",
-  "generated_at": "2026-11-17T03:27:56+00:00",
+  "generated_at": "2026-11-17T16:12:16+00:00",
   "latest_run_by_device_date": {
-    "2000/2027-12-01": {
-      "run_id": "RUN-2000-20271201-20261117T032756Z-410fd7",
-      "status": "PARTIAL",
-      "coverage_ratio": 3.472222222222222e-05,
-      "valid_records": 3,
-      "report_path": "C:/Users/Administrator/AppData/Local/Temp/pytest-of-Administrator/pytest-47/test_web_daily_routes0/out/06_ANALYSIS_RESULTS/s03/daily/2000/2027-12-01/daily_report.md"
+    "2000/2026-10-31": {
+      "run_id": "RUN-2000-20261031-20261117T023419Z-b031c4",
+      "status": "REPROCESSED",
+      "coverage_ratio": 0.9234606481481481,
+      "valid_records": 192235,
+      "report_path": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/06_ANALYSIS_RESULTS/s03/daily/2000/2026-10-31/daily_report.md"
     },
-    "2000/2027-12-02": {
-      "run_id": null,
-      "status": "MISSING",
-      "coverage_ratio": null,
-      "valid_records": null,
-      "report_path": null
+    "2001/2026-10-31": {
+      "run_id": "RUN-2001-20261031-20261117T023626Z-c8cc4b",
+      "status": "REPROCESSED",
+      "coverage_ratio": 0.9909722222222223,
+      "valid_records": 189834,
+      "report_path": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/06_ANALYSIS_RESULTS/s03/daily/2001/2026-10-31/daily_report.md"
+    },
+    "2000/2026-11-01": {
+      "run_id": "RUN-2000-20261101-20261117T023916Z-e91986",
+      "status": "UPLOADED_LATE",
+      "coverage_ratio": 0.9993055555555556,
+      "valid_records": 192732,
+      "report_path": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/06_ANALYSIS_RESULTS/s03/daily/2000/2026-11-01/daily_report.md"
+    },
+    "2000/2026-11-02": {
+      "run_id": "RUN-2000-20261102-20261117T024834Z-cb7d60",
+      "status": "REPROCESSED",
+      "coverage_ratio": 0.9979166666666667,
+      "valid_records": 192863,
+      "report_path": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/06_ANALYSIS_RESULTS/s03/daily/2000/2026-11-02/daily_report.md"
+    },
+    "2000/2026-11-03": {
+      "run_id": "RUN-2000-20261103-20261117T024127Z-802e30",
+      "status": "UPLOADED_LATE",
+      "coverage_ratio": 0.9979166666666667,
+      "valid_records": 193491,
+      "report_path": "C:/Users/Administrator/WorkBuddy/渔业声学监测科研分析系统/FISHERY_RESEARCH_SYSTEM/06_ANALYSIS_RESULTS/s03/daily/2000/2026-11-03/daily_report.md"
     }
   },
   "blocked": [],
-  "missing": [
-    "2000/2027-12-02"
-  ]
+  "missing": []
 }

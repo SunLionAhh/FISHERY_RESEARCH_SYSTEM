@@ -377,10 +377,18 @@ def day_night(conn: sqlite3.Connection, grid: list[dict], device_ids: Iterable[s
             next_date = (datetime.strptime(observed_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
             next_solar = solar_for(conn, device_id, next_date, timezone_name, offset_hours)
             if solar is None or next_solar is None or not cells:
+                stat = ds.latest_stat(conn, device_id, observed_date)
+                next_stat = ds.latest_stat(conn, device_id, next_date)
+                next_cells = by_key.get((device_id, next_date), [])
+                if not cells or stat is None:
+                    reason = "无该日 S03 统计行/15 分钟格，不能做昼夜比较；不是经纬度缺失"
+                elif not next_cells or next_stat is None:
+                    reason = "次日无 S03 统计行/15 分钟格，不能做跨午夜昼夜比较；不是经纬度缺失"
+                else:
+                    reason = "缺少该日/次日真实经纬度或声明时区，禁止伪造天文昼夜"
                 results.append({
                     "device_id": device_id, "observed_date": observed_date,
-                    "status": "BLOCKED", "reason": "缺少该日/次日真实经纬度或时区，禁止伪造天文昼夜",
-                    "segments": {},
+                    "status": "BLOCKED", "reason": reason, "segments": {},
                 })
                 continue
             day_start = datetime.fromisoformat(observed_date + "T00:00:00")
@@ -401,6 +409,15 @@ def day_night(conn: sqlite3.Connection, grid: list[dict], device_ids: Iterable[s
             day_segment = segments["DAY"]
             night_rate = night_events / (night_seconds / 3600) if night_seconds > 0 else None
             day_rate = day_segment["rate_per_hour"]
+            night_expected = ((day_end - solar.dusk).total_seconds()
+                              + (next_solar.sunrise - next_start).total_seconds())
+            day_expected = (solar.sunset - solar.sunrise).total_seconds()
+            night_ratio = night_seconds / night_expected if night_expected > 0 else None
+            day_ratio = (day_segment["covered_seconds"] / day_expected
+                         if day_expected > 0 else None)
+            comparable = bool(night_ratio is not None and day_ratio is not None
+                              and night_ratio >= 0.9 and day_ratio >= 0.9
+                              and night_seconds >= 900 and day_segment["covered_seconds"] >= 900)
             results.append({
                 "device_id": device_id, "observed_date": observed_date,
                 "status": "PROVISIONAL" if solar.crs_status == "UNDECLARED" else "OK",
@@ -416,11 +433,17 @@ def day_night(conn: sqlite3.Connection, grid: list[dict], device_ids: Iterable[s
                     "night_events": night_events, "night_covered_seconds": round(night_seconds, 3),
                     "night_rate_per_hour": night_rate, "day_rate_per_hour": day_rate,
                     "difference": (night_rate - day_rate) if night_rate is not None and day_rate is not None else None,
-                    "coverage_ok": (night_seconds >= 900 and day_segment["covered_seconds"] >= 900),
+                    "night_expected_seconds": round(night_expected, 3),
+                    "night_coverage_ratio": round(night_ratio, 6) if night_ratio is not None else None,
+                    "day_expected_seconds": round(day_expected, 3),
+                    "day_coverage_ratio": round(day_ratio, 6) if day_ratio is not None else None,
+                    "coverage_ok": comparable,
+                    "comparison_status": "COMPARABLE" if comparable else "NOT_COMPARABLE_PARTIAL_NIGHT",
                 },
             })
     return {"results": results, "night_anchor": "夜开始日期（日落当日）",
-            "note": "晨昏按民用曙暮光 96°；天文分段时间按 15 分钟格中点归类，边界格不细分子区间。"}
+            "note": "晨昏按民用曙暮光 96°；天文分段时间按 15 分钟格中点归类，边界格不细分子区间。"
+                    "昼夜比较要求夜段与日段覆盖率均≥90% 且各≥900 s；半截夜标 NOT_COMPARABLE_PARTIAL_NIGHT，不与完整日比较。"}
 
 
 def solar_windows(conn: sqlite3.Connection, grid: list[dict], device_ids: Iterable[str],

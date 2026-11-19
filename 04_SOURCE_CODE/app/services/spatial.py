@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
+import shutil
 from collections import Counter
 import math
 import sqlite3
@@ -64,6 +66,38 @@ def sync_from_positions(conn: sqlite3.Connection, *, actor: str = "S08") -> int:
         inserted += 1
     conn.commit()
     return inserted
+
+
+def import_headings(conn: sqlite3.Connection, project_root: Path, records: list[dict], *,
+                    effective_from: str, measured_at: str, actor: str = "S08") -> list[dict]:
+    """把用户提供的方位角截图登记为新站位版本；坐标沿用当前生效记录，没有则不补。"""
+    root = Path(project_root)
+    image_dir = root / "10_TEST_REPORTS" / "s08_verification" / "heading_images"
+    image_dir.mkdir(parents=True, exist_ok=True)
+    existing = {point["device_id"]: point for point in locations(conn, effective_from)}
+    imported = []
+    for record in records:
+        device_id = record["device_id"]
+        source_path = Path(record["image_path"])
+        if not source_path.exists():
+            raise FileNotFoundError(source_path)
+        target = image_dir / source_path.name
+        shutil.copy2(source_path, target)
+        digest = hashlib.sha256(target.read_bytes()).hexdigest()
+        point = existing.get(device_id, {})
+        upsert_station(
+            conn, device_id, station_id=point.get("station_id"),
+            longitude=point.get("longitude_deg"), latitude=point.get("latitude_deg"),
+            coordinate_reference_system=point.get("coordinate_reference_system"),
+            gps_accuracy_m=point.get("gps_accuracy_m"), water_depth_m=point.get("water_depth_m"),
+            heading_deg=float(record["heading_deg"]),
+            heading_reference=record.get("heading_reference") or "PHONE_COMPASS_MAGNETIC_SCREENSHOT",
+            position_source=record.get("position_source") or "USER_PROVIDED_COMPASS_IMAGE",
+            measured_at=measured_at, effective_from=effective_from, actor=actor)
+        imported.append({"device_id": device_id, "heading_deg": float(record["heading_deg"]),
+                         "image": target.as_posix(), "sha256": digest,
+                         "had_coordinates": point.get("longitude_deg") is not None})
+    return imported
 
 
 def upsert_station(conn: sqlite3.Connection, device_id: str, *, station_id: str | None,
@@ -192,6 +226,28 @@ def compute_distances(conn: sqlite3.Connection, observed_date: str | None = None
             "note": "跨坐标系不混算；未声明坐标系的站距为 PROVISIONAL，不代表实测站距"}
 
 
+def directional_footprint(heading_deg, geometry: dict, *, heading_reference: str | None = None) -> dict:
+    """ heading 已提供时的条件方向足迹包络；不是实测足迹，不绑定坐标系。"""
+    if heading_deg is None:
+        return {"status": "UNKNOWN", "reason": "未提供探头水平朝向，不画方向足迹"}
+    half = float(geometry["inputs"]["internal_half_angle_deg"])
+    radius = float(geometry["water_projection_max_forward_m"])
+    heading = float(heading_deg) % 360
+    steps = max(8, int(half * 2))
+    points = [[0.0, 0.0]]
+    for index in range(steps + 1):
+        bearing = heading - half + 2 * half * index / steps
+        math_angle = math.radians((90.0 - bearing) % 360)
+        points.append([round(radius * math.cos(math_angle), 4),
+                       round(radius * math.sin(math_angle), 4)])
+    return {"status": "CONDITIONAL_SECTOR", "heading_deg": heading,
+            "heading_reference": heading_reference or "UNDECLARED",
+            "half_angle_deg": half, "max_forward_m": round(radius, 4),
+            "polygon_local_m": points,
+            "note": ("以 heading=0° 朝北、顺时针为正的条件扇形包络；基于当日生效波束参数与"
+                     "人工斜距上限，未做坐标系转换，不是实测鱼群位置或密度")}
+
+
 def map_payload(conn: sqlite3.Connection, observed_date: str | None = None) -> dict:
     points = locations(conn, observed_date)
     activity = (daily_activity(conn, [p["device_id"] for p in points], observed_date, observed_date)
@@ -214,8 +270,9 @@ def map_payload(conn: sqlite3.Connection, observed_date: str | None = None) -> d
                 coverage = {"status": "CIRCLE_ONLY",
                             "cutoff_m": geometry["cutoff_locked_m"],
                             "center_axis_bottom_m": geometry["center_axis_bottom_m"],
-                            "directional_footprint": "UNKNOWN" if point["heading_deg"] is None
-                                                     else "HEADING_DECLARED_NO_MEASURED_FOOTPRINT",
+                            "directional_footprint": directional_footprint(
+                                point["heading_deg"], geometry,
+                                heading_reference=point["heading_reference"]),
                             "parameter_effective_from": params["effective_from"],
                             "assumption": "水平底面 + 人工斜距上限；圆为理论覆盖示意，不是鱼位置/密度"}
             except (geo.GeometryUnavailable, ValueError, TypeError, KeyError) as exc:

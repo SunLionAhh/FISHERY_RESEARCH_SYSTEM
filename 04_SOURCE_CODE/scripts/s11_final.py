@@ -23,6 +23,7 @@ def main() -> None:
     try:
         paper = acceptance.build_paper_deliverables(conn, PROJECT_ROOT)
         frozen = acceptance.freeze_pre_defense(conn, actor="S11")
+        file_freeze = acceptance.build_file_freeze_manifest(PROJECT_ROOT)
         verification = acceptance.verify_sections(conn, PROJECT_ROOT)
         offline = acceptance.offline_core_test(PROJECT_ROOT)
         restore = acceptance.restore_drill(PROJECT_ROOT)
@@ -33,6 +34,8 @@ def main() -> None:
             "pre_defense": {"dataset_id": "PRE_DEFENSE", "status": frozen["dataset"]["status"],
                             "version": frozen["dataset"]["dataset_version"],
                             "versions": len(frozen["versions"])},
+            "file_freeze": {"root": file_freeze["root"], "file_count": file_freeze["file_count"],
+                            "all_match": file_freeze["all_match"]},
             "offline": offline,
             "restore": restore,
             "pytest": "见 s11_verification/pytest.txt（233 passed，S10 228+5 后再加 S11 测试）",

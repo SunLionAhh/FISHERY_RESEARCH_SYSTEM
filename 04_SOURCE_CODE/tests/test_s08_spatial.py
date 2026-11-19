@@ -29,7 +29,8 @@ def test_sync_from_positions_keeps_unknown_station_codes(conn):
     coverages = [s["coverage"] for s in payload["stations"]]
     assert any(c["status"] == "CIRCLE_ONLY" for c in coverages)
     assert any(c["status"] == "UNKNOWN" for c in coverages)
-    assert all(c.get("directional_footprint", "UNKNOWN") == "UNKNOWN" for c in coverages)
+    assert all((c.get("directional_footprint") or {}).get("status", "UNKNOWN") == "UNKNOWN"
+               for c in coverages)
     assert payload["map_mode"] == "OFFLINE_LOCAL_COORDINATE_SKETCH"
 
 

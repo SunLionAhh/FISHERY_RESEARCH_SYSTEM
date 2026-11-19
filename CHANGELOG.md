@@ -2,6 +2,13 @@
 
 > 按时间倒序。只记录实际发生的操作，不把文档完成写成软件功能完成。
 
+## 2026-11-19（用户补充五站方位角）
+用户以手机罗盘截图提供 2000=110°、2001=260°、2002=270°、2003=234°、2005=165°。`s08_import_headings.py` 复制截图、登记 SHA-256 并写为生效日期 2026-10-31 的新站位版本；`heading_reference` 明确为手机磁北罗盘，假定部署期朝向未变。真实 `map_payload` 中 2000 已生成 `CONDITIONAL_SECTOR`，其余因缺坐标/参数仍不画方向足迹。新增 1 项导入测试，全库 251 passed。
+
+## 2026-11-17（再验收整改：D1 5/5、P2 8/8，CodeBuddy；状态 REMEDIATION_DONE_PENDING_REVERIFICATION）
+
+依据独立复核报告 `ACCEPTANCE_S03_S11.md` 完成整改：S03 重建 analysis_index 并隔离上传写入、跨午夜 MISSING 标 partial；S05 补齐分箱/sin-cos/多站/潮汐与风速变化机制、自动获取四能力、DERIVED 标记、environment_match 下钻与结果归档并更正阶段报告；S06 半截夜不可比与 BLOCKED 原因区分；S07 足迹面积改为 0.854510 m² 并以 V2 追加留痕；S08 条件方向足迹；S09 16 类图自包含定义；S11 文件级冻结清单。全量 pytest **250 passed**，21 CSV 哈希 21/21 一致。逐项证据见 `ACCEPTANCE_REMEDIATION_S03_S11.md`；真实数据缺失项仍保持 BLOCKED/UNKNOWN。
+
 ## 2026-11-17（S11 执行并签收，CodeBuddy；用户「S10验收通过，继续」后启动，状态 S11_ACCEPTED_FINAL）
 
 S10 验收通过后先提交 `7ec58f6` 并建 tag **`s10-accepted`**，备份正式库（`11_BACKUPS/s11_pre_run_20261117/`，SHA-256 `27AE845F…47660D2`），再执行 S11 最终系统回归与预答辩验收；停在最终验收，不再进入新阶段。

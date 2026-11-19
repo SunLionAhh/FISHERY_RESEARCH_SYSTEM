@@ -15,6 +15,56 @@ from pathlib import Path
 from . import csv_parser, s07_datasets, workbench
 
 PAPER_DIR = "12_DOCUMENTATION/PAPER_EVIDENCE"
+FREEZE_ROOT = "13_FROZEN_VERSIONS/PRE_DEFENSE"
+
+
+def build_file_freeze_manifest(project_root: Path) -> dict:
+    """P2-7：把图表/统计表/方法质量/预答辩材料逐文件复制并登记 SHA-256。"""
+    root = Path(project_root)
+    dest = root / FREEZE_ROOT
+    dest.mkdir(parents=True, exist_ok=True)
+    patterns = (
+        "03_DATABASE/fishery.db",
+        "06_ANALYSIS_RESULTS/s03/analysis_index.json",
+        "07_FIGURES/s09/*.csv", "07_FIGURES/s09/*.png", "07_FIGURES/s09/*.pdf",
+        "07_FIGURES/s09/*.svg",
+        "07_FIGURES/s09/animation/*.*",
+        "07_FIGURES/s09/origin/exports/*.*",
+        "10_TEST_REPORTS/s08_verification/real_data/*.*",
+        "10_TEST_REPORTS/s09_verification/figure_manifest.csv",
+        "10_TEST_REPORTS/s10_verification/*.*",
+        "12_DOCUMENTATION/PAPER_EVIDENCE/*.md",
+        "10_TEST_REPORTS/stage_reports/STAGE_*.md",
+    )
+    seen: set[Path] = set()
+    rows = []
+    for pattern in patterns:
+        for path in root.glob(pattern):
+            if not path.is_file() or path in seen or FREEZE_ROOT in path.parts:
+                continue
+            seen.add(path)
+            rel = path.relative_to(root)
+            target = dest / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+            source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+            target_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+            rows.append({"relative_path": rel.as_posix(), "category": rel.parts[0],
+                         "bytes": path.stat().st_size, "sha256": source_hash,
+                         "copy_sha256": target_hash,
+                         "match": source_hash == target_hash})
+    rows.sort(key=lambda r: r["relative_path"])
+    manifest_csv = dest / "FROZEN_FILE_MANIFEST.csv"
+    with manifest_csv.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=["relative_path", "category", "bytes",
+                                                "sha256", "copy_sha256", "match"])
+        writer.writeheader()
+        writer.writerows(rows)
+    payload = {"frozen_at": _now(), "root": FREEZE_ROOT, "file_count": len(rows),
+               "all_match": all(r["match"] for r in rows), "files": rows}
+    (dest / "FROZEN_FILE_MANIFEST.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
 
 
 def _now() -> str:
@@ -114,10 +164,13 @@ def verify_sections(conn: sqlite3.Connection, project_root: Path) -> dict:
     paper = root / PAPER_DIR
     required = ["CHAPTER03_DUAL_STATION.md", "CHAPTER04_FIVE_STATION.md",
                 "CHAPTER05_ENVIRONMENT.md", "METHODS.md", "DATA_QUALITY.md", "PRE_DEFENSE.md"]
+    freeze_manifest = root / FREEZE_ROOT / "FROZEN_FILE_MANIFEST.csv"
     section("十三 论文交付", [
         {"name": "第三章/第四章/第五章数据包与说明齐全", "pass": all((paper / x).exists() for x in required)},
         {"name": "PRE_DEFENSE 数据集冻结", "pass": _one(conn,
             "SELECT COUNT(*) FROM datasets WHERE dataset_id='PRE_DEFENSE' AND status='FROZEN'") == 1},
+        {"name": "文件级冻结清单（逐文件 SHA-256）存在且副本一致", "pass": freeze_manifest.exists()
+         and (root / FREEZE_ROOT / "FROZEN_FILE_MANIFEST.json").exists()},
     ])
     return {"sections": sections, "pass": sum(1 for s in sections if s["pass"]),
             "total": len(sections), "failed": [s["section"] for s in sections if not s["pass"]]}

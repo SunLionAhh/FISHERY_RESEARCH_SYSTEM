@@ -13,7 +13,7 @@
 | 规范优先级 | 08 用户要求（同主题最高）→ 11 几何 / 09 验收 → 01 主规范 > 02 执行指南 > 03 阶段任务 → 04 总规划（实施深化，不是新主规范）；叠加 `FIGURE_COLOR_SPEC_V1`、`SCOPE_DUAL_STATION_V1` |
 | 正式设备 | **2000、2001、2002、2003、2005 共五台；没有 2004**（用户 19:17 强调不得混淆） |
 | 当前阶段 | S11（**最终系统回归与预答辩验收完成**：13/13 验收章节 PASS；论文第三/四/五章数据包+方法/质量/预答辩索引齐全；PRE_DEFENSE 数据集 FROZEN；隔离恢复与离线测试 PASS；238 测试全过**，见 `STAGE_S11.md` 与 `CHANGELOG.md` 顶部） |
-| 当前状态 | **S11_ACCEPTED_FINAL**（用户已最终验收并建 tag `s11-accepted`；S00—S11 全部完成，开发停止） |
+| 当前状态 | **S11_ACCEPTED_FINAL + REMEDIATION_DONE_PENDING_REVERIFICATION**（用户已最终验收并建 tag `s11-accepted`；按独立再验收报告完成 D1/P2 整改，等待整改复验；不再新开阶段） |
 | 预答辩目标 | 2027-01-20 |
 | 更新时间 | 2026-11-17（S11 完成：13/13 验收/论文包/PRE_DEFENSE 冻结/恢复离线） |
 | Git 初始回滚点 | 见本文件「运行标识」与 `CHANGELOG.md`（用户 19:17 明确需要安全回滚点） |
@@ -135,9 +135,9 @@
 | origin_job_id | 无（S09） |
 | dataset_id | `DATASET_01_DUAL_STATION` **FROZEN v5**（实际边界 2026-10-31—11-03，正式同步时间 NULL，5 个文件哈希/7 个 run 关联）；`DATASET_02_FIVE_STATION` PLANNED |
 | 最新 Git 提交 | S11 最终提交（见 `git log`；S10 为 `7ec58f6`）；tag **`s00-accepted`—`s11-accepted`** 全部建立 |
-| 最新测试结果 | pytest **238 passed**（S02 136 + S03 22 + S04 26 + S05 12 + S06 8 + S07 11 + S08 8 + S09 5 + S10 5 + S11 5）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS |
+| 最新测试结果 | pytest **251 passed**（250 + 方位角导入 1）；S03 独立复算两台 PASS；正式图颜色板外 0 PASS；D1 5/5、P2 8/8 复验通过 |
 | 距离映射现行版本 | 2000/2001 各 **v2 = CONFIRMED**（INTERVAL、首点 0.5m、间隔 0.0375m、末格终点 38.0m）；v1 UNVERIFIED 只读保留 |
-| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/STAGE_S11.md`（已最终签收）｜`STAGE_S10.md`（已签收）｜`10_TEST_REPORTS/s11_verification/`（13/13 验收/冻结/恢复/离线/测试证据） |
+| 最新阶段报告 | `10_TEST_REPORTS/stage_reports/ACCEPTANCE_REMEDIATION_S03_S11.md`（D1/P2 整改复验）｜`ACCEPTANCE_S03_S11.md`（独立再验收）｜`STAGE_S11.md`（已签收） |
 | 冻结版本 | 无（DUAL_STATION / FIVE_STATION / PRE_DEFENSE / BLIND_REVIEW 均未建立） |
 
 ## 已关闭与仍待处置

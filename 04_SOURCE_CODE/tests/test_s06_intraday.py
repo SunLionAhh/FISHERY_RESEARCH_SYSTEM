@@ -63,6 +63,7 @@ def test_missing_coordinates_block_astronomy(s03_conn, tmp_path):
     s03_conn.execute("DELETE FROM device_positions WHERE device_id='2000'")
     s03_conn.commit()
     grid = _grid(s03_conn, tmp_path)
+    grid += _grid(s03_conn, tmp_path, date="2026-11-01")
     result = it.day_night(s03_conn, grid, ["2000"], ["2026-10-31"], "Asia/Shanghai", 8.0)
     assert result["results"][0]["status"] == "BLOCKED"
     assert "禁止伪造" in result["results"][0]["reason"]

@@ -141,7 +141,7 @@
 | K18 | S03/S11 | 历史补传与冻结保护 | **PASS（S03 + S07 数据集版本）**：真实 11-02 先 MISSING 后补传为 `REPROCESSED` 且旧行保留；S07 第一阶段边界实际记录、补录 7 run 后冻结 `DATASET_01_DUAL_STATION` v5，5 个版本留痕，解冻亦新增版本；`FrozenDatasetBlocked` 阻止区间内上传；S11 备份恢复演练待做 | K41 | S00/S10 | W1/W2/W3 负载 | 待验证（S00 已冻结预算草案，见 STAGE_S00.md 第 9 节） |
 | K19 | S01/S08 | 经纬度网页录入回读 | **S08 已实现（`/s08` 可编辑 stations/distance，保存后回读与历史保留；P 码不自动分配）** | K42 | S11 | 备份恢复复现 | **隔离路径实际恢复 PASS（SHA/完整性/记录数）；运行库哈希不变，覆盖式恢复留用户授权** |
 | K20 | S01/S08 | 坐标系/颠倒/缺失处理 | **S08 已实现（范围/坐标系/疑似颠倒/重复点审计；跨坐标系拒算；缺坐标 UNKNOWN，不自动交换或补 0）** | K43 | S11 | 部署升级迁移回滚 | 待验证（S01 整改已实现迁移原子性 + 坏迁移回滚测试 `test_bad_migration_rolls_back_atomically`；依赖锁 `test_requirements_lock_is_parseable_multiline`；完整部署回滚 S11 复验） |
-| K21 | S01/S08 | 位置/姿态历史匹配 | **S08 已实现（`effective_from<=日<effective_to`，2000 改朝向后迁移前后命中各自版本）** | K44 | S00—S11 | 逐项核对全套规范 | **本阶段 13/13 章节 PASS（STAGE_S11.md/final_acceptance.json）；BLOCKED/UNVERIFIED 如实列出** |
+| K21 | S01/S08 | 位置/姿态历史匹配 | **S08 已实现（`effective_from<=日<effective_to`，2000 改朝向后迁移前后命中各自版本）** | K44 | S00—S11 | 逐项核对全套规范 | **13/13 章节 PASS；独立再验收后 D1 5/5、P2 8/8 已整改并专项复验（ACCEPTANCE_REMEDIATION_S03_S11.md），250 passed** |
 | K22 | S07/S08 | 全/半角与几何算例 | **S07 已实现（全部基准通过）；S08 在地图给 CIRCLE_ONLY 覆盖示意，朝向缺失不画方向足迹** | K45 | S11 | 用户亲自十步验收 | **已签收（2026-11-17；用户确认 S11 验收完毕，tag `s11-accepted`）** |
 | K23 | S08 | 缺方位角行为 | **S08 已实现（朝向 NULL → `directional_footprint=UNKNOWN`，只给理论圆，不画确定方向扇形/实测足迹）** | | | | |
 

@@ -288,6 +288,9 @@ def _location(row: dict, mapping: Mapping) -> str:
 def _quality(row: dict, mapping: Mapping, metadata: list[str]) -> str:
     flag = str(row.get(mapping.quality_column) or "") if mapping.quality_column else ""
     meta = " ".join(metadata)
+    normalized = flag.strip().upper()
+    if normalized in ("DERIVED", "SUSPECT", "FORECAST", "MODEL_HISTORICAL", "OK"):
+        return normalized
     if any(w in flag for w in _FORECAST_WORDS):
         return "FORECAST"
     if any(w in flag for w in _HISTORICAL_WORDS):

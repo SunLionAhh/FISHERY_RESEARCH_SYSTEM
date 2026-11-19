@@ -1,0 +1,3 @@
+﻿station_id,device_id,longitude_deg,latitude_deg,crs,gps_accuracy_m,water_depth_m,heading_deg,source,measured_at,effective_from,audit_status,coverage_status,activity_rate_per_hour
+,2000,121.2117505073547,27.99346353124773,UNDECLARED,,,,S01_DEVICE_POSITIONS,2026-10-31,2026-10-31,PROVISIONAL,CIRCLE_ONLY,590.7578928898191
+,2001,121.2130272388458,27.99260143251764,UNDECLARED,,,,S01_DEVICE_POSITIONS,2026-10-31,2026-10-31,PROVISIONAL,UNKNOWN,2892.1093202522775

@@ -1,0 +1,286 @@
+﻿{
+  "stations": [
+    {
+      "label": "2000（P 码未提供）",
+      "station_id": null,
+      "device_id": "2000",
+      "longitude_deg": 121.2117505073547,
+      "latitude_deg": 27.99346353124773,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": true,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "CRS_UNDECLARED"
+        ],
+        "status": "PROVISIONAL"
+      },
+      "heading_deg": 110.0,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "USER_PROVIDED_COMPASS_IMAGE_2026-11-19",
+      "measured_at": "2026-11-19",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "CIRCLE_ONLY",
+        "cutoff_m": 5.2,
+        "center_axis_bottom_m": 5.20430590953299,
+        "directional_footprint": {
+          "status": "CONDITIONAL_SECTOR",
+          "heading_deg": 110.0,
+          "heading_reference": "PHONE_COMPASS_MAGNETIC_SCREENSHOT_2026-11-19; ASSUMED_SAME_AS_DEPLOYMENT_HEADING_2026-10_31_TO_11_03",
+          "half_angle_deg": 7.5,
+          "max_forward_m": 4.1252,
+          "polygon_local_m": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              4.0274,
+              -0.8929
+            ],
+            [
+              4.0112,
+              -0.963
+            ],
+            [
+              3.9938,
+              -1.0329
+            ],
+            [
+              3.9751,
+              -1.1024
+            ],
+            [
+              3.9553,
+              -1.1716
+            ],
+            [
+              3.9342,
+              -1.2405
+            ],
+            [
+              3.912,
+              -1.3089
+            ],
+            [
+              3.8886,
+              -1.377
+            ],
+            [
+              3.8639,
+              -1.4447
+            ],
+            [
+              3.8381,
+              -1.5119
+            ],
+            [
+              3.8112,
+              -1.5786
+            ],
+            [
+              3.783,
+              -1.6449
+            ],
+            [
+              3.7537,
+              -1.7107
+            ],
+            [
+              3.7233,
+              -1.7759
+            ],
+            [
+              3.6918,
+              -1.8406
+            ],
+            [
+              3.6591,
+              -1.9048
+            ]
+          ],
+          "note": "以 heading=0° 朝北、顺时针为正的条件扇形包络；基于当日生效波束参数与人工斜距上限，未做坐标系转换，不是实测鱼群位置或密度"
+        },
+        "parameter_effective_from": "2026-10-31",
+        "assumption": "水平底面 + 人工斜距上限；圆为理论覆盖示意，不是鱼位置/密度"
+      },
+      "activity": {
+        "status": "REPROCESSED",
+        "candidate_events": 13093,
+        "valid_hours": 22.163055555555555,
+        "coverage_ratio": 0.9234606481481481,
+        "rate_per_hour": 590.7578928898191
+      }
+    },
+    {
+      "label": "2001（P 码未提供）",
+      "station_id": null,
+      "device_id": "2001",
+      "longitude_deg": 121.2130272388458,
+      "latitude_deg": 27.99260143251764,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": true,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "CRS_UNDECLARED"
+        ],
+        "status": "PROVISIONAL"
+      },
+      "heading_deg": 260.0,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "USER_PROVIDED_COMPASS_IMAGE_2026-11-19",
+      "measured_at": "2026-11-19",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "UNKNOWN",
+        "reason": "float() argument must be a string or a real number, not 'NoneType'"
+      },
+      "activity": {
+        "status": "REPROCESSED",
+        "candidate_events": 68784,
+        "valid_hours": 23.783333333333335,
+        "coverage_ratio": 0.9909722222222223,
+        "rate_per_hour": 2892.1093202522775
+      }
+    },
+    {
+      "label": "2002（P 码未提供）",
+      "station_id": null,
+      "device_id": "2002",
+      "longitude_deg": null,
+      "latitude_deg": null,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": false,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "MISSING_COORDINATE",
+          "CRS_UNDECLARED"
+        ],
+        "status": "BLOCKED"
+      },
+      "heading_deg": 270.0,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "USER_PROVIDED_COMPASS_IMAGE_2026-11-19",
+      "measured_at": "2026-11-19",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "UNKNOWN",
+        "reason": "缺参数、缺坐标或坐标审计阻断"
+      },
+      "activity": null
+    },
+    {
+      "label": "2003（P 码未提供）",
+      "station_id": null,
+      "device_id": "2003",
+      "longitude_deg": null,
+      "latitude_deg": null,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": false,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "MISSING_COORDINATE",
+          "CRS_UNDECLARED"
+        ],
+        "status": "BLOCKED"
+      },
+      "heading_deg": 234.0,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "USER_PROVIDED_COMPASS_IMAGE_2026-11-19",
+      "measured_at": "2026-11-19",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "UNKNOWN",
+        "reason": "缺参数、缺坐标或坐标审计阻断"
+      },
+      "activity": null
+    },
+    {
+      "label": "2005（P 码未提供）",
+      "station_id": null,
+      "device_id": "2005",
+      "longitude_deg": null,
+      "latitude_deg": null,
+      "crs": "UNDECLARED",
+      "coordinate_audit": {
+        "range_ok": false,
+        "crs": "UNDECLARED",
+        "crs_declared": false,
+        "suspected_latlon_swap": false,
+        "duplicate_with": [],
+        "flags": [
+          "MISSING_COORDINATE",
+          "CRS_UNDECLARED"
+        ],
+        "status": "BLOCKED"
+      },
+      "heading_deg": 165.0,
+      "gps_accuracy_m": null,
+      "water_depth_m": null,
+      "source": "USER_PROVIDED_COMPASS_IMAGE_2026-11-19",
+      "measured_at": "2026-11-19",
+      "effective_from": "2026-10-31",
+      "coverage": {
+        "status": "UNKNOWN",
+        "reason": "缺参数、缺坐标或坐标审计阻断"
+      },
+      "activity": null
+    }
+  ],
+  "bounds": {
+    "min_lon": 121.2117505073547,
+    "max_lon": 121.2130272388458,
+    "min_lat": 27.99260143251764,
+    "max_lat": 27.99346353124773
+  },
+  "distances": [
+    {
+      "distance_id": 1,
+      "station_a": "2000",
+      "station_b": "2001",
+      "device_a": "2000",
+      "device_b": "2001",
+      "distance_m": 157.80907150692417,
+      "method": "HAVERSINE_WGS84_ASSUMED_UNDECLARED",
+      "computed_at": "2026-11-17T13:47:36+00:00",
+      "crs_pair": "UNDECLARED",
+      "status": "PROVISIONAL",
+      "note": "双方坐标系均未声明；按经纬度数值以 WGS84 近似，仅作相对位置示意，不作正式站距"
+    }
+  ],
+  "unknown_devices": [],
+  "map_mode": "OFFLINE_LOCAL_COORDINATE_SKETCH",
+  "station_selection": [
+    "2000（P 码未提供）",
+    "2001（P 码未提供）",
+    "2002（P 码未提供）",
+    "2003（P 码未提供）",
+    "2005（P 码未提供）"
+  ],
+  "legend": {
+    "activity_scale": "FIXED_PER_VIEW",
+    "missing": "NA",
+    "circle": "理论斜距上限示意（非实测足迹）"
+  },
+  "note": "离线本地坐标示意图；不做在线底图、地图投影、鱼群轨迹或连续密度插值"
+}

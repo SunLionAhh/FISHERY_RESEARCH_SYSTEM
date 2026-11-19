@@ -52,7 +52,8 @@
   <td>{{ s.longitude_deg if s.longitude_deg is not none else 'NA' }} / {{ s.latitude_deg if s.latitude_deg is not none else 'NA' }}</td>
   <td>{{ s.crs }}</td><td>{{ s.coordinate_audit.status }}（{{ s.coordinate_audit.flags | join(',') or '无' }}）</td>
   <td>{{ s.heading_deg if s.heading_deg is not none else 'UNKNOWN' }}</td>
-  <td>{{ s.coverage.status }}{% if s.coverage.cutoff_m is defined %} / {{ s.coverage.cutoff_m }} m{% endif %}</td>
+  <td>{{ s.coverage.status }}{% if s.coverage.cutoff_m is defined %} / {{ s.coverage.cutoff_m }} m{% endif %}
+      {% if s.coverage.directional_footprint is mapping %}<br><span class="muted">方向足迹：{{ s.coverage.directional_footprint.status }}</span>{% endif %}</td>
   <td>{{ s.activity.rate_per_hour | round(3) if s.activity and s.activity.rate_per_hour is not none else 'NA' }}</td>
 </tr>
 {% else %}<tr><td colspan="8">暂无站位记录；请先从 S01 接入或逐台录入</td></tr>{% endfor %}

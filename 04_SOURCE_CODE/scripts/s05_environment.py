@@ -73,6 +73,33 @@ def main() -> None:
     p_attempt = sub.add_parser("fetch-attempt")
     p_attempt.add_argument("--adapter", required=True)
 
+    p_register_adapter = sub.add_parser("adapter-register")
+    p_register_adapter.add_argument("--name", required=True)
+    p_register_adapter.add_argument("--module-path", required=True)
+    p_register_adapter.add_argument("--status", default="BLOCKED",
+                                    choices=("BLOCKED", "ENABLED", "DISABLED"))
+
+    p_schedule = sub.add_parser("schedule-configure")
+    p_schedule.add_argument("--adapter", required=True)
+    p_schedule.add_argument("--start-utc", default="")
+    p_schedule.add_argument("--end-utc", default="")
+    p_schedule.add_argument("--interval-minutes", type=int, default=60)
+    p_schedule.add_argument("--enabled", action="store_true")
+
+    p_retry = sub.add_parser("fetch-retry")
+    p_retry.add_argument("--adapter", required=True)
+    p_retry.add_argument("--start-utc", default="")
+    p_retry.add_argument("--end-utc", default="")
+    p_retry.add_argument("--max-retries", type=int, default=3)
+
+    sub.add_parser("run-due")
+
+    p_backfill = sub.add_parser("backfill")
+    p_backfill.add_argument("--adapter", required=True)
+    p_backfill.add_argument("--start-utc", required=True)
+    p_backfill.add_argument("--end-utc", required=True)
+    p_backfill.add_argument("--chunk-hours", type=int, default=24)
+
     p_analysis = sub.add_parser("analyze")
     p_analysis.add_argument("--devices", default="2000")
     p_analysis.add_argument("--start")
@@ -111,6 +138,21 @@ def main() -> None:
             out = fetch.evaluate()
         elif args.command == "fetch-attempt":
             out = fetch.attempt(conn, args.adapter, {"requested_by": "cli"})
+        elif args.command == "adapter-register":
+            out = fetch.register_adapter(conn, args.name, args.module_path, status=args.status)
+        elif args.command == "schedule-configure":
+            out = fetch.configure_schedule(
+                conn, args.adapter,
+                {"start_utc": args.start_utc, "end_utc": args.end_utc},
+                interval_minutes=args.interval_minutes, enabled=args.enabled)
+        elif args.command == "fetch-retry":
+            out = fetch.fetch_with_retry(conn, args.adapter, args.start_utc, args.end_utc,
+                                         max_retries=args.max_retries)
+        elif args.command == "run-due":
+            out = {"results": fetch.run_due_schedules(conn)}
+        elif args.command == "backfill":
+            out = fetch.backfill_history(conn, args.adapter, args.start_utc, args.end_utc,
+                                         chunk_hours=args.chunk_hours)
         elif args.command == "analyze":
             result = analysis.run(conn, devices=tuple(args.devices.split(",")),
                                   start_date=args.start, end_date=args.end,
@@ -119,10 +161,15 @@ def main() -> None:
                    "scope": result["scope"],
                    "status": {k: v["status"] for k, v in result["variables"].items()},
                    "joint_status": result["joint_analysis"]["status"]}
+            archive_dir = PROJECT_ROOT / "06_ANALYSIS_RESULTS" / "s05"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            archive = archive_dir / f"{result['analysis_id']}.json"
+            archive.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+            out["result_path"] = str(archive)
             if args.out:
                 args.out.parent.mkdir(parents=True, exist_ok=True)
                 args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-                out["result_path"] = str(args.out)
+                out["requested_result_path"] = str(args.out)
         else:
             parser.error("未知命令")
         print(json.dumps(out, ensure_ascii=False, indent=2, default=str))

@@ -24,7 +24,8 @@ LAGS_HOURS = (0, 1, 2, 3, 6, 12, 24)
 DEFAULT_TOLERANCE_S = 1800
 ALLOWED_QUALITIES = ("OK", "MODEL_HISTORICAL", "DERIVED")
 SPEED_BINS = ((0, 2), (2, 4), (4, 6), (6, 8), (8, float("inf")))
-TEMP_BINS = ((-math.inf, 21), (21, 22), (22, 23), (23, math.inf))
+TEMP_BINS = ((-math.inf, 10), (10, 22), (22, 23), (23, 24), (24, math.inf))
+TIDE_NOTE = "潮位不是流速；涨落潮/高低潮/潮位变化率只由潮位数值派生，不推断水团运动或流向"
 
 
 class AnalysisUnavailable(Exception):
@@ -220,14 +221,128 @@ def binned(rows: list[dict], value_key: str, bins) -> list[dict]:
     return out
 
 
+def circular_statistics(values_deg: list[float]) -> dict:
+    """风向圆周量：必须先转 sin/cos，不能对 0°/360° 做线性平均。"""
+    valid = [float(v) for v in values_deg if v is not None and math.isfinite(float(v))]
+    if not valid:
+        return {"status": "NO_DATA", "mean_direction_deg": None, "resultant_length": None}
+    radians = [math.radians(v % 360) for v in valid]
+    sin_mean = sum(math.sin(a) for a in radians) / len(radians)
+    cos_mean = sum(math.cos(a) for a in radians) / len(radians)
+    resultant = math.hypot(sin_mean, cos_mean)
+    mean = (math.degrees(math.atan2(sin_mean, cos_mean)) + 360) % 360
+    return {"status": "OK", "n": len(valid), "mean_direction_deg": round(mean, 3),
+            "resultant_length": round(resultant, 6),
+            "sin_mean": round(sin_mean, 6), "cos_mean": round(cos_mean, 6),
+            "method": "sin/cos 圆周均值；resultant_length 越小方向越分散"}
+
+
+def persist_matches(conn, analysis_id: str, pairs_by_variable: dict[str, list[dict]]) -> int:
+    """把时间配对下钻留痕写入 environment_match；同一分析重跑先清旧行。"""
+    conn.execute("DELETE FROM environment_match WHERE analysis_id=?", (analysis_id,))
+    count = 0
+    for variable, pairs in pairs_by_variable.items():
+        for pair in pairs:
+            conn.execute(
+                "INSERT INTO environment_match (analysis_id,device_id,acoustic_time,variable,"
+                "obs_id,lag_hours,delta_seconds,tolerance_seconds,method,acoustic_metric,"
+                "acoustic_value,environment_value) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (analysis_id, pair["device_id"], pair["acoustic_time"], variable,
+                 pair["obs_id"], pair["lag_hours"], pair["delta_seconds"],
+                 pair["tolerance_seconds"], "NEAREST", "candidate_events",
+                 pair["acoustic_value"], pair["environment_value"]))
+            count += 1
+    conn.commit()
+    return count
+
+
+def tide_analysis(conn, acoustic: dict, location_key: str, *, timezone_name: str) -> dict:
+    """涨落潮、高低潮窗口与潮位变化率机制；缺数值潮位时如实 BLOCKED。"""
+    observations_tide = observations(conn, "TIDE_HEIGHT", location_key)
+    if len(observations_tide) < 3:
+        return {"status": "BLOCKED", "tide_note": TIDE_NOTE,
+                "reason": "潮位数值观测少于 3 条；PNG 截图不估读", "n_observations": len(observations_tide)}
+    ordered = sorted(observations_tide, key=lambda o: o["observed_at_utc"])
+    phases, rates = [], []
+    for previous, current in zip(ordered, ordered[1:]):
+        hours = (_utc_from_local(current["observed_at"], current["timezone"])
+                 - _utc_from_local(previous["observed_at"], previous["timezone"])).total_seconds() / 3600
+        if hours <= 0:
+            continue
+        delta = current["value_si"] - previous["value_si"]
+        rates.append({"observed_at": current["observed_at"], "rate_m_per_hour": round(delta / hours, 6)})
+        phases.append({"observed_at": current["observed_at"],
+                       "phase": "FLOOD" if delta > 0 else ("EBB" if delta < 0 else "SLACK")})
+    values = [o["value_si"] for o in ordered]
+    highs = [i for i in range(1, len(values) - 1) if values[i] >= values[i - 1] and values[i] >= values[i + 1]]
+    lows = [i for i in range(1, len(values) - 1) if values[i] <= values[i - 1] and values[i] <= values[i + 1]]
+    windows = [{"kind": kind, "center": ordered[i]["observed_at"],
+                "start": ordered[max(0, i - 1)]["observed_at"],
+                "end": ordered[min(len(ordered) - 1, i + 1)]["observed_at"]}
+               for kind, indices in (("HIGH", highs), ("LOW", lows)) for i in indices]
+    return {"status": "OK", "tide_note": TIDE_NOTE, "n_observations": len(ordered),
+            "phases": phases, "rate_of_change": rates,
+            "high_low_windows": windows,
+            "note": "窗口为相邻数值潮位极值的前后邻点；无截图估读、无水团运动推断"}
+
+
+def wind_change_analysis(conn, acoustic: dict, location_key: str, *, timezone_name: str) -> dict:
+    """风速变化前后对照：按当窗口中位风速分组，只作探索性关联。"""
+    pairs = pair(conn, acoustic, "WIND_SPEED", location_key, 0, timezone_name=timezone_name)
+    if len(pairs) < 10:
+        return {"status": "INSUFFICIENT_SAMPLES", "n_pairs": len(pairs),
+                "reason": "风速配对少于 10，无法做变化前后分组"}
+    winds = sorted(p["environment_value"] for p in pairs)
+    median = winds[len(winds) // 2]
+    low = [p["acoustic_value"] for p in pairs if p["environment_value"] <= median]
+    high = [p["acoustic_value"] for p in pairs if p["environment_value"] > median]
+    if len(low) < 5 or len(high) < 5:
+        return {"status": "INSUFFICIENT_SAMPLES", "n_low": len(low), "n_high": len(high)}
+    mean_low = sum(low) / len(low)
+    mean_high = sum(high) / len(high)
+    return {"status": "OK", "median_wind_m_s": round(median, 6),
+            "n_low": len(low), "n_high": len(high),
+            "mean_acoustic_low": round(mean_low, 6), "mean_acoustic_high": round(mean_high, 6),
+            "difference_high_minus_low": round(mean_high - mean_low, 6),
+            "note": "仅为同期分组关联，不代表风速变化导致声学变化"}
+
+
+def multi_station_association(conn, acoustic: dict, variable: str, location_key: str,
+                              *, timezone_name: str) -> dict:
+    """多站同期环境关联：同一变量至少两台设备各自有有效配对才计算。"""
+    by_device = {}
+    for device_id in sorted({key[0] for key in acoustic}):
+        scoped = {key: value for key, value in acoustic.items() if key[0] == device_id}
+        pairs = pair(conn, scoped, variable, location_key, 0, timezone_name=timezone_name)
+        if len(pairs) >= 5:
+            by_device[device_id] = {p["acoustic_time"]: p["acoustic_value"] for p in pairs}
+    if len(by_device) < 2:
+        return {"status": "INSUFFICIENT_STATIONS", "n_stations": len(by_device),
+                "reason": "至少需要两台设备各有 5 个有效环境配对；不足不出多站结论"}
+    pairs_out = []
+    for a, b in combinations(sorted(by_device), 2):
+        common = sorted(set(by_device[a]) & set(by_device[b]))
+        r = pearson([by_device[a][t] for t in common], [by_device[b][t] for t in common])
+        pairs_out.append({"device_a": a, "device_b": b, "n_common": len(common),
+                          "pearson_r": r,
+                          "status": "OK" if len(common) >= 5 and r is not None else "INSUFFICIENT_DATA"})
+    return {"status": "OK", "variable": variable, "n_stations": len(by_device), "pairs": pairs_out,
+            "note": "多站同期关联只称关联；未校正空间自相关，不推断鱼群移动"}
+
+
 def variable_report(conn, acoustic: dict, variable: str, location_key: str,
                     *, bins, timezone_name: str = "Asia/Shanghai") -> dict:
     pairs = pair(conn, acoustic, variable, location_key, 0, timezone_name=timezone_name)
     available = observations(conn, variable, location_key)
     if not available:
-        return {"variable": variable, "status": "BLOCKED",
-                "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值",
-                "n_observations": 0}
+        blocked = {"variable": variable, "status": "BLOCKED",
+                   "reason": "无已导入且非预报的该变量观测；不估读图片、不伪造数值",
+                   "n_observations": 0}
+        if variable == "TIDE_HEIGHT":
+            blocked["tide_note"] = TIDE_NOTE
+        if variable == "WIND_DIRECTION":
+            blocked["circular_statistics"] = circular_statistics([])
+        return blocked
     flags = sorted({o["quality_flag"] for o in available})
     report = {
         "variable": variable, "location_key": location_key, "status": "OK",
@@ -238,9 +353,12 @@ def variable_report(conn, acoustic: dict, variable: str, location_key: str,
                           if all(o["source_kind"] == "DERIVED" for o in available) else None),
     }
     if variable == "WIND_DIRECTION":
-        report["wind_direction"] = "圆周量须用 sin/cos 处理；本表仅作线性对照，方向结论以联合模型为准"
+        report["circular_statistics"] = circular_statistics(
+            [p["environment_value"] for p in pairs])
+        report["wind_direction"] = ("圆周量用 sin/cos 处理；线性分箱只作辅助对照，"
+                                    "方向结论以 circular_statistics 与联合模型为准")
     if variable == "TIDE_HEIGHT":
-        report["tide_note"] = "潮位不是流速；涨落潮只用潮位差派生，不推断水团运动"
+        report["tide_note"] = TIDE_NOTE
     return report
 
 
@@ -273,11 +391,18 @@ def joint_analysis(conn, acoustic: dict, variables: list[str], location_keys: di
     lookup = {(v["local_time"], k[0]): v["candidate_events"] for k, v in acoustic.items()}
     ordered = sorted(common)
     y = np.array([lookup[k] for k in ordered], dtype=float)
-    matrix = np.column_stack([
-        np.ones(len(ordered)),
-        *[np.array([pairs_by_var[v][k] for k in ordered], dtype=float) for v, _ in usable],
-    ])
-    names = ["intercept", *[v for v, _ in usable]]
+    columns = [np.ones(len(ordered))]
+    names = ["intercept"]
+    for variable, _ in usable:
+        values = np.array([pairs_by_var[variable][k] for k in ordered], dtype=float)
+        if variable == "WIND_DIRECTION":
+            radians = np.radians(values % 360)
+            columns.extend([np.sin(radians), np.cos(radians)])
+            names.extend(["WIND_DIRECTION_sin", "WIND_DIRECTION_cos"])
+        else:
+            columns.append(values)
+            names.append(variable)
+    matrix = np.column_stack(columns)
     Xs = matrix[:, 1:].copy()
     means, stds = Xs.mean(axis=0), Xs.std(axis=0)
     stds[stds == 0] = 1.0
@@ -335,11 +460,25 @@ def run(conn, *, devices=("2000",), start_date=None, end_date=None,
             lags[variable] = {"status": "BLOCKED", "reason": variables[variable].get(
                 "reason", "可用配对不足")}
     joint = joint_analysis(conn, acoustic,
-                           [v for v in variables if variables[v]["status"] == "OK"
-                            and v != "WIND_DIRECTION"], keys, timezone_name=timezone_name)
+                           [v for v in variables if variables[v]["status"] == "OK"],
+                           keys, timezone_name=timezone_name)
     all_lag_items = [item for result in lags.values() for item in result.get("results", [])
                      if isinstance(item, dict)]
     holm_adjust(all_lag_items)
+    pairs_by_variable = {}
+    for variable in variables:
+        if variables[variable]["status"] == "OK":
+            pairs_by_variable[variable] = pair(conn, acoustic, variable, keys[variable], 0,
+                                               timezone_name=timezone_name)
+    n_matches = persist_matches(conn, analysis_id, pairs_by_variable)
+    tide = tide_analysis(conn, acoustic, keys["TIDE_HEIGHT"], timezone_name=timezone_name)
+    wind_change = wind_change_analysis(conn, acoustic, keys["WIND_SPEED"],
+                                       timezone_name=timezone_name)
+    multi_station = {
+        variable: multi_station_association(conn, acoustic, variable, keys[variable],
+                                            timezone_name=timezone_name)
+        for variable in ("WATER_TEMP", "WIND_SPEED", "TIDE_HEIGHT")
+    }
     result = {
         "analysis_id": analysis_id, "generated_at": datetime.now(dt_timezone.utc).isoformat(
             timespec="seconds") + "Z",
@@ -347,6 +486,10 @@ def run(conn, *, devices=("2000",), start_date=None, end_date=None,
                   "timezone": timezone_name, "tolerance_seconds": tolerance_s,
                   "n_acoustic_hours": len(acoustic), "location_keys": keys},
         "variables": variables, "lag_analysis": lags, "joint_analysis": joint,
-        "disclaimer": "关联≠因果；预报/模型/代理资料已标注，不能当作独立实测环境证据。",
+        "environment_match_persisted": n_matches,
+        "tide_analysis": tide, "wind_change_analysis": wind_change,
+        "multi_station_association": multi_station,
+        "disclaimer": "关联≠因果；预报/模型/代理资料已标注，不能当作独立实测环境证据。"
+                      + TIDE_NOTE,
     }
     return result

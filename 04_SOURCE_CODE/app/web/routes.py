@@ -241,6 +241,8 @@ def daily_upload():
             observed_date=request.form.get("observed_date") or None,
             upload_date=request.form.get("upload_date") or None,
             force=request.form.get("force") == "1",
+            project_root=Path(current_app.config["PROJECT_ROOT"]),
+            output_root=Path(current_app.config["PROJECT_ROOT"]) / "06_ANALYSIS_RESULTS",
         )
         verb = {"NEW": "上传", "REPROCESSED": "补传/重算", "BLOCKED": "登记（统计 BLOCKED）",
                 "DUPLICATE": "重复上传已跳过"}[outcome.decision]
@@ -473,6 +475,11 @@ def environment_analysis():
                 end_date=form.get("end_date") or None,
                 timezone_name=form.get("timezone") or "Asia/Shanghai",
                 tolerance_s=int(form.get("tolerance") or env_analysis_svc.DEFAULT_TOLERANCE_S))
+            import json
+            archive = (Path(current_app.config["PROJECT_ROOT"]) / "06_ANALYSIS_RESULTS"
+                       / "s05" / f"{result['analysis_id']}.json")
+            archive.parent.mkdir(parents=True, exist_ok=True)
+            archive.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         except (ValueError, env_analysis_svc.AnalysisUnavailable) as exc:
             error = str(exc)
         finally:

@@ -62,22 +62,27 @@ def _ellipse_radius(phi: float, xc: float, a: float, b: float) -> float:
 
 def _footprint_area(cutoff: float, h: float, xc: float, a: float, b: float,
                     steps: int) -> tuple[float, tuple[float, float]]:
+    """圆盘 ∩ 椭圆的截面积；按 x 切片积分，原点在椭圆外也成立。"""
     disk = math.sqrt(max(cutoff * cutoff - h * h, 0.0))
     if disk <= 0:
         return 0.0, (0.0, 0.0)
-    dphi = 2 * math.pi / steps
-    area = cx = cy = 0.0
-    for index in range(steps):
-        phi = (index + 0.5) * dphi
-        limit = min(disk, _ellipse_radius(phi, xc, a, b))
-        if limit <= 0:
+    slices = max(steps, 4096)
+    dx = 2 * disk / slices
+    area = cx = 0.0
+    for index in range(slices):
+        x = -disk + (index + 0.5) * dx
+        disk_y = math.sqrt(max(disk * disk - x * x, 0.0))
+        q = 1.0 - ((x - xc) / a) ** 2
+        ellipse_y = b * math.sqrt(q) if q > 0 else 0.0
+        half = min(disk_y, ellipse_y)
+        if half <= 0:
             continue
-        area += 0.5 * limit * limit * dphi
-        cx += limit ** 3 * math.cos(phi) * dphi / 3
-        cy += limit ** 3 * math.sin(phi) * dphi / 3
+        strip = 2 * half * dx
+        area += strip
+        cx += x * strip
     if area <= 0:
         return 0.0, (0.0, 0.0)
-    return area, (cx / area, cy / area)
+    return area, (cx / area, 0.0)
 
 
 def _integrate_volume(cutoff: float, h: float, alpha: float, beta: float,

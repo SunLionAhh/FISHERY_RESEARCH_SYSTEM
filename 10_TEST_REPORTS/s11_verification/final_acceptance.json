@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-17T23:07:27",
+  "generated_at": "2026-11-19T18:19:13",
   "verification": {
     "sections": [
       {
@@ -190,6 +190,10 @@
           {
             "name": "PRE_DEFENSE 数据集冻结",
             "pass": true
+          },
+          {
+            "name": "文件级冻结清单（逐文件 SHA-256）存在且副本一致",
+            "pass": true
           }
         ],
         "pass": true
@@ -213,6 +217,11 @@
     "version": 2,
     "versions": 1
   },
+  "file_freeze": {
+    "root": "13_FROZEN_VERSIONS/PRE_DEFENSE",
+    "file_count": 105,
+    "all_match": true
+  },
   "offline": {
     "pass": true,
     "checks": [
@@ -232,7 +241,7 @@
     "target": "C:\\Users\\Administrator\\WorkBuddy\\渔业声学监测科研分析系统\\FISHERY_RESEARCH_SYSTEM\\10_TEST_REPORTS\\s11_verification\\restore_drill\\restored_fishery.db",
     "source_sha256": "27ae845f11df480ce26959f1a9e6904f0e506c88a400a27f3fd54822747660d2",
     "restored_sha256": "27ae845f11df480ce26959f1a9e6904f0e506c88a400a27f3fd54822747660d2",
-    "live_sha256_unchanged": "861039e7b5bdaefc02ba997ceafad5373674451975374a33263b291f81629a2a",
+    "live_sha256_unchanged": "840e2603e4f07842a61852f0561004543cd6964ecb28a8b74bbd723b0448925f",
     "integrity": "ok",
     "devices": 5,
     "files": 21,
